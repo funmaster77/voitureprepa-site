@@ -39,4 +39,5 @@ Maquette **v14** du marketplace VoiturePrepa.fr — dédiée aux voitures sporti
 
 ## Auteur
 
-Thomas Ralet — 2026 
+Thomas Ralet — 2026
+
