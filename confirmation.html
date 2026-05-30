@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activation du compte — VoiturePrepa.fr</title>
+<meta name="description" content="Activez votre compte VoiturePrepa.fr pour déposer des annonces et acheter en toute sécurité.">
+<link rel="canonical" href="https://voitureprepa.fr/confirmation.html">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="auth-card" style="max-width:520px;text-align:center;">
+    <div id="conf-content">
+      <p class="text-muted">Chargement…</p>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "compte";
+
+// Récupère un paramètre dans le hash (#a=1&b=2) OU dans la query (?a=1)
+function getAuthParam(name) {
+  const fromHash = new URLSearchParams(location.hash.replace(/^#/, ""));
+  if (fromHash.get(name)) return fromHash.get(name);
+  return new URLSearchParams(location.search).get(name);
+}
+
+async function initPage(){
+  const box = document.getElementById("conf-content");
+  const query = new URLSearchParams(location.search);
+  const isNew = query.get("new") === "1";
+  const emailParam = query.get("email") || "";
+
+  // ============================================================
+  // Cas 1 — On vient de s'inscrire (?new=1) : page d'attente
+  // ============================================================
+  if (isNew) {
+    box.innerHTML = `
+      <div style="font-size:48px;">📧</div>
+      <h1>Vérifiez votre email</h1>
+      <p class="sub">Votre compte est presque prêt.</p>
+      <p>Un email de confirmation a été envoyé à <strong>${emailParam || "votre adresse"}</strong>.<br>
+      Cliquez sur le lien qu'il contient pour <strong>activer votre compte</strong>.</p>
+      <div class="alert alert-info mt-2" style="text-align:left;">
+        💡 <strong>Astuce :</strong> pensez à vérifier le dossier <em>Spam / Indésirables</em>
+        si l'email n'arrive pas dans votre boîte de réception.
+      </div>
+      <p class="text-muted mt-2" style="font-size:13px;">
+        Tant que votre compte n'est pas activé, la connexion sera refusée.
+      </p>
+      <a href="connexion.html" class="btn btn-outline mt-2">Aller à la connexion</a>`;
+    return;
+  }
+
+  // ============================================================
+  // Cas 2 — L'utilisateur arrive depuis le lien Supabase
+  // L'URL contient #access_token=...&type=signup (ou #error=...)
+  // Le SDK Supabase a détecté le hash et créé la session AUTO.
+  // ============================================================
+  const hashErr = getAuthParam("error_description") || getAuthParam("error");
+  if (hashErr) {
+    box.innerHTML = `
+      <div style="font-size:48px;">⚠️</div>
+      <h1>Activation impossible</h1>
+      <p class="text-muted">${decodeURIComponent(hashErr)}</p>
+      <a href="inscription.html" class="btn btn-primary mt-2">Créer un nouveau compte</a>`;
+    return;
+  }
+
+  // Petite attente pour laisser le SDK traiter le hash
+  await new Promise(r => setTimeout(r, 300));
+
+  try {
+    const session = await VP_SB.getSession();
+    if (session && session.user) {
+      // Récupérer le profil pour personnaliser le message
+      const profile = await VP_SB.getMyProfile();
+      const prenom = (profile && profile.prenom) || "";
+      const type = (profile && profile.type) || "particulier";
+      box.innerHTML = `
+        <div style="font-size:48px;">🎉</div>
+        <h1>Compte activé !</h1>
+        <p class="sub">Bienvenue sur VoiturePrepa.fr${prenom ? ", " + prenom : ""} !</p>
+        <p>Votre compte <strong>${type === "pro" ? "professionnel" : (type === "garage" ? "garage" : "particulier")}</strong> est maintenant
+        activé. Vous pouvez dès à présent profiter de toutes les fonctionnalités.</p>
+        <a href="profil.html" class="btn btn-primary btn-block btn-lg mt-2">Accéder à mon compte</a>
+        <a href="index.html" class="btn btn-outline mt-1">Retour à l'accueil</a>`;
+      // Nettoie l'URL (retire le hash pour éviter de réutiliser le token)
+      try { history.replaceState(null, "", location.pathname); } catch (e) {}
+ return;
+    }
+  } catch (e) {
+    console.warn("getSession err", e);
+  }
+
+  // ============================================================
+  // Cas 3 — Aucun paramètre, aucune session
+  // ============================================================
+  box.innerHTML = `
+    <div style="font-size:48px;">❓</div>
+    <h1>Lien invalide ou expiré</h1>
+    <p class="text-muted">Ce lien d'activation n'est plus valide. Si vous venez de vous inscrire,
+    vérifiez votre boîte mail et cliquez sur le bouton « Confirmer mon adresse ».</p>
+    <a href="inscription.html" class="btn btn-primary mt-2">Créer un compte</a>
+    <a href="connexion.html" class="btn btn-outline mt-1">Se connecter</a>`;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Détail annonce — VoiturePrepa.fr</title>
+<meta name="description" content="Détail d'une annonce de voiture préparée ou de pièce de performance : caractéristiques, photos, prix et contact vendeur sécurisé sur VoiturePrepa.fr.">
+<link rel="canonical" href="https://voitureprepa.fr/annonce.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VoiturePrepa.fr">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Détail annonce — VoiturePrepa.fr">
+<meta property="og:description" content="Détail d'une annonce de voiture préparée ou de pièce de performance : caractéristiques, photos, prix et contact vendeur sécurisé sur VoiturePrepa.fr.">
+<meta property="og:url" content="https://voitureprepa.fr/annonce.html">
+<meta property="og:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Détail annonce — VoiturePrepa.fr">
+<meta name="twitter:description" content="Détail d'une annonce de voiture préparée ou de pièce de performance : caractéristiques, photos, prix et contact vendeur sécurisé sur VoiturePrepa.fr.">
+<meta name="twitter:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <nav class="breadcrumb">
+    <a href="index.html">Accueil</a><span class="sep">›</span>
+    <a href="annonces.html">Annonces</a><span class="sep">›</span>
+    <span id="bc-title">Détail</span>
+  </nav>
+
+  <div class="detail-layout">
+    <div>
+      <div class="detail-gallery">
+        <div class="gallery-main" id="gallery-main"></div>
+        <div class="gallery-thumbs" id="gallery-thumbs"></div>
+      </div>
+
+      <div class="detail-card">
+        <div id="ad-status-banner"></div>
+        <h1 id="ad-title"></h1>
+        <div class="meta" id="ad-meta"></div>
+        <div class="meta" id="ad-expiry" style="font-size:13px;margin-top:2px;"></div>
+        <div class="price" id="ad-price" style="margin-top:8px;"></div>
+        <div id="ad-badges" style="margin-top:10px;"></div>
+
+        <div class="specs-grid" id="ad-specs"></div>
+
+        <h3 style="margin-top:24px;margin-bottom:8px;">Description</h3>
+        <p id="ad-desc" style="white-space:pre-line;color:#444;"></p>
+
+        <h3 style="margin-top:24px;margin-bottom:10px;">Pièces de performance installées</h3>
+        <div id="ad-pieces"></div>
+
+        <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;">
+          <span class="text-muted" style="font-size:13px;">👁️ <span id="ad-vues">0</span> vues</span>
+          <span class="text-muted" style="font-size:13px;">❤️ <span id="ad-favs">0</span> personnes ont mis en favori</span>
+        </div>
+
+        <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+          <a href="#" class="text-muted" style="font-size:13px;" onclick="event.preventDefault();reportAd();return false;">
+            🚩 Signaler cette annonce
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="seller-card">
+        <div class="seller-header">
+          <div class="avatar" id="seller-avatar"></div>
+          <div>
+            <strong id="seller-name"></strong>
+            <div class="stars" id="seller-stars"></div>
+            <div class="text-muted" id="seller-meta" style="font-size:12px;"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg" onclick="contactSeller()">
+          ✉️ Contacter le vendeur
+        </button>
+        <button id="btn-fav" class="btn btn-outline btn-block mt-1" onclick="toggleAdFav()">
+          ❤️ Ajouter aux favoris
+        </button>
+        <div id="buy-zone"></div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid var(--border);">
+
+        <h4 style="margin-bottom:8px;font-size:14px;">🛡️ Protection des Achats VoiturePrepa</h4>
+        <p style="font-size:13px;color:#555;margin-bottom:8px;">
+          Achetez via la plateforme et bénéficiez de garanties concrètes :
+        </p>
+        <ul style="font-size:12.5px;color:#444;margin:0 0 8px;padding-left:18px;line-height:1.7;">
+          <li>Argent bloqué jusqu'à réception du véhicule</li>
+          <li>Contrôle des documents (carte grise, CT, identité)</li>
+          <li>Vérification HistoVec : gage, vol, sinistres</li>
+        </ul>
+        <p id="seller-fees" style="font-size:12px;color:var(--text-muted);margin-bottom:8px;"></p>
+        <a href="protection.html" style="font-size:13px;color:var(--orange);font-weight:600;">En savoir plus sur la protection →</a>
+
+        <button class="btn btn-ghost btn-block mt-2" onclick="openSellerProfile()">Voir le profil du vendeur</button>
+      </div>
+
+      <div class="seller-card" style="margin-top:14px;">
+        <h4 style="margin-bottom:10px;font-size:14px;">📍 Localisation</h4>
+        <p id="ad-localisation">—</p>
+      </div>
+
+      <div class="ad-slot ad-sidebar">
+        <span class="ad-label">Publicité</span>
+        <div class="ad-main">Espace publicitaire</div>
+        <div class="ad-sub">Annonce sponsorisée — <a href="contact.html">réservez cet emplacement</a></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="section">
+    <h2 class="section-title">Avis sur le vendeur</h2>
+    <div style="background:#fff;padding:20px;border-radius:8px;box-shadow:var(--shadow);max-width:760px;" id="avis-content"></div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Annonces similaires</h2>
+    <div class="ad-grid" id="similar"></div>
+  </section>
+</div>
+
+<!-- Modale : profil du vendeur -->
+<div class="modal-backdrop" id="seller-modal" onclick="if(event.target===this)closeSellerProfile()">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <h3>👤 Profil du vendeur</h3>
+      <button class="close" onclick="closeSellerProfile()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-body" id="seller-modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSellerProfile()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "voitures";
+
+// Informations publiques du vendeur d'une annonce
+function getSellerInfo(ad) {
+  const email = (ad && ad.owner_email) || "";
+  const acc = email
+    ? loadAccounts().find(a => (a.email || "").toLowerCase() === email.toLowerCase())
+    : null;
+  // Pseudo du compte
+  let pseudo = "Julien Dupont";
+  if (acc) {
+    pseudo = acc.type === "pro"
+      ? (acc.raison || acc.prenom || "Professionnel")
+      : ([acc.prenom, acc.nom].filter(Boolean).join(" ") || acc.prenom || "Membre");
+  }
+  // Type de compte
+  const type = ad.pro ? "Professionnel" : "Particulier";
+  // Membre depuis
+  let membreDepuis = "2022";
+  if (acc && acc.created_at) {
+    const d = new Date(acc.created_at);
+    if (!isNaN(d.getTime())) membreDepuis = d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  }
+  // Transactions réalisées (annonces vendues par ce vendeur)
+  let transactions = 12;
+  if (email) {
+    transactions = loadUserAds().filter(a =>
+      (a.owner_email || "").toLowerCase() === email.toLowerCase() && getAdStatus(a) === "sold"
+    ).length;
+  }
+  // Avis : calculés à partir des avis acheteurs réels
+  const rating = sellerRating(email);
+  let avis;
+  if (rating)       avis = starsHtml(rating.avg) + " " + rating.avg + "/5 (" + rating.count + " avis)";
+  else if (email)   avis = "Pas encore d'avis";
+  else              avis = "★★★★★ 4,9/5 (28 avis)"; // vendeur de démonstration
+  // Localisation
+  const localisation = ad.departement || "Non précisée";
+  return { pseudo, avis, type, membreDepuis, transactions, localisation };
+}
+
+// Remplit l'encart vendeur (colonne de droite) à partir des données réelles
+function renderSellerCard(ad) {
+  const s = getSellerInfo(ad);
+  const nameEl = document.getElementById("seller-name");
+  const avatarEl = document.getElementById("seller-avatar");
+  const starsEl = document.getElementById("seller-stars");
+  const metaEl = document.getElementById("seller-meta");
+  if (nameEl) nameEl.textContent = s.pseudo;
+  if (avatarEl) {
+    const initials = s.pseudo.split(/\s+/).filter(Boolean)
+      .map(w => w[0]).join("").slice(0, 2).toUpperCase();
+    avatarEl.textContent = initials || "?";
+  }
+  if (starsEl) {
+    starsEl.innerHTML = /^[★☆]/.test(s.avis)
+      ? s.avis
+      : `<span class="text-muted" style="font-size:12px;">${s.avis}</span>`;
+  }
+  if (metaEl) metaEl.textContent = s.type + " · Membre depuis " + s.membreDepuis;
+  // Frais affichés selon le type d'annonce (2 % acheteur + commission vendeur)
+  const feesEl = document.getElementById("seller-fees");
+  if (feesEl) {
+    const rate = commissionRate(ad.type);
+    feesEl.textContent = "Frais : 2 % protection acheteur · " + rate + " % commission vendeur.";
+  }
+}
+
+function openSellerProfile() {
+  const ad = MOCK_ADS.find(a => a.id === window._currentAdId);
+  if (!ad) return;
+  const s = getSellerInfo(ad);
+  const row = (label, val) => `<div style="display:flex;justify-content:space-between;gap:14px;` +
+    `padding:11px 0;border-bottom:1px solid var(--border);font-size:14px;">` +
+    `<span class="text-muted">${label}</span><strong style="text-align:right;">${val}</strong></div>`;
+  document.getElementById("seller-modal-body").innerHTML =
+    row("Pseudo du compte", s.pseudo) +
+    row("Avis", s.avis) +
+    row("Type de compte", s.type) +
+    row("Membre depuis", s.membreDepuis) +
+    row("Transactions réalisées", s.transactions) +
+    row("Localisation", s.localisation);
+  document.getElementById("seller-modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeSellerProfile() {
+  document.getElementById("seller-modal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+// Signaler l'annonce courante aux modérateurs
+function reportAd() {
+  const id = window._currentAdId;
+  const ad = MOCK_ADS.find(a => a.id === id);
+  const motif = prompt(
+    "Signaler cette annonce aux modérateurs.\n\n" +
+    "Indiquez le motif (annonce frauduleuse, photos trompeuses, prix suspect, contenu inapproprié, doublon...) :",
+    "Annonce suspecte"
+  );
+  if (motif === null) return;
+  if (!motif.trim()) { alert("Veuillez indiquer un motif de signalement."); return; }
+  addReport({ ad_id: id, ad_titre: ad ? ad.titre : "Annonce #" + id, motif: motif.trim() });
+  alert("🚩 Merci. Votre signalement a été transmis aux modérateurs pour vérification de l'annonce.");
+}
+
+function initPage() {
+  const id = parseInt(getParam("id"));
+  const ad = MOCK_ADS.find(a => a.id === id);
+
+  // Annonce inexistante (id absent/périmé, annonce supprimée, lien obsolète) :
+  // on affiche un message clair au lieu de laisser la page planter.
+  if (!ad) {
+    const layout = document.querySelector(".detail-layout");
+    if (layout) {
+      layout.innerHTML = `<div style="grid-column:1/-1;background:#fff;border-radius:8px;
+        box-shadow:var(--shadow);padding:48px 24px;text-align:center;">
+        <div style="font-size:46px;margin-bottom:10px;">🔍</div>
+        <h1 style="font-size:22px;margin-bottom:8px;">Annonce introuvable</h1>
+        <p class="text-muted" style="font-size:14px;margin-bottom:20px;">
+          Cette annonce n'existe pas ou n'est plus en ligne — elle a pu être vendue,
+          retirée par un administrateur ou expirée.
+        </p>
+        <a href="annonces.html" class="btn btn-primary">Voir toutes les annonces</a>
+      </div>`;
+    }
+    // Les sections « Avis » et « Annonces similaires » n'ont plus de sens
+    document.querySelectorAll(".container > .section").forEach(s => s.style.display = "none");
+    const bc = document.getElementById("bc-title");
+    if (bc) bc.textContent = "Annonce introuvable";
+    document.title = "Annonce introuvable — VoiturePrepa.fr";
+    return;
+  }
+
+  // Comptabilise cette consultation de l'annonce
+  bumpAdView(ad.id);
+
+  document.title = ad.titre + " — VoiturePrepa.fr";
+  $("#bc-title").textContent = ad.titre;
+  $("#ad-title").textContent = ad.titre;
+  $("#ad-price").textContent = ad.prix.toLocaleString('fr-FR') + " €";
+  $("#ad-meta").textContent = `Mise en ligne ${formatAdDate(ad.created_at) || "récemment"} · ${ad.departement}`;
+
+  // Bandeau de statut de modération (visible par le vendeur sur sa propre annonce)
+  const statusBanner = document.getElementById("ad-status-banner");
+  if (statusBanner) {
+    const st = getAdStatus(ad);
+    if (st === "rejected") {
+      statusBanner.innerHTML = `<div class="alert alert-error" style="margin-bottom:14px;">
+        ⛔ <strong>Annonce retirée par l'administrateur</strong> — elle n'est plus visible dans le listing public.<br>
+        <strong>Motif :</strong> ${escHtml(ad.reject_reason || "non précisé")}<br>
+        <span style="font-size:13px;">Corrigez votre annonce et soumettez-la à nouveau, ou contactez le support si vous estimez qu'il s'agit d'une erreur.</span>
+      </div>`;
+    } else if (st === "pending") {
+      statusBanner.innerHTML = `<div class="alert alert-warning" style="margin-bottom:14px;">
+        ⏳ <strong>Annonce en attente de validation</strong> — elle n'est pas encore visible publiquement.
+        Un administrateur va la vérifier prochainement.
+      </div>`;
+    } else {
+      statusBanner.innerHTML = "";
+    }
+  }
+  // Date d'expiration (3 mois de mise en ligne)
+  const expEl = document.getElementById("ad-expiry");
+  if (expEl && ad.created_at) {
+    if (isAdExpired(ad)) {
+      expEl.innerHTML = `<span style="color:var(--red);font-weight:600;">⛔ Annonce expirée — elle n'est plus en ligne</span>`;
+    } else {
+      expEl.innerHTML = `🕒 En ligne jusqu'au <strong>${formatExpiry(ad)}</strong> · ${adDaysLeft(ad)} jours restants`;
+    }
+  }
+  $("#ad-vues").textContent = getAdVues(ad);
+  $("#ad-favs").textContent = getAdFavoris(ad);
+
+  // Badges
+  $("#ad-badges").innerHTML = (ad.badges||[]).map(b => {
+    const lbl = {urgent:"⚡ Urgente",premium:"⭐ Premium",pro:"PRO",or:"🥇 Or",argent:"🥈 Argent",bronze:"🥉 Bronze"}[b]||b;
+    return `<span class="badge badge-${b}" style="margin-right:6px;">${lbl}</span>`;
+  }).join("");
+
+  // Galerie : utilise les vraies photos uploadées si disponibles, sinon des variantes de l'image
+  let imgs;
+  if (ad.photos && ad.photos.length) {
+    imgs = ad.photos;
+  } else {
+    imgs = [ad.img];
+  }
+  $("#gallery-main").style.backgroundImage = `url('${imgs[0]}')`;
+  $("#gallery-main").style.backgroundSize = "cover";
+  $("#gallery-main").style.backgroundPosition = "center";
+  $("#gallery-thumbs").innerHTML = imgs.map((src,i) =>
+    `<img src="${src}" class="${i===0?'active':''}" onclick="document.querySelectorAll('.gallery-thumbs img').forEach(x=>x.classList.remove('active'));this.classList.add('active');document.getElementById('gallery-main').style.backgroundImage='url(${src})';">`
+  ).join("");
+
+  // Description : utilise celle de l'annonce si fournie, sinon texte d'exemple
+  const defaultDesc = "Aucune description détaillée fournie par le vendeur.";
+  $("#ad-desc").textContent = ad.description && ad.description.trim() ? ad.description : defaultDesc;
+
+  // Localisation : utilise le département + ville de l'annonce
+  $("#ad-localisation").textContent = ad.departement || "—";
+
+  // Specs
+  if (ad.type === "voiture") {
+    const specs = [
+      ["Marque", ad.marque], ["Modèle", ad.modele], ["Année", ad.annee],
+      ["Kilométrage", (ad.km||0).toLocaleString('fr-FR') + " km"],
+      ["Carburant", ad.carburant], ["Boîte", ad.boite],
+      ["Couleur", ad.couleur], ["Catégorie", ad.categorie],
+      ["Stage", ad.stage], ["État", ad.etat],
+      ["Puissance origine", ad.puissance_origine ? ad.puissance_origine + " ch" : null],
+      ["Puissance actuelle", ad.puissance_actuelle ? ad.puissance_actuelle + " ch" : null],
+      ["Couple origine", ad.couple_origine ? ad.couple_origine + " Nm" : null],
+      ["Couple actuel", ad.couple_actuel ? ad.couple_actuel + " Nm" : null],
+      ["Nombre de portes", ad.nb_portes], ["Nombre de places", ad.nb_places],
+      ["Covering", ad.covering],
+      ["Vendeur", ad.pro ? "Professionnel" : "Particulier"],
+    ];
+    $("#ad-specs").innerHTML = specs
+      .filter(([l,v]) => v !== null && v !== undefined && v !== "")
+      .map(([l,v]) => `<div class="spec"><div class="lbl">${l}</div><div class="val">${v}</div></div>`)
+      .join("");
+
+    // Pièces de performance installées : si fournies dans l'annonce, on les affiche
+    // sinon on cache la section (au lieu de montrer un échantillon factice)
+    const pieces = ad.pieces_perf && ad.pieces_perf.length ? ad.pieces_perf : [];
+    if (pieces.length) {
+      $("#ad-pieces").innerHTML = pieces.map(p =>
+        `<span class="badge" style="background:var(--orange-light);color:var(--orange-dark);margin:2px 4px 2px 0;padding:5px 10px;">✓ ${p}</span>`
+      ).join("");
+    } else {
+      $("#ad-pieces").innerHTML = `<span class="text-muted" style="font-size:13px;">Aucune pièce de performance déclarée par le vendeur.</span>`;
+    }
+  } else {
+    const specs = [
+      ["Catégorie", ad.cat], ["Sous-catégorie", ad.sous],
+      ["Compatibilité", (ad.marque||"Universel") + " " + (ad.modele||"")],
+      ["Vendeur", ad.pro ? "Professionnel" : "Particulier"],
+      ["Envoi", "Mondial Relay"],
+    ];
+    $("#ad-specs").innerHTML = specs
+      .filter(([l,v]) => v !== null && v !== undefined && String(v).trim() !== "")
+      .map(([l,v]) => `<div class="spec"><div class="lbl">${l}</div><div class="val">${v}</div></div>`)
+      .join("");
+    // Cache toute la section "Pièces de performance installées" pour les pièces détachées
+    $("#ad-pieces").innerHTML = "";
+    const piecesTitle = $("#ad-pieces").previousElementSibling;
+    if (piecesTitle && piecesTitle.tagName === "H3") piecesTitle.style.display = "none";
+  }
+
+  // Similar ads
+  $("#similar").innerHTML = MOCK_ADS.filter(a => a.id !== ad.id && a.type === ad.type).slice(0,4).map(renderAdCard).join("");
+
+  // État initial du bouton favori
+  refreshFavBtn(ad.id);
+  window._currentAdId = ad.id;
+
+  // Carte vendeur (encart latéral) — synchronisée avec les avis réels
+  renderSellerCard(ad);
+
+  // Section avis sur le vendeur
+  renderReviewSection(ad);
+
+  // Bouton d'achat via la plateforme (si vente en ligne activée)
+  renderBuyZone(ad);
+}
+
+// ---------- Achat via la plateforme (vente en ligne sécurisée) ----------
+function renderBuyZone(ad) {
+  const zone = document.getElementById("buy-zone");
+  if (!zone) return;
+  if (!ad.vente_en_ligne) { zone.innerHTML = ""; return; }
+  const st = getAdStatus(ad);
+  if (st === "sold") {
+    zone.innerHTML = `<div class="alert alert-info" style="margin-top:8px;font-size:13px;">Cette annonce a déjà été vendue.</div>`;
+    return;
+  }
+  if (st !== "approved") { zone.innerHTML = ""; return; }
+  zone.innerHTML = `<button class="btn btn-block btn-lg mt-1" style="background:var(--green);color:#fff;border:none;font-weight:700;" onclick="buyAd()">🛒 Acheter via la plateforme</button>
+    <p class="text-muted" style="font-size:12px;margin-top:4px;text-align:center;">Paiement sécurisé Stripe — dépôt fiduciaire jusqu'à réception.</p>`;
+}
+
+function buyAd() {
+  if (!requireLogin("L'achat via la plateforme")) return;
+  const ad = MOCK_ADS.find(a => a.id === window._currentAdId);
+  if (!ad) return;
+  const sess = getSession();
+  if ((ad.owner_email || "").toLowerCase() === (sess.email || "").toLowerCase()) {
+    alert("Vous ne pouvez pas acheter votre propre annonce.");
+    return;
+  }
+  const sellerInfo = getSellerInfo(ad);
+  const isCar = ad.type === "voiture";
+  // Commission vendeur (3 % voiture / 10 % pièce), prélevée sur le prix de vente
+  const rate = commissionRate(ad.type);
+  const commission = commissionAmount(ad.prix, ad.type);
+  const sellerNet = ad.prix - commission;
+  // Frais de protection acheteur (2 %), payés EN PLUS du prix
+  const protectionFee = buyerProtectionFee(ad.prix);
+  const totalBuyer = ad.prix + protectionFee;
+  // Coordonnées capturées — dévoilées seulement une fois la transaction engagée
+  const buyerPhone = (sess && sess.telephone) || userPhone(sess.email) || "";
+  const sellerPhone = userPhone(ad.owner_email) || "";
+  openPaymentModal(totalBuyer, "Achat sécurisé — " + ad.titre, function () {
+    // Callback exécuté UNIQUEMENT si le paiement Stripe est accepté
+    addTransaction({
+      ad_id: ad.id, ad_titre: ad.titre, ad_img: ad.img,
+      prix: ad.prix, type: ad.type,
+      seller_email: ad.owner_email || "", seller_name: sellerInfo.pseudo,
+      buyer_email: sess.email || "", buyer_name: (sess.prenom || sess.raison) || "Acheteur",
+      buyer_phone: buyerPhone, seller_phone: sellerPhone
+    });
+    // L'annonce passe en « vendue »
+    if (loadUserAds().some(a => String(a.id) === String(ad.id))) {
+      updateUserAd(ad.id, { status: "sold", sold_at: new Date().toISOString() });
+    }
+    alert("✅ Paiement accepté — achat effectué !\n\n" +
+      "Votre argent est bloqué en toute sécurité par la Protection des Achats VoiturePrepa. " +
+      (isCar
+        ? "Organisez la récupération du véhicule avec le vendeur, puis débloquez les fonds une fois les papiers de vente signés."
+        : "Le vendeur va expédier le colis ; vous débloquerez les fonds à réception.") +
+      "\n\nSuivez tout dans « Mon compte › Transactions ».");
+    window.location.href = "profil.html?tab=transactions";
+  }, null, {
+    breakdown: [
+      { label: "Prix " + (isCar ? "du véhicule" : "de la pièce"), value: ad.prix.toLocaleString('fr-FR') + " €" },
+      { label: "Frais de protection acheteur (" + BUYER_PROTECTION_RATE + " %)", value: protectionFee.toLocaleString('fr-FR') + " €" }
+    ],
+    footnote: "Les frais de protection acheteur financent le paiement sécurisé, le contrôle des documents et la vérification HistoVec. Le vendeur perçoit " + sellerNet.toLocaleString('fr-FR') + " € (commission vendeur " + rate + " % déduite).",
+    protectionHtml: protectionCheckoutHtml()
+  });
+}
+
+// ---------- Avis sur le vendeur ----------
+function renderReviewSection(ad) {
+  const box = document.getElementById("avis-content");
+  if (!box) return;
+  const sellerEmail = ad.owner_email || "";
+  const revs = reviewsForSeller(sellerEmail);
+  const rating = sellerRating(sellerEmail);
+  let html = "";
+  if (rating) {
+    html += `<div style="font-size:15px;margin-bottom:6px;">
+      <span style="color:var(--gold);font-size:22px;">${starsHtml(rating.avg)}</span>
+      <strong>${rating.avg}/5</strong> · ${rating.count} avis</div>`;
+  } else {
+    html += `<p class="text-muted" style="font-size:14px;">Ce vendeur n'a pas encore reçu d'avis.</p>`;
+  }
+  if (revs.length) {
+    html += revs.map(r => `<div style="border-top:1px solid var(--border);padding:12px 0;">
+      <div style="color:var(--gold);font-size:16px;">${starsHtml(r.note)}</div>
+      <strong>${r.buyer_name || "Acheteur"}</strong>
+      <span class="text-muted" style="font-size:12px;">· ${formatAdDate(r.created_at)}</span>
+      ${r.commentaire ? `<p style="margin-top:4px;font-size:14px;">${r.commentaire}</p>` : ""}
+    </div>`).join("");
+  }
+  html += reviewFormHtml(ad, sellerEmail, revs);
+  box.innerHTML = html;
+}
+
+// Les avis sont déposés depuis l'espace « Mon compte › Transactions »,
+// une fois l'achat finalisé (réception confirmée). Ici on n'affiche
+// qu'une note d'information sous la liste des avis.
+function reviewFormHtml(ad, sellerEmail, revs) {
+  const sep = 'style="border-top:1px solid var(--border);padding-top:14px;margin-top:12px;"';
+  return `<p class="text-muted" ${sep}>
+    ⓘ Les avis et notes (sur 5 étoiles) sont déposés par les acheteurs depuis
+    leur espace <a href="profil.html?tab=transactions">Mon compte › Transactions</a>,
+    une fois l'achat finalisé sur la plateforme.</p>`;
+}
+
+function refreshFavBtn(id) {
+  const btn = $("#btn-fav");
+  if (!btn) return;
+  if (isFav(id)) {
+    btn.innerHTML = "❤️ Retirer des favoris";
+    btn.classList.remove("btn-outline");
+    btn.classList.add("btn-primary");
+  } else {
+    btn.innerHTML = "❤️ Ajouter aux favoris";
+    btn.classList.add("btn-outline");
+    btn.classList.remove("btn-primary");
+  }
+}
+
+function contactSeller() {
+  if (!requireLogin("La messagerie")) return;
+  const ad = MOCK_ADS.find(a => a.id === window._currentAdId);
+  if (!ad) return;
+  const sess = getSession();
+  const sellerEmail = (ad.owner_email || "").toLowerCase().trim();
+  if (sellerEmail && (sess.email || "").toLowerCase().trim() === sellerEmail) {
+    alert("Il s'agit de votre propre annonce — vous ne pouvez pas vous contacter vous-même.");
+    return;
+  }
+  // Avertissement « Protection des Achats » AVANT d'ouvrir la conversation :
+  // l'acheteur est éduqué à exiger le paiement sur la plateforme.
+  openProtectionNotice(function () {
+    const sellerInfo = getSellerInfo(ad);
+    const t = getOrCreateThread({
+      ad_id: ad.id, ad_titre: ad.titre, ad_img: ad.img,
+      buyer_email: sess.email, buyer_name: (sess.prenom || sess.raison) || "Acheteur",
+      seller_email: sellerEmail, seller_name: sellerInfo.pseudo
+    });
+    // Ouvre la conversation dans la messagerie sécurisée
+    window.location.href = "profil.html?tab=messages&thread=" + t.id;
+  });
+}
+
+function toggleAdFav() {
+  if (!requireLogin("L'ajout aux favoris")) return;
+  const id = window._currentAdId;
+  if (id == null) return;
+  toggleFav(id);
+  refreshFavBtn(id);
+  const counter = document.getElementById("hdr-fav-count");
+  if (counter) counter.textContent = countFavs();
+  // Met à jour le nombre de favoris affiché sur l'annonce
+  const ad = MOCK_ADS.find(a => a.id === id);
+  if (ad) $("#ad-favs").textContent = getAdFavoris(ad);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /profil.html
+Disallow: /reinitialiser.html
+Disallow: /confirmation.html
+Disallow: /espace-garage.html
+Disallow: /annonce.html
+
+Sitemap: https://voitureprepa.fr/sitemap.xml

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nouveau mot de passe — VoiturePrepa.fr</title>
+<meta name="description" content="Choisissez un nouveau mot de passe pour votre compte VoiturePrepa.fr.">
+<link rel="canonical" href="https://voitureprepa.fr/nouveau-mot-de-passe.html">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="auth-card" style="max-width:520px;">
+    <h1>Nouveau mot de passe</h1>
+    <p class="sub" id="pw-sub">Choisissez votre nouveau mot de passe pour vous reconnecter.</p>
+
+    <div id="pw-form-box">
+      <form onsubmit="event.preventDefault();submitNewPassword();">
+        <div class="form-group">
+          <label class="form-label">Nouveau mot de passe <span class="req">*</span></label>
+          <input type="password" id="pw-new" class="form-input" required minlength="8">
+          <div class="form-hint">8 caractères minimum, 1 majuscule, 1 chiffre.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer le mot de passe <span class="req">*</span></label>
+          <input type="password" id="pw-new2" class="form-input" required>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">Mettre à jour mon mot de passe</button>
+      </form>
+    </div>
+
+    <div id="pw-result" style="display:none;text-align:center;"></div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "compte";
+
+function showResult(html) {
+  document.getElementById("pw-form-box").style.display = "none";
+  const r = document.getElementById("pw-result");
+  r.style.display = "block";
+  r.innerHTML = html;
+}
+
+function getAuthParam(name) {
+  const fromHash = new URLSearchParams(location.hash.replace(/^#/, ""));
+  if (fromHash.get(name)) return fromHash.get(name);
+  return new URLSearchParams(location.search).get(name);
+}
+
+async function initPage(){
+  // Erreur Supabase éventuelle
+  const err = getAuthParam("error_description") || getAuthParam("error");
+  if (err) {
+    showResult(`
+      <div style="font-size:48px;">⚠️</div>
+      <h2>Lien invalide ou expiré</h2>
+      <p class="text-muted">${decodeURIComponent(err)}</p>
+      <a href="connexion.html" class="btn btn-primary mt-2">Demander un nouveau lien</a>`);
+    return;
+  }
+
+  // Petite attente pour laisser le SDK Supabase traiter le hash et créer la session
+  await new Promise(r => setTimeout(r, 300));
+  try {
+    const session = await VP_SB.getSession();
+    if (!session) {
+      showResult(`
+        <div style="font-size:48px;">❓</div>
+        <h2>Lien invalide</h2>
+        <p class="text-muted">Ce lien de réinitialisation est invalide ou a expiré.</p>
+        <a href="connexion.html" class="btn btn-primary mt-2">Demander un nouveau lien</a>`);
+      return;
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+  // Session valide — formulaire prêt à l'usage
+}
+
+async function submitNewPassword(){
+  const pwd = document.getElementById("pw-new").value;
+  const pwd2 = document.getElementById("pw-new2").value;
+  if (!/^(?=.*[A-Z])(?=.*\d).{8,}$/.test(pwd)) {
+    alert("⚠ Mot de passe trop faible.\n\nIl doit contenir au minimum :\n• 8 caractères\n• 1 majuscule\n• 1 chiffre");
+    return;
+  }
+  if (pwd !== pwd2) {
+    alert("⚠ Les deux mots de passe ne sont pas identiques.");
+    return;
+  }
+  try {
+    const { data, error } = await VP_SB.client.auth.updateUser({ password: pwd });
+    if (error) {
+      alert("❌ Mise à jour impossible : " + error.message);
+      return;
+    }
+    showResult(`
+      <div style="font-size:48px;">✅</div>
+      <h2>Mot de passe mis à jour</h2>
+      <p>Votre nouveau mot de passe est actif. Vous pouvez maintenant vous reconnecter.</p>
+      <a href="connexion.html" class="btn btn-primary btn-block btn-lg mt-2">Se connecter</a>`);
+    // Déconnecte la session courante pour forcer une vraie reconnexion
+    try { await VP_SB.signOut(); } catch (e) {}
+    // Nettoie l'URL pour ne pas réutiliser le token
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  } catch (e) {
+    alert("❌ Erreur technique : " + (e.message || e));
+  }
+}
+</script>
+</body>
+</html>

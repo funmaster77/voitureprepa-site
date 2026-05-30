@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — VoiturePrepa.fr</title>
+<meta name="description" content="Contactez l'équipe VoiturePrepa.fr pour toute question sur les annonces, la Protection des Achats ou votre compte.">
+<link rel="canonical" href="https://voitureprepa.fr/contact.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VoiturePrepa.fr">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Contact — VoiturePrepa.fr">
+<meta property="og:description" content="Contactez l'équipe VoiturePrepa.fr pour toute question sur les annonces, la Protection des Achats ou votre compte.">
+<meta property="og:url" content="https://voitureprepa.fr/contact.html">
+<meta property="og:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Contact — VoiturePrepa.fr">
+<meta name="twitter:description" content="Contactez l'équipe VoiturePrepa.fr pour toute question sur les annonces, la Protection des Achats ou votre compte.">
+<meta name="twitter:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="container">
+  <nav class="breadcrumb"><a href="index.html">Accueil</a><span class="sep">›</span><span>Contact</span></nav>
+  <div class="auth-card" style="max-width:640px;">
+    <h1>Nous contacter</h1>
+    <p class="sub">Une question ? Un partenariat ? Écrivez-nous via ce formulaire, nous vous répondons sous 48h.</p>
+    <form onsubmit="event.preventDefault();submitContactForm();">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nom *</label><input id="ct-nom" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">Email *</label><input type="email" id="ct-email" class="form-input" required></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sujet *</label>
+        <select id="ct-sujet" class="form-select" required>
+          <option value="">Choisissez un sujet</option>
+          <option>Question générale</option>
+          <option>Problème avec une annonce</option>
+          <option>Partenariat garage</option>
+          <option>Demande d'inspection</option>
+          <option>Signalement / arnaque</option>
+          <option>Presse / Communication</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message *</label>
+        <textarea id="ct-message" class="form-textarea" required></textarea>
+      </div>
+      <label class="checkbox-line"><input type="checkbox" required> J'accepte que mes données soient traitées selon la <a href="confidentialite.html">politique RGPD</a>.</label>
+      <button class="btn btn-primary btn-block btn-lg mt-2">Envoyer le message</button>
+    </form>
+  </div>
+</div>
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "contact";
+function initPage(){}
+
+// Enregistre le message pour qu'il parvienne à l'administrateur
+function submitContactForm(){
+  const nom = ($("#ct-nom").value || "").trim();
+  const email = ($("#ct-email").value || "").trim();
+  const sujet = $("#ct-sujet").value || "";
+  const message = ($("#ct-message").value || "").trim();
+  if (!nom || !email || !sujet || !message) {
+    alert("Veuillez remplir tous les champs obligatoires.");
+    return;
+  }
+  addContactMessage({ nom: nom, email: email, sujet: sujet, message: message });
+  alert("✅ Votre message a bien été envoyé à l'équipe VoiturePrepa.fr.\n\n" +
+        "Nous vous répondrons par email à " + email + " sous 48 h.");
+  $("#ct-nom").value = ""; $("#ct-email").value = "";
+  $("#ct-sujet").value = ""; $("#ct-message").value = "";
+  const cb = document.querySelector('.checkbox-line input');
+  if (cb) cb.checked = false;
+}
+</script>
+</body>
+</html>
