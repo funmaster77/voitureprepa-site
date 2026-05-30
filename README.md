@@ -37,6 +37,6 @@ Maquette **v14** du marketplace VoiturePrepa.fr — dédiée aux voitures sporti
 - [ ] Création de la micro-entreprise
 - [ ] Intégration paiement réel (Stripe / Mangopay)
 
-## Auteur
+## Auteur 
 
 Thomas Ralet — 2026
