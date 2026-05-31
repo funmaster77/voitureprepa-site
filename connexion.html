@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion — VoiturePrepa.fr</title>
+<meta name="description" content="Connectez-vous à votre compte VoiturePrepa.fr pour gérer vos annonces, vos favoris et votre messagerie sécurisée.">
+<link rel="canonical" href="https://voitureprepa.fr/connexion.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VoiturePrepa.fr">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Connexion — VoiturePrepa.fr">
+<meta property="og:description" content="Connectez-vous à votre compte VoiturePrepa.fr pour gérer vos annonces, vos favoris et votre messagerie sécurisée.">
+<meta property="og:url" content="https://voitureprepa.fr/connexion.html">
+<meta property="og:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Connexion — VoiturePrepa.fr">
+<meta name="twitter:description" content="Connectez-vous à votre compte VoiturePrepa.fr pour gérer vos annonces, vos favoris et votre messagerie sécurisée.">
+<meta name="twitter:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .email-suggest-wrap { position:relative; }
+  .email-suggest {
+    position:absolute; left:0; right:0; top:100%;
+    background:#fff; border:1px solid var(--border);
+    border-radius:0 0 6px 6px; box-shadow:0 8px 18px rgba(0,0,0,.14);
+    z-index:60; max-height:230px; overflow-y:auto; display:none;
+  }
+  .email-suggest.open { display:block; }
+  .email-suggest .head {
+    padding:7px 12px; font-size:11px; text-transform:uppercase;
+    letter-spacing:.4px; color:var(--text-muted); background:var(--bg-alt);
+  }
+  .email-suggest .row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 12px; cursor:pointer; font-size:14px; gap:8px;
+  }
+  .email-suggest .row:hover { background:var(--orange-light); }
+  .email-suggest .row .mail { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .email-suggest .row .del {
+    border:none; background:none; color:var(--text-muted); cursor:pointer;
+    font-size:13px; padding:2px 7px; border-radius:4px; flex-shrink:0;
+  }
+  .email-suggest .row .del:hover { background:#fdecea; color:var(--red); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="auth-card">
+    <h1>Se connecter</h1>
+    <p class="sub">Pour déposer des annonces, échanger des messages et suivre vos favoris.</p>
+
+    <div class="social-btns">
+      <a class="social-btn" href="#" onclick="event.preventDefault();socialLogin('Google');">
+        <span style="color:#4285f4;font-weight:900;">G</span> Continuer avec Google
+      </a>
+      <a class="social-btn" href="#" onclick="event.preventDefault();socialLogin('Facebook');">
+        <span style="color:#1877f2;font-weight:900;">f</span> Continuer avec Facebook
+      </a>
+      <a class="social-btn" href="#" onclick="event.preventDefault();socialLogin('Apple');">
+        <span style="color:#000;font-weight:900;">🍎</span> Continuer avec Apple
+      </a>
+    </div>
+
+    <div class="divider">ou</div>
+
+    <form onsubmit="event.preventDefault();fakeLogin();">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <div class="email-suggest-wrap">
+          <input type="email" id="login-email" class="form-input" placeholder="votre@email.fr"
+                 autocomplete="off" required
+                 onfocus="renderEmailSuggestions(true)"
+                 oninput="renderEmailSuggestions(false)"
+                 onblur="hideEmailSuggestions()">
+          <div id="email-suggest" class="email-suggest" onmousedown="event.preventDefault();"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" id="login-password" class="form-input" required>
+      </div>
+      <div class="form-group flex-between">
+        <label class="checkbox-line"><input type="checkbox" id="login-remember"> Se souvenir de moi</label>
+        <a href="#" style="font-size:13px;" onclick="event.preventDefault();forgotPassword();">Mot de passe oublié ?</a>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Se connecter</button>
+    </form>
+
+    <p class="text-center mt-3" style="font-size:14px;">
+      Pas encore inscrit ? <a href="inscription.html">Créer un compte gratuitement</a>
+    </p>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "compte";
+const REMEMBER_KEY = "voitureprepa_remember_email";
+const KNOWN_EMAILS_KEY = "voitureprepa_known_emails";
+
+// Emails déjà utilisés pour se connecter (proposés en autocomplétion)
+function loadKnownEmails(){
+  try { return JSON.parse(localStorage.getItem(KNOWN_EMAILS_KEY) || "[]"); }
+  catch(e){ return []; }
+}
+function saveKnownEmails(list){
+  try { localStorage.setItem(KNOWN_EMAILS_KEY, JSON.stringify(list)); } catch(e){}
+}
+function rememberEmail(email){
+  email = (email || "").trim();
+  if (!email) return;
+  let list = loadKnownEmails().filter(e => e.toLowerCase() !== email.toLowerCase());
+  list.unshift(email);          // le plus récent en tête
+  list = list.slice(0, 20);     // on conserve jusqu'à 20 comptes
+  saveKnownEmails(list);
+}
+
+// Affiche la liste déroulante des comptes déjà utilisés.
+// showAll = true (focus) : tous les comptes ; sinon filtrés par la saisie.
+function renderEmailSuggestions(showAll){
+  const box = $("#email-suggest");
+  if (!box) return;
+  const all = loadKnownEmails();
+  const typed = ($("#login-email").value || "").trim().toLowerCase();
+  const list = (showAll || !typed)
+    ? all
+    : all.filter(e => e.toLowerCase().includes(typed));
+  if (!list.length) { box.classList.remove("open"); box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="head">Comptes déjà utilisés</div>` + list.map(e => {
+    const esc = e.replace(/'/g, "\\'");
+    return `<div class="row" onclick="pickEmail('${esc}')">
+      <span class="mail">📧 ${e}</span>
+      <button type="button" class="del" title="Oublier ce compte"
+        onclick="event.stopPropagation();removeEmail('${esc}')">✕</button>
+    </div>`;
+  }).join("");
+  box.classList.add("open");
+}
+function pickEmail(email){
+  $("#login-email").value = email;
+  $("#email-suggest").classList.remove("open");
+  $("#login-password").focus();
+}
+function removeEmail(email){
+  saveKnownEmails(loadKnownEmails().filter(e => e.toLowerCase() !== email.toLowerCase()));
+  renderEmailSuggestions(true);
+}
+// Masque la liste après un court délai (laisse le clic se déclencher)
+function hideEmailSuggestions(){
+  setTimeout(() => {
+    const box = $("#email-suggest");
+    if (box) box.classList.remove("open");
+  }, 180);
+}
+
+function initPage(){
+  // Pré-remplit l'email si "Se souvenir de moi" avait été coché
+  const remembered = localStorage.getItem(REMEMBER_KEY);
+  if (remembered) {
+    $("#login-email").value = remembered;
+    $("#login-remember").checked = true;
+  }
+}
+
+async function fakeLogin(){
+  const email = ($("#login-email").value || "").trim();
+  const password = $("#login-password").value;
+  const remember = $("#login-remember").checked;
+  if (!email || !password) { alert("Veuillez saisir email et mot de passe."); return; }
+
+  // v14 — Supabase Auth : connexion réelle
+  try {
+    const { data, error } = await VP_SB.signIn(email, password);
+    if (error) {
+      if ((error.message || "").toLowerCase().includes("email not confirmed")) {
+        alert("⚠ Votre compte n'est pas encore activé.\n\n" +
+              "Vous devez d'abord confirmer votre inscription en cliquant sur le lien reçu par email.");
+        return;
+      }
+      alert("❌ Connexion impossible : " + (error.message || "identifiants invalides"));
+      return;
+    }
+    // Récupère le profil pour connaître le type
+    const profile = await VP_SB.getMyProfile();
+    if (!profile) {
+      alert("⚠ Compte authentifié mais profil introuvable. Contactez le support.");
+      return;
+    }
+    // Compte banni : on coupe la session immédiatement
+    if (profile.banned) {
+      await VP_SB.signOut();
+      alert("🚫 Ce compte a été suspendu par l'administration."
+        + (profile.banned_reason ? "\n\nMotif : " + profile.banned_reason : "")
+        + "\n\nPour toute question, contactez le support.");
+      return;
+    }
+    // Garage en attente de validation admin ?
+    if (profile.type === "garage" && profile.role !== "admin" && !profile.garage_id) {
+      // Pour l'instant on autorise la connexion garage ; un futur flag d'activation pourra être ajouté.
+    }
+    // Mémorise l'email
+    if (remember && email) localStorage.setItem(REMEMBER_KEY, email);
+    else localStorage.removeItem(REMEMBER_KEY);
+    rememberEmail(profile.email || email);
+    // Compatibilité avec l'ancien code app.js (qui lit voitureprepa_session)
+    loginAs({
+      id: profile.id,
+      type: profile.type,
+      pack: profile.pack || "gratuit",
+      prenom: profile.prenom || "",
+      nom: profile.nom || "",
+      raison: profile.raison_sociale || "",
+      email: profile.email || email,
+      pack_expires_at: profile.pack_expires_at,
+      garage_id: profile.garage_id,
+      garage_label: profile.garage_label,
+      siret: profile.siret
+    });
+    alert("✅ Connexion réussie ! Bon retour sur VoiturePrepa.fr.");
+    window.location.href = (profile.type === "garage") ? "espace-garage.html" : "profil.html";
+  } catch (e) {
+    console.error(e);
+    alert("❌ Erreur technique : " + (e.message || e));
+  }
+}
+
+function socialLogin(provider){
+  if (!isLoggedIn()) {
+    loginAs({ type:"particulier", prenom:"Membre", email:"", provider:provider });
+  }
+  alert("✅ Connexion via " + provider + " réussie !");
+  window.location.href = "profil.html";
+}
+
+async function forgotPassword(){
+  const email = prompt(
+    "Mot de passe oublié ?\n\nSaisissez l'adresse email de votre compte. Un lien de réinitialisation vous sera envoyé :",
+    ($("#login-email").value || "").trim()
+  );
+  if (email === null) return;
+  if (!email.trim()) { alert("Veuillez saisir une adresse email."); return; }
+  // v14 — Supabase Auth : email de récupération réel
+  try {
+    const { error } = await VP_SB.resetPassword(email.trim());
+    if (error) {
+      alert("⚠ Impossible d'envoyer l'email : " + error.message);
+      return;
+    }
+    alert("✅ Email de réinitialisation envoyé à " +
+      email.trim() + ".\nVérifiez votre boîte de réception (pensez à regarder les spams).");
+  } catch (e) {
+    console.error(e);
+    alert("Erreur réseau. Veuillez réessayer.");
+  }
+}
+</script>
+</body>
+</html>
