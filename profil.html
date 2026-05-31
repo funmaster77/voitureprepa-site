@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon compte — VoiturePrepa.fr</title>
+<meta name="description" content="Gérez votre compte VoiturePrepa.fr : vos annonces, favoris, messagerie, transactions et recherches sauvegardées.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://voitureprepa.fr/profil.html">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .profile-header { background:#fff;padding:24px;border-radius:8px;box-shadow:var(--shadow);display:flex;align-items:center;gap:18px;margin:20px 0 0; }
+  .avatar-big { width:80px;height:80px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px; }
+  .stats { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:10px; }
+  .stat { background:var(--bg-alt);padding:10px;border-radius:6px;text-align:center; }
+  .stat .n { font-weight:800;font-size:22px;color:var(--orange); }
+  .stat .l { font-size:12px;color:var(--text-muted); }
+  .saved-row { display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid var(--border); }
+
+  /* Messagerie */
+  .msg-layout { display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;min-height:460px; }
+  .msg-list { width:300px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;max-height:580px;background:#fff; }
+  .msg-conv { flex:1;display:flex;flex-direction:column;background:var(--bg-alt);min-width:0; }
+  .msg-thread { display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer; }
+  .msg-thread:hover { background:var(--bg-alt); }
+  .msg-thread.active { background:var(--orange-light); }
+  .msg-thread .av { width:40px;height:40px;border-radius:50%;background:var(--bleu);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:14px; }
+  .msg-thread .who { font-weight:700;font-size:14px; }
+  .msg-thread .sub { color:var(--text-muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .msg-thread .unread { background:var(--orange);color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;font-weight:700;display:inline-block; }
+  .msg-conv-head { padding:12px 16px;border-bottom:1px solid var(--border);background:#fff; }
+  .msg-body { flex:1;padding:16px;overflow-y:auto;max-height:430px;display:flex;flex-direction:column;gap:8px; }
+  .msg-bubble { max-width:75%;padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.45;word-wrap:break-word; }
+  .msg-bubble.mine { align-self:flex-end;background:var(--orange);color:#fff;border-bottom-right-radius:4px; }
+  .msg-bubble.theirs { align-self:flex-start;background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px; }
+  .msg-bubble .meta { display:block;font-size:11px;opacity:.75;margin-top:3px; }
+  .msg-compose { display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:#fff; }
+  .msg-compose textarea { flex:1;resize:none; }
+  .msg-empty { margin:auto;color:var(--text-muted);font-size:14px;padding:30px;text-align:center; }
+  @media (max-width:700px) {
+    .msg-layout { flex-direction:column; }
+    .msg-list { width:auto;max-height:240px;border-right:none;border-bottom:1px solid var(--border); }
+  }
+  @media (max-width:600px) { .stats { grid-template-columns:1fr 1fr; } }
+
+  /* Cartes annonces du dashboard avec actions de gestion */
+  .dash-ad-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+  .dash-ad {
+    background:#fff; border-radius:8px; box-shadow:var(--shadow); overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .dash-ad .img { height:140px; background:#ddd center/cover no-repeat; position:relative; }
+  .dash-ad .status {
+    position:absolute; top:8px; left:8px;
+    padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.3px; color:#fff;
+  }
+  .dash-ad .status.active { background:var(--green); }
+  .dash-ad .status.draft  { background:#999; }
+  .dash-ad .status.boost  { background:var(--gold); }
+  .dash-ad .status.expired{ background:var(--red); }
+  .dash-ad .status.pending{ background:#e08a00; }
+  .dash-ad .status.sold   { background:var(--bleu); }
+
+  .dash-ad .body { padding:12px; flex:1; display:flex; flex-direction:column; }
+  .dash-ad .price { font-weight:800; color:var(--prix); font-size:17px; }
+  .dash-ad .title { font-size:14px; font-weight:600; margin:4px 0; flex:1; }
+  .dash-ad .stats-line { font-size:12px; color:var(--text-muted); margin-bottom:8px; }
+  .dash-ad .actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:0 12px 12px; }
+  .dash-ad .actions .btn-boost {
+    grid-column:1/-1; background:var(--gold); color:#fff;
+    padding:8px; border-radius:6px; font-weight:700; font-size:13px;
+    border:none; cursor:pointer; text-decoration:none; text-align:center;
+  }
+  .dash-ad .actions .btn-boost:hover { background:#b88a14; text-decoration:none; color:#fff; }
+  .dash-ad .actions .btn-mini {
+    background:var(--bg-alt); padding:7px; border-radius:6px;
+    font-size:12px; border:1px solid var(--border); cursor:pointer;
+    text-align:center; color:var(--text); text-decoration:none;
+  }
+  .dash-ad .actions .btn-mini:hover { background:var(--orange-light); border-color:var(--orange); text-decoration:none; }
+  .dash-ad .actions .btn-mini.danger:hover { background:#fdecea; border-color:var(--red); color:var(--red); }
+
+  /* Onglet Inspections (côté vendeur) */
+  .insp-block { border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .insp-block-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .insp-badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+  .insp-badge.wait { background:#fff8e1; color:#8a5b00; }
+  .insp-badge.propose { background:#fff1d6; color:#8a5b00; }
+  .insp-badge.ok { background:#e8f7ee; color:var(--green); }
+  .insp-badge.refused { background:#fdecea; color:#a02018; }
+  .insp-slot { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:8px; }
+  .insp-confirmed { background:#e8f7ee; border:1px solid #b6e3c8; border-radius:8px; padding:12px; font-size:14px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="profile-header">
+    <div class="avatar-big" id="prof-avatar">JD</div>
+    <div style="flex:1;">
+      <h2 id="prof-name">Julien Dupont</h2>
+      <div class="text-muted" id="prof-type">Particulier · Membre VoiturePrepa.fr</div>
+      <div class="stars" id="prof-stars" style="margin-top:4px;">★★★★★ <span style="color:var(--text-muted);font-size:13px;">(28 avis · note 4,9/5)</span></div>
+    </div>
+    <button class="btn btn-outline" onclick="openSettings()">⚙️ Paramètres</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="n">5</div><div class="l">Annonces en ligne</div></div>
+    <div class="stat"><div class="n">12</div><div class="l">Favoris</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">Messages non lus</div></div>
+    <div class="stat"><div class="n">2</div><div class="l">Recherches sauvegardées</div></div>
+  </div>
+
+  <div style="background:#fff;border-radius:8px;box-shadow:var(--shadow);padding:24px;margin-top:12px;">
+    <div class="tabs">
+      <button class="tab active" data-tab="annonces" onclick="switchTab('annonces')">📋 Mes annonces</button>
+      <button class="tab" data-tab="transactions" onclick="switchTab('transactions')">🤝 Transactions <span id="txn-tab-badge"></span></button>
+      <button class="tab" data-tab="inspections" onclick="switchTab('inspections')">🔧 Inspections <span id="insp-tab-badge"></span></button>
+      <button class="tab" data-tab="favoris" onclick="switchTab('favoris')">❤️ Favoris</button>
+      <button class="tab" data-tab="messages" onclick="switchTab('messages')">💬 Messagerie <span id="msg-tab-badge"></span></button>
+      <button class="tab" data-tab="recherches" onclick="switchTab('recherches')">🔍 Recherches sauvegardées</button>
+      <button class="tab" data-tab="avis" onclick="switchTab('avis')">⭐ Avis reçus</button>
+    </div>
+
+    <div id="tab-annonces" class="tab-panel active">
+      <div class="flex-between mb-2">
+        <h3>Mes annonces (5)</h3>
+        <a href="deposer.html" class="btn btn-primary btn-sm">+ Nouvelle annonce</a>
+      </div>
+      <div class="dash-ad-grid" id="mes-annonces"></div>
+      <div id="no-ads" class="alert alert-info" style="display:none;">
+        Vous n'avez pas encore déposé d'annonce avec ce compte.
+        <a href="deposer.html">Déposez votre première annonce</a>.
+      </div>
+    </div>
+
+    <div id="tab-transactions" class="tab-panel">
+      <h3 class="mb-2">Mes transactions</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Vos achats et ventes réalisés via la vente en ligne sécurisée (paiement par dépôt fiduciaire).
+      </p>
+      <h4 style="margin:16px 0 8px;">🛒 Mes achats</h4>
+      <div id="my-purchases"></div>
+      <h4 style="margin:22px 0 8px;">💰 Mes ventes</h4>
+      <div id="my-sales"></div>
+    </div>
+
+    <div id="tab-inspections" class="tab-panel">
+      <h3 class="mb-2">Mes demandes d'inspection</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Suivez vos demandes d'inspection et répondez aux créneaux de rendez-vous proposés par l'administrateur.
+      </p>
+      <div id="mes-inspections"></div>
+    </div>
+
+    <div id="tab-favoris" class="tab-panel">
+      <h3 class="mb-2" id="fav-title">Mes favoris</h3>
+      <div class="ad-grid" id="mes-favoris"></div>
+      <div id="no-favs" class="alert alert-info" style="display:none;">
+        Vous n'avez pas encore d'annonce en favori.
+        <a href="annonces.html">Parcourez les annonces</a> et cliquez sur le ♡ pour en ajouter.
+      </div>
+    </div>
+
+    <div id="tab-messages" class="tab-panel">
+      <h3 class="mb-2">Messagerie</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Échangez avec les acheteurs et les vendeurs. Une conversation est créée
+        lorsqu'un acheteur clique sur « Contacter le vendeur » depuis une annonce.
+      </p>
+      <div class="msg-layout">
+        <div class="msg-list" id="msg-thread-list"></div>
+        <div class="msg-conv" id="msg-conversation">
+          <div class="msg-empty">Sélectionnez une conversation pour l'afficher.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-recherches" class="tab-panel">
+      <h3 class="mb-2">Recherches sauvegardées</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Vos recherches enregistrées depuis la page Annonces. Relancez-les en un clic —
+        les filtres seront ré-appliqués automatiquement.
+      </p>
+      <div id="searches-list"></div>
+    </div>
+
+
+    <div id="tab-avis" class="tab-panel">
+      <h3 class="mb-2">Avis reçus</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Avis laissés par les acheteurs après une transaction finalisée.
+      </p>
+      <div id="avis-recus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : paramètres du compte utilisateur -->
+<div class="modal-backdrop" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head">
+      <h3>⚙️ Paramètres du compte</h3>
+      <button class="close" onclick="closeSettings()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="set-part-fields">
+        <label class="form-label" style="font-size:13px;font-weight:600;">Prénom</label>
+        <input id="set-prenom" class="form-input" style="width:100%;margin-bottom:10px;">
+        <label class="form-label" style="font-size:13px;font-weight:600;">Nom</label>
+        <input id="set-nom" class="form-input" style="width:100%;margin-bottom:10px;">
+      </div>
+      <div id="set-pro-fields" style="display:none;">
+        <label class="form-label" style="font-size:13px;font-weight:600;">Raison sociale</label>
+        <input id="set-raison" class="form-input" style="width:100%;margin-bottom:10px;">
+      </div>
+      <label class="form-label" style="font-size:13px;font-weight:600;">Téléphone</label>
+      <input id="set-tel" class="form-input" type="tel" placeholder="06 12 34 56 78" style="width:100%;margin-bottom:10px;">
+      <label class="form-label" style="font-size:13px;font-weight:600;">Adresse email</label>
+      <input id="set-email" class="form-input" disabled style="width:100%;margin-bottom:4px;background:var(--bg-alt);">
+      <p class="form-hint" style="margin-bottom:12px;">Pour changer d'adresse email, contactez le support.</p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+      <p style="font-weight:600;font-size:14px;margin-bottom:8px;">Changer le mot de passe (facultatif)</p>
+      <label class="form-label" style="font-size:13px;font-weight:600;">Nouveau mot de passe</label>
+      <input id="set-pwd" class="form-input" type="password" placeholder="Laisser vide pour ne pas changer" style="width:100%;margin-bottom:10px;">
+      <label class="form-label" style="font-size:13px;font-weight:600;">Confirmer le mot de passe</label>
+      <input id="set-pwd2" class="form-input" type="password" style="width:100%;margin-bottom:4px;">
+      <p class="form-hint">8 caractères minimum, au moins 1 majuscule et 1 chiffre.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSettings()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : édition rapide d'une annonce -->
+<div class="modal-backdrop" id="edit-ad-modal" onclick="if(event.target===this)closeEditAd()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head">
+      <h3>✏️ Modifier l'annonce</h3>
+      <button class="close" onclick="closeEditAd()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="font-size:13px;">
+        Après modification, votre annonce repassera en validation par un administrateur
+        avant d'être de nouveau publiée.
+      </div>
+      <label class="form-label" style="font-size:13px;font-weight:600;">Titre de l'annonce</label>
+      <input id="edit-titre" class="form-input" style="width:100%;margin-bottom:10px;">
+      <label class="form-label" style="font-size:13px;font-weight:600;">Prix (€)</label>
+      <input id="edit-prix" class="form-input" type="number" min="0" step="100" style="width:100%;margin-bottom:10px;">
+      <label class="form-label" style="font-size:13px;font-weight:600;">Description</label>
+      <textarea id="edit-desc" class="form-input" rows="5" style="width:100%;font-family:inherit;"></textarea>
+
+      <label class="form-label" style="font-size:13px;font-weight:600;margin-top:12px;display:block;">Photos de l'annonce</label>
+      <div id="edit-photos-grid" style="display:flex;flex-wrap:wrap;gap:9px;margin:6px 0;"></div>
+      <input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none;" onchange="addEditPhotos(this.files)">
+      <button type="button" class="btn btn-outline btn-sm" id="edit-photo-add" onclick="document.getElementById('edit-photo-input').click()">+ Ajouter une photo</button>
+      <div id="edit-photo-info" class="form-hint" style="margin-top:5px;"></div>
+
+      <div id="edit-offers" style="margin-top:12px;"></div>
+      <div id="edit-vente-block" style="margin-top:12px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeEditAd()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEditAd()">Enregistrer et renvoyer en validation</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : avis sur le vendeur après transaction finalisée -->
+<div class="modal-backdrop" id="review-modal" onclick="if(event.target===this)closeReviewModal()">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <h3>⭐ Évaluer le vendeur</h3>
+      <button class="close" onclick="closeReviewModal()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" id="rev-modal-seller" style="font-size:14px;margin-bottom:10px;"></p>
+      <label class="form-label" style="font-size:13px;font-weight:600;">Votre note</label>
+      <div class="star-rate" id="rev-modal-stars" style="margin:4px 0 10px;">
+        <span data-n="1" onclick="setModalStars(1)">★</span>
+        <span data-n="2" onclick="setModalStars(2)">★</span>
+        <span data-n="3" onclick="setModalStars(3)">★</span>
+        <span data-n="4" onclick="setModalStars(4)">★</span>
+        <span data-n="5" onclick="setModalStars(5)">★</span>
+      </div>
+      <label class="form-label" style="font-size:13px;font-weight:600;">Commentaire (facultatif)</label>
+      <textarea id="rev-modal-comment" class="form-input" rows="3" style="width:100%;font-family:inherit;" placeholder="Partagez votre expérience avec ce vendeur"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeReviewModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="submitTxnReview()">Publier l'avis</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "profil";
+
+// IDs des annonces démo "fictivement déposées par l'utilisateur" (toujours visibles)
+const DEMO_ANNONCES_IDS = [1, 2, 4, 8, 6];
+
+function renderDashboardAd(ad, isUserCreated) {
+  const expired = isAdExpired(ad);
+  const modStatus = getAdStatus(ad);
+  // Statut visuel
+  const isBoost = (ad.badges||[]).some(b => ["urgent","premium"].includes(b));
+  let statusTxt = isBoost ? "Boostée" : "Active";
+  let statusCls = isBoost ? "boost" : "active";
+  if (modStatus === "pending")  { statusTxt = "En attente"; statusCls = "pending"; }
+  else if (modStatus === "rejected") { statusTxt = "Refusée"; statusCls = "expired"; }
+  else if (modStatus === "sold") { statusTxt = "Vendue"; statusCls = "sold"; }
+  else if (expired) { statusTxt = "Expirée"; statusCls = "expired"; }
+  else if (isUserCreated) { statusTxt = "Publiée"; statusCls = "active"; }
+
+  // Ligne durée / statut de modération
+  let dureeLine = "";
+  if (modStatus === "pending") {
+    dureeLine = `<div class="stats-line" style="color:#e08a00;font-weight:600;">⏳ En attente de validation par un administrateur</div>`;
+  } else if (modStatus === "rejected") {
+    dureeLine = `<div class="stats-line" style="color:var(--red);font-weight:600;">❌ Annonce refusée${ad.reject_reason ? " — " + ad.reject_reason : ""}</div>`;
+  } else if (modStatus === "sold") {
+    dureeLine = `<div class="stats-line" style="color:var(--bleu);font-weight:600;">✅ Annonce vendue</div>`;
+  } else if (ad.created_at) {
+    if (expired) {
+      dureeLine = `<div class="stats-line" style="color:var(--red);font-weight:600;">⛔ Expirée le ${formatExpiry(ad)}</div>`;
+    } else {
+      const dl = adDaysLeft(ad);
+      const warn = dl <= 14;
+      dureeLine = `<div class="stats-line" style="${warn?'color:var(--gold);font-weight:600;':''}">🕒 Expire le ${formatExpiry(ad)} (${dl} j restants)</div>`;
+    }
+  }
+
+  // Bouton de renouvellement gratuit — annonce de particulier expirée ou à 14 jours ou moins
+  const renewBtn = (isUserCreated && modStatus === "approved" && !ad.pro && (expired || adDaysLeft(ad) <= 14))
+    ? `<button class="btn-mini" style="grid-column:1/-1;background:var(--green);color:#fff;border:none;font-weight:700;" onclick="renewAdAction(${ad.id})">🔄 Renouvelez gratuitement votre annonce</button>`
+    : "";
+  // Modifier : indisponible pour une annonce vendue
+  const modifyBtn = (modStatus !== "sold")
+    ? `<button class="btn-mini" onclick="openEditAd(${ad.id})">✏️ Modifier</button>`
+    : "";
+
+  // "Vendu" et "Booster" ne sont possibles que sur une annonce réellement publiée
+  const isPublished = modStatus === "approved";
+  const soldBtn = isPublished
+    ? `<button class="btn-mini" onclick="markSold(${ad.id},${isUserCreated})">✓ Vendu</button>`
+    : "";
+  const boostBtn = isPublished
+    ? `<a href="tarifs.html?boost=${ad.id}" class="btn-boost">🚀 Booster cette annonce</a>`
+    : "";
+
+  // Options / packs souscrits sur l'annonce
+  const subOpts = ad.options || [];
+  const optsLine = subOpts.length
+    ? `<div class="stats-line" style="color:var(--orange-dark);font-weight:600;">🎯 Offre(s) souscrite(s) : ${subOpts.join(" · ")}</div>`
+    : "";
+
+  return `
+    <div class="dash-ad" ${expired?'style="opacity:.7;"':''}>
+      <div class="img" style="background-image:url('${ad.img}');">
+        <span class="status ${statusCls}">${statusTxt}</span>
+      </div>
+      <div class="body">
+        <div class="price">${(Number(ad.prix) || 0).toLocaleString('fr-FR')} €</div>
+        <div class="title">${escHtml(ad.titre || "Annonce")}</div>
+        <div class="stats-line">👁 ${getAdVues(ad)} vues · ❤ ${getAdFavoris(ad)} favoris</div>
+        ${ad.created_at ? `<div class="stats-line">📅 ${formatAdDate(ad.created_at)}</div>` : ""}
+        ${dureeLine}
+        ${optsLine}
+      </div>
+      <div class="actions">
+        ${renewBtn}
+        ${boostBtn}
+        <a href="annonce.html?id=${ad.id}" class="btn-mini">👁 Voir</a>
+        ${modifyBtn}
+        ${soldBtn}
+        <button class="btn-mini danger" onclick="deleteAdAction(${ad.id},${isUserCreated})">🗑 Supprimer</button>
+      </div>
+    </div>
+  `;
+}
+
+function renewAdAction(id) {
+  const ad = loadUserAds().find(a => String(a.id) === String(id));
+  if (!ad) { alert("Annonce introuvable."); return; }
+  if (!confirm("Renouveler gratuitement cette annonce ?\n\n"
+    + "Elle sera soumise à un administrateur pour validation, puis remise en ligne pour " + (loadSiteSettings().particulier_duree || 3) + " mois.\n\n"
+    + "(Les options payantes prises précédemment devront être reconduites séparément.)")) return;
+  const ok = updateUserAd(id, {
+    status: "pending",
+    reject_reason: "",
+    is_renewal: true,
+    renewal_requested_at: new Date().toISOString(),
+    previous_status: getAdStatus(ad)
+  });
+  if (!ok) {
+    alert("⚠️ L'enregistrement a échoué : l'espace de stockage du navigateur est saturé.");
+    return;
+  }
+  alert("✅ Demande de renouvellement envoyée !\n\n"
+    + "Votre annonce a été soumise à un administrateur. Après validation, "
+    + "elle sera de nouveau en ligne pour " + (loadSiteSettings().particulier_duree || 3) + " mois.");
+  location.reload();
+}
+
+function markSold(id, isUserCreated){
+  if (!confirm("Marquer cette annonce comme vendue ?\n\nElle sera retirée de la liste publique et apparaîtra dans les ventes côté administrateur.")) return;
+  if (isUserCreated) {
+    updateUserAd(id, { status: "sold", sold_at: new Date().toISOString() });
+    alert("✅ Annonce marquée comme vendue. Bravo pour cette vente !");
+    location.reload();
+  } else {
+    alert("✅ Annonce marquée comme vendue (démo).");
+  }
+}
+
+function deleteAdAction(id, isUserCreated){
+  if (!confirm("Supprimer définitivement cette annonce ?")) return;
+  if (isUserCreated) {
+    deleteUserAd(id);
+    alert("🗑 Annonce supprimée.");
+    location.reload();
+  } else {
+    alert("🗑 Suppression simulée (annonce de démo, non persistée).");
+  }
+}
+
+function refreshDashboard() {
+  // Uniquement les annonces du compte connecté (rattachées par owner_email)
+  const mine = loadMyAds();
+  // Chaque annonce est rendue isolément : une annonce au format inattendu
+  // n'empêche plus l'affichage des autres.
+  $("#mes-annonces").innerHTML = mine.map(a => {
+    try { return renderDashboardAd(a, true); }
+    catch (e) {
+      console.error("Annonce non affichable :", a, e);
+      return `<div class="dash-ad"><div class="body">
+        <div class="title">${(a && a.titre) || "Annonce"}</div>
+        <div class="stats-line">Aperçu indisponible — ouvrez l'annonce pour la consulter.</div>
+        <a href="annonce.html?id=${a && a.id}" class="btn-mini" style="margin-top:8px;">👁 Voir l'annonce</a>
+      </div></div>`;
+    }
+  }).join("");
+
+  // Message si le compte n'a encore aucune annonce
+  const empty = $("#no-ads");
+  if (empty) empty.style.display = mine.length ? "none" : "block";
+
+  // Compteur du titre de l'onglet
+  const counter = document.querySelector("[id='tab-annonces'] h3");
+  if (counter) counter.textContent = "Mes annonces (" + mine.length + ")";
+
+  // Statistique « Annonces en ligne » en haut : annonces validées et non expirées
+  const online = mine.filter(a => isAdPublic(a)).length;
+  const stat0 = document.querySelectorAll(".stat .n")[0];
+  if (stat0) stat0.textContent = online;
+}
+
+function refreshFavorites() {
+  const favIds = loadFavs().map(String);
+  const favAds = favIds
+    .map(id => MOCK_ADS.find(a => String(a.id) === id))
+    .filter(Boolean);
+  $("#fav-title").textContent = "Mes favoris (" + favAds.length + ")";
+  if (!favAds.length) {
+    $("#mes-favoris").innerHTML = "";
+    $("#no-favs").style.display = "block";
+  } else {
+    $("#no-favs").style.display = "none";
+    $("#mes-favoris").innerHTML = favAds.map(renderAdCard).join("");
+  }
+  // Mise à jour du compteur dans la stat-grid en haut
+  const favStat = document.querySelectorAll(".stat .n")[1];
+  if (favStat) favStat.textContent = favAds.length;
+}
+
+
+async function applySessionToProfile() {
+  let s = getSession();
+  if (!s) return;
+  // Hydrate la session locale avec les données Supabase à jour
+  if (window.VP_SB) {
+    try {
+      const pr = await VP_SB.getMyProfile();
+      if (pr) {
+        const patch = {};
+        if (pr.prenom != null) patch.prenom = pr.prenom;
+        if (pr.nom != null) patch.nom = pr.nom;
+        if (pr.raison_sociale != null) patch.raison = pr.raison_sociale;
+        if (pr.telephone != null) patch.telephone = pr.telephone;
+        if (pr.pack != null) patch.pack = pr.pack;
+        if (pr.pack_expires_at != null) patch.pack_expires_at = pr.pack_expires_at;
+        // Met à jour la session locale silencieusement
+        Object.assign(s, patch);
+        try { loginAs(s); } catch (e) {}
+        // Met aussi à jour le compte enregistré
+        const accs = loadAccounts();
+        const acc = accs.find(a => (a.email||"").toLowerCase() === (s.email||"").toLowerCase());
+        if (acc) {
+          if (pr.prenom != null) acc.prenom = pr.prenom;
+          if (pr.nom != null) acc.nom = pr.nom;
+          if (pr.raison_sociale != null) acc.raison = pr.raison_sociale;
+          if (pr.telephone != null) acc.telephone = pr.telephone;
+          saveAccounts(accs);
+        }
+      }
+    } catch (e) { console.warn("applySessionToProfile hydrate:", e); }
+  }
+  const fullName = (s.prenom || "") + (s.nom ? " " + s.nom : "");
+  $("#prof-name").textContent = fullName || "Mon compte";
+  const initials = ((s.prenom||"M")[0] + (s.nom ? s.nom[0] : (s.prenom && s.prenom[1] ? s.prenom[1] : ""))).toUpperCase();
+  $("#prof-avatar").textContent = initials;
+  if (s.type === "pro") {
+    const packLabel = {gratuit:"Gratuit",premium:"Premium",performance:"Performance"}[s.pack] || s.pack;
+    $("#prof-type").textContent = "Professionnel · Pack " + packLabel + " · Membre VoiturePrepa.fr";
+  } else {
+    $("#prof-type").textContent = "Particulier · Membre VoiturePrepa.fr";
+  }
+}
+
+// ---------- Paramètres du compte ----------
+async function openSettings() {
+  const s = getSession();
+  if (!s) return;
+  const acc = findAccount(s.email || "");
+  const isPro = s.type === "pro";
+  $("#set-part-fields").style.display = isPro ? "none" : "block";
+  $("#set-pro-fields").style.display = isPro ? "block" : "none";
+  $("#set-prenom").value = (acc && acc.prenom) || s.prenom || "";
+  $("#set-nom").value = (acc && acc.nom) || s.nom || "";
+  $("#set-raison").value = (acc && acc.raison) || s.raison || s.prenom || "";
+  $("#set-tel").value = (acc && acc.telephone) || s.telephone || "";
+  $("#set-email").value = s.email || "(connexion via réseau social)";
+  $("#set-pwd").value = "";
+  $("#set-pwd2").value = "";
+  $("#settings-modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  if (window.VP_SB) {
+    try {
+      const pr = await VP_SB.getMyProfile();
+      if (pr) {
+        if (pr.prenom != null) $("#set-prenom").value = pr.prenom;
+        if (pr.nom != null) $("#set-nom").value = pr.nom;
+        if (pr.raison_sociale != null) $("#set-raison").value = pr.raison_sociale;
+        if (pr.telephone != null) $("#set-tel").value = pr.telephone;
+      }
+    } catch (e) { console.warn("openSettings refresh:", e); }
+  }
+}
+function closeSettings() {
+  $("#settings-modal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+async function saveSettings() {
+  const s = getSession();
+  if (!s) return;
+  const isPro = s.type === "pro";
+  const prenom = $("#set-prenom").value.trim();
+  const nom    = $("#set-nom").value.trim();
+  const raison = $("#set-raison").value.trim();
+  const tel    = $("#set-tel").value.trim();
+  const pwd    = $("#set-pwd").value;
+  const pwd2   = $("#set-pwd2").value;
+
+  if (isPro && !raison) { alert("Veuillez indiquer la raison sociale."); return; }
+  if (!isPro && !prenom) { alert("Veuillez indiquer votre prénom."); return; }
+
+  let newPwd = null;
+  if (pwd || pwd2) {
+    if (pwd !== pwd2) { alert("Les deux mots de passe ne sont pas identiques."); return; }
+    if (!validatePassword(pwd)) {
+      alert("Le mot de passe doit contenir au moins 8 caractères, 1 majuscule et 1 chiffre.");
+      return;
+    }
+    newPwd = pwd;
+  }
+
+  // Persistance Supabase (source de vérité serveur)
+  if (window.VP_SB) {
+    try {
+      const patch = { telephone: tel };
+      if (isPro) patch.raison_sociale = raison;
+      else { patch.prenom = prenom; patch.nom = nom; }
+      await VP_SB.updateMyProfile(patch);
+      if (newPwd && VP_SB.client && VP_SB.client.auth) {
+        const { error: pwErr } = await VP_SB.client.auth.updateUser({ password: newPwd });
+        if (pwErr) { alert("Mise à jour du mot de passe échouée : " + pwErr.message); return; }
+      }
+    } catch (e) {
+      console.error("saveSettings Supabase:", e);
+      alert("Erreur d'enregistrement : " + (e.message || e));
+      return;
+    }
+  }
+
+  // Cache local (cohérence immédiate de l'UI)
+  const accounts = loadAccounts();
+  const acc = accounts.find(a => (a.email||"").toLowerCase() === (s.email||"").toLowerCase());
+  if (acc) {
+    if (isPro) { acc.raison = raison; acc.prenom = raison; }
+    else { acc.prenom = prenom; acc.nom = nom; }
+    acc.telephone = tel;
+    if (newPwd) acc.password = newPwd;
+    saveAccounts(accounts);
+  }
+  if (isPro) { s.raison = raison; s.prenom = raison; }
+  else { s.prenom = prenom; s.nom = nom; }
+  s.telephone = tel;
+  loginAs(s);
+
+  applySessionToProfile();
+  closeSettings();
+  alert("✅ Vos paramètres ont été enregistrés." + (newPwd ? "\nVotre mot de passe a été modifié." : ""));
+}
+
+// ---------- Édition rapide d'une annonce ----------
+let _editAdId = null;
+let _editPhotos = [];   // photos de l'annonce en cours d'édition (Data URLs)
+let _editDocs = {};     // documents joints pour activer la vente en ligne
+function openEditAd(id) {
+  const ad = loadUserAds().find(a => String(a.id) === String(id));
+  if (!ad) { alert("Annonce introuvable."); return; }
+  _editAdId = id;
+  $("#edit-titre").value = ad.titre || "";
+  $("#edit-prix").value = ad.prix || "";
+  $("#edit-desc").value = ad.description || "";
+  // Offres / packs déjà souscrits : conservés tels quels après modification
+  const opts = ad.options || [];
+  $("#edit-offers").innerHTML = opts.length
+    ? `<div class="alert alert-success" style="font-size:13px;">🎯 Offre(s) souscrite(s) <strong>conservée(s)</strong> sur l'annonce : ${opts.join(" · ")}<br>Aucun nouveau paiement n'est nécessaire.</div>`
+    : `<div class="alert alert-info" style="font-size:13px;">Aucune offre souscrite sur cette annonce.</div>`;
+  // Photos réelles de l'annonce — modifiables (le Pack Photos+ débloque jusqu'à 10 photos)
+  _editPhotos = (ad.photos || []).slice();
+  renderEditPhotos();
+  _editDocs = {};
+  renderEditVenteBlock(ad);
+  $("#edit-ad-modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeEditAd() {
+  $("#edit-ad-modal").classList.remove("open");
+  document.body.style.overflow = "";
+  _editAdId = null;
+  _editPhotos = [];
+  _editDocs = {};
+}
+
+// ----- Gestion des photos dans la modale d'édition -----
+function renderEditPhotos() {
+  const ad = loadUserAds().find(a => String(a.id) === String(_editAdId));
+  const limit = ad ? adPhotoLimit(ad) : 3;
+  const grid = $("#edit-photos-grid");
+  if (grid) {
+    grid.innerHTML = _editPhotos.map((src, i) => `
+      <div style="position:relative;width:80px;height:60px;border-radius:6px;background:#ddd center/cover no-repeat;background-image:url('${src}');">
+        <button type="button" onclick="removeEditPhoto(${i})" title="Retirer cette photo"
+          style="position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;border:none;background:var(--red);color:#fff;cursor:pointer;font-size:11px;line-height:1;">✕</button>
+        ${i === 0 ? '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;text-align:center;padding:1px 0;">Principale</span>' : ''}
+      </div>`).join("");
+  }
+  const info = $("#edit-photo-info");
+  if (info) {
+    const sess = getSession();
+    const hasPhotosPack = ((ad && ad.options) || []).some(o => o.indexOf("Pack Photos+") === 0);
+    let note;
+    if (hasPhotosPack) note = " — Pack Photos+ actif.";
+    else if (sess && sess.type === "pro" && limit > 3) note = " — limite incluse dans votre formule Pro.";
+    else if (limit > 3) note = "";
+    else note = " — souscrivez le Pack Photos+ pour en ajouter plus.";
+    info.textContent = _editPhotos.length + " / " + limit + " photo(s)" + note;
+  }
+  const addBtn = $("#edit-photo-add");
+  if (addBtn) addBtn.style.display = (_editPhotos.length >= limit) ? "none" : "";
+}
+// Redimensionne une image avant stockage (évite de saturer le stockage du navigateur)
+function resizeImage(file, maxDim, cb) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL("image/jpeg", 0.75));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addEditPhotos(files) {
+  const ad = loadUserAds().find(a => String(a.id) === String(_editAdId));
+  const limit = ad ? adPhotoLimit(ad) : 3;
+  const list = Array.from(files || []);
+  const inp = document.getElementById("edit-photo-input");
+  if (inp) inp.value = "";   // permet de re-sélectionner le même fichier
+  let i = 0;
+  (function next() {
+    if (i >= list.length || _editPhotos.length >= limit) {
+      renderEditPhotos();
+      if (i < list.length) alert("Limite de " + limit + " photos atteinte. Les photos en trop n'ont pas été ajoutées.");
+      return;
+    }
+    const f = list[i++];
+    if (!f || !/^image\//.test(f.type)) { next(); return; }
+    resizeImage(f, 1400, dataUrl => { _editPhotos.push(dataUrl); next(); });
+  })();
+}
+function removeEditPhoto(idx) {
+  _editPhotos.splice(idx, 1);
+  renderEditPhotos();
+}
+// ----- Vente en ligne sécurisée : activation depuis l'édition d'annonce -----
+function renderEditVenteBlock(ad) {
+  const box = $("#edit-vente-block");
+  if (!box) return;
+  if (ad.vente_en_ligne) {
+    box.innerHTML = '<div class="alert alert-success" style="font-size:13px;margin:0;">'
+      + '🔒 Vente en ligne sécurisée <strong>déjà activée</strong> sur cette annonce.</div>';
+    return;
+  }
+  const isCar = ad.type === "voiture";
+  const commission = isCar ? "3 %" : "10 %";
+  const docs = isCar ? `
+      <div id="edit-vente-docs" style="display:none;margin-top:10px;">
+        <div class="alert alert-warning" style="font-size:12.5px;">
+          📎 Documents obligatoires pour la vente sécurisée d'un véhicule — joignez les 3 pièces.
+          Elles ne sont jamais affichées publiquement (accès administrateur uniquement).
+        </div>
+        <label class="form-label" style="font-size:12px;font-weight:600;display:block;">Contrôle Technique (moins de 6 mois) *</label>
+        <input type="file" id="edit-doc-ct" accept="image/*,application/pdf" style="width:100%;margin-bottom:8px;" onchange="readEditDoc('ct',this)">
+        <label class="form-label" style="font-size:12px;font-weight:600;display:block;">Pièce d'identité *</label>
+        <input type="file" id="edit-doc-id" accept="image/*,application/pdf" style="width:100%;margin-bottom:8px;" onchange="readEditDoc('id',this)">
+        <label class="form-label" style="font-size:12px;font-weight:600;display:block;">Carte grise *</label>
+        <input type="file" id="edit-doc-cg" accept="image/*,application/pdf" style="width:100%;" onchange="readEditDoc('cg',this)">
+      </div>` : "";
+  box.innerHTML = `
+    <div style="background:#fff;border:2px solid var(--orange);border-radius:10px;padding:14px;">
+      <label class="checkbox-line" style="align-items:flex-start;font-size:14px;cursor:pointer;">
+        <input type="checkbox" id="edit-opt-vente" onchange="toggleEditVente(this.checked)" style="margin-top:3px;">
+        <div>
+          <strong>🔒 Activer la vente en ligne sécurisée via la plateforme</strong>
+          <p style="font-size:12.5px;color:var(--text-muted);margin:4px 0 0;font-weight:normal;">
+            Paiement bloqué par dépôt fiduciaire jusqu'à la livraison. Commission de ${commission} sur la vente.
+            ${isCar
+              ? "Les 3 documents ci-dessous vous seront demandés."
+              : "Aucun document n'est requis pour une pièce détachée."}
+          </p>
+        </div>
+      </label>
+      ${docs}
+    </div>`;
+}
+function toggleEditVente(on) {
+  const d = $("#edit-vente-docs");
+  if (d) d.style.display = on ? "block" : "none";
+}
+function readEditDoc(key, inp) {
+  const f = inp.files && inp.files[0];
+  if (!f) { delete _editDocs[key]; return; }
+  if (f.type && f.type.indexOf("image/") === 0) {
+    resizeImage(f, 1600, dataUrl => {
+      _editDocs[key] = { name: f.name, type: f.type, data: dataUrl };
+    });
+  } else {
+    const r = new FileReader();
+    r.onload = e => { _editDocs[key] = { name: f.name, type: f.type || "application/octet-stream", data: e.target.result }; };
+    r.readAsDataURL(f);
+  }
+}
+
+function saveEditAd() {
+  if (_editAdId == null) return;
+  const titre = $("#edit-titre").value.trim();
+  const prix  = parseFloat($("#edit-prix").value) || 0;
+  const desc  = $("#edit-desc").value.trim();
+  if (!titre) { alert("Le titre de l'annonce ne peut pas être vide."); return; }
+  if (prix <= 0) { alert("Veuillez indiquer un prix valide."); return; }
+  // L'annonce modifiée repasse en validation — les offres souscrites sont conservées
+  const ad = loadUserAds().find(a => String(a.id) === String(_editAdId));
+  const prevStatus = ad ? getAdStatus(ad) : "";
+  const patch = {
+    titre: titre, prix: prix, description: desc,
+    photos: _editPhotos.slice(),
+    img: _editPhotos[0] || noPhotoPlaceholder(),
+    status: "pending", reject_reason: "",
+    options: (ad && ad.options) || [],   // offres / packs conservés
+    badges:  (ad && ad.badges)  || [],   // étiquettes conservées
+    was_modified: true,                  // annonce existante modifiée par le vendeur
+    modified_at: new Date().toISOString(),
+    previous_status: prevStatus
+  };
+  // Vente en ligne sécurisée : activable depuis l'édition si non choisie à la création
+  const venteChk = document.getElementById("edit-opt-vente");
+  let venteActivee = false;
+  if (ad && !ad.vente_en_ligne && venteChk && venteChk.checked) {
+    if (ad.type === "voiture") {
+      if (!_editDocs.ct || !_editDocs.id || !_editDocs.cg) {
+        alert("Pour activer la vente en ligne sécurisée d'un véhicule, joignez les 3 documents : "
+            + "Contrôle Technique (moins de 6 mois), pièce d'identité et carte grise.");
+        return;
+      }
+      patch.documents = {
+        controle_technique: _editDocs.ct,
+        piece_identite: _editDocs.id,
+        carte_grise: _editDocs.cg
+      };
+    }
+    patch.vente_en_ligne = true;
+    venteActivee = true;
+  }
+  // Récapitulatif avant / après, pour l'administrateur qui doit revalider
+  const afterVente = patch.vente_en_ligne ? true : !!(ad && ad.vente_en_ligne);
+  const changes = [];
+  if (ad) {
+    if ((ad.titre || "") !== titre)
+      changes.push({ champ: "Titre", avant: ad.titre || "(vide)", apres: titre });
+    if ((ad.prix || 0) !== prix)
+      changes.push({ champ: "Prix",
+        avant: (ad.prix || 0).toLocaleString('fr-FR') + " €",
+        apres: prix.toLocaleString('fr-FR') + " €" });
+    if ((ad.description || "") !== desc)
+      changes.push({ champ: "Description", avant: ad.description || "(vide)", apres: desc || "(vide)" });
+    const nbAvant = (ad.photos || []).length, nbApres = _editPhotos.length;
+    if (nbAvant !== nbApres)
+      changes.push({ champ: "Photos", avant: nbAvant + " photo(s)", apres: nbApres + " photo(s)" });
+    if (!!ad.vente_en_ligne !== afterVente)
+      changes.push({ champ: "Vente en ligne sécurisée",
+        avant: ad.vente_en_ligne ? "Activée" : "Non activée",
+        apres: afterVente ? "Activée" : "Non activée" });
+  }
+  patch.modif_changes = changes;
+  if (!updateUserAd(_editAdId, patch)) {
+    alert("⚠️ L'enregistrement a échoué : l'espace de stockage du navigateur est saturé.\n\n"
+        + "Essayez de réduire le nombre de photos de l'annonce, puis réenregistrez.");
+    return;
+  }
+  closeEditAd();
+  const keptOffers = (ad && ad.options && ad.options.length)
+    ? "\n\nVos offres souscrites (" + ad.options.join(", ") + ") sont conservées."
+    : "";
+  const venteNote = venteActivee
+    ? "\n\n🔒 La vente en ligne sécurisée a été activée sur cette annonce."
+    : "";
+  alert("✅ Annonce modifiée.\n\nElle a été renvoyée en validation par un administrateur — " +
+        "elle sera de nouveau publiée après approbation." + keptOffers + venteNote);
+  refreshDashboard();
+}
+
+function initPage() {
+  // 🔒 Le tableau de bord nécessite une connexion
+  if (!isLoggedIn()) {
+    document.querySelector(".container").innerHTML = `
+      <div style="text-align:center;padding:50px 20px;background:#fff;border-radius:8px;box-shadow:var(--shadow);margin:30px auto;max-width:500px;">
+        <div style="font-size:52px;">🔒</div>
+        <h2 style="margin:10px 0;">Connexion requise</h2>
+        <p class="text-muted" style="margin-bottom:20px;">
+          Connectez-vous pour accéder à votre tableau de bord : annonces, favoris, messagerie et recherches sauvegardées.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <a href="connexion.html" class="btn btn-primary btn-lg">Se connecter</a>
+          <a href="inscription.html" class="btn btn-outline btn-lg">Créer un compte gratuit</a>
+        </div>
+      </div>`;
+    return;
+  }
+  // Chaque section est rendue de façon isolée : si l'une échoue,
+  // les autres s'affichent et surtout l'onglet ?tab= reste honoré.
+  [applySessionToProfile, refreshDashboard, refreshFavorites,
+   renderInspectionsTab, renderReviewsTab, renderTransactionsTab,
+   renderSearchesTab, renderMessagesTab].forEach(fn => {
+    try { fn(); }
+    catch (e) { console.error("Profil — échec du rendu de " + fn.name + " :", e); }
+  });
+  // Conversation ciblée par ?thread= (venant de « Contacter le vendeur »)
+  const wantThread = getParam("thread");
+  if (wantThread) { try { openThread(wantThread); } catch (e) { console.error(e); } }
+  // Onglet à afficher d'emblée selon ?tab= (ex. ?tab=messages depuis l'en-tête)
+  const t = getParam("tab");
+  if (t && $("[data-tab='"+t+"']")) switchTab(t);
+}
+
+// ---------- Onglet Recherches sauvegardées ----------
+function renderSearchesTab() {
+  const box = $("#searches-list");
+  if (!box) return;
+  const list = getSession() ? loadSearches() : [];
+  // Met à jour le compteur dans la grille de stats (4e case)
+  const stat = document.querySelectorAll(".stat .n")[3];
+  if (stat) stat.textContent = list.length;
+  if (!list.length) {
+    box.innerHTML = `<div class="alert alert-info">Aucune recherche sauvegardée pour le moment.
+      Lancez une recherche depuis la page <a href="annonces.html">Annonces</a>, appliquez vos filtres,
+      puis cliquez sur « 💾 Sauvegarder ma recherche ».</div>`;
+    return;
+  }
+  box.innerHTML = list.map(s => `<div class="saved-row">
+    <div>
+      <strong>${s.label || "Recherche"}</strong>
+      <div class="text-muted" style="font-size:13px;">
+        ${s.type === "piece" ? "🔧 Pièces" : "🏎️ Voitures"} · enregistrée le ${formatAdDate(s.created_at)}
+      </div>
+    </div>
+    <div>
+      <a href="${savedSearchUrl(s)}" class="btn btn-outline btn-sm">Relancer</a>
+      <button class="btn btn-ghost btn-sm" onclick="removeSavedSearch('${s.id}')" title="Supprimer">🗑</button>
+    </div>
+  </div>`).join("");
+}
+
+function removeSavedSearch(id) {
+  if (!confirm("Supprimer cette recherche sauvegardée ?")) return;
+  deleteSavedSearch(id);
+  renderSearchesTab();
+}
+
+// ---------- Onglet Messagerie ----------
+let _activeThreadId = null;
+
+function msgInitials(name) {
+  return (name || "?").split(/\s+/).filter(Boolean)
+    .map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
+}
+function msgTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso), now = new Date();
+  if (isNaN(d.getTime())) return "";
+  return d.toDateString() === now.toDateString()
+    ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+}
+function msgEsc(str) {
+  return (str || "").replace(/[&<>"]/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+}
+
+function renderMessagesTab() {
+  const listBox = $("#msg-thread-list");
+  const convBox = $("#msg-conversation");
+  if (!listBox || !convBox) return;
+  const s = getSession();
+  const email = s ? (s.email || "").toLowerCase().trim() : "";
+  let threads = email ? threadsForUser(email) : [];
+
+  if (!threads.length) {
+    listBox.innerHTML = `<div class="msg-empty">Aucune conversation pour le moment.</div>`;
+    convBox.innerHTML = `<div class="msg-empty">Vos échanges avec les acheteurs et vendeurs apparaîtront ici.<br>
+      Contactez un vendeur depuis une annonce pour démarrer un échange.</div>`;
+    const stat0 = document.querySelectorAll(".stat .n")[2];
+    if (stat0) stat0.textContent = "0";
+    const badge0 = document.getElementById("msg-tab-badge");
+    if (badge0) badge0.innerHTML = "";
+    return;
+  }
+
+  // Conversation active par défaut : la plus récente
+  if (!_activeThreadId || !threads.some(t => t.id === _activeThreadId)) {
+    _activeThreadId = threads[0].id;
+  }
+
+  // Compteurs : stat « Messages non lus » + pastille de l'onglet
+  const totalUnread = unreadMessagesTotal(email);
+  const stat = document.querySelectorAll(".stat .n")[2];
+  if (stat) stat.textContent = totalUnread;
+  const badge = document.getElementById("msg-tab-badge");
+  if (badge) badge.innerHTML = totalUnread
+    ? `<span style="background:var(--orange);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${totalUnread}</span>`
+    : "";
+
+  listBox.innerHTML = threads.map(t => {
+    const iAmBuyer = _emailEq(t.buyer_email, email);
+    const isContact = String(t.ad_id || "").startsWith("contact-");
+    const otherName = iAmBuyer ? t.seller_name : t.buyer_name;
+    const otherRole = isContact
+      ? (iAmBuyer ? "Support" : "Visiteur")
+      : (iAmBuyer ? "Vendeur" : "Acheteur");
+    const last = t.messages[t.messages.length - 1];
+    const unread = threadUnreadCount(t, email);
+    const preview = last
+      ? (_emailEq(last.from_email, email) ? "Vous : " : "") + last.text
+      : "Nouvelle conversation";
+    return `<div class="msg-thread ${t.id === _activeThreadId ? 'active' : ''}" onclick="openThread('${t.id}')">
+      <div class="av">${msgInitials(otherName)}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="who">${msgEsc(otherName)} <span class="text-muted" style="font-weight:400;font-size:11px;">· ${otherRole}</span></div>
+        <div class="sub">${msgEsc(t.ad_titre)}</div>
+        <div class="sub">${msgEsc(preview)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div class="text-muted" style="font-size:11px;">${last ? msgTime(last.at) : ""}</div>
+        ${unread ? `<div class="unread" style="margin-top:4px;">${unread}</div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+
+  renderConversation();
+}
+
+function openThread(id) {
+  _activeThreadId = id;
+  const s = getSession();
+  if (s) markThreadRead(id, s.email);
+  renderMessagesTab();
+}
+
+function renderConversation() {
+  const box = $("#msg-conversation");
+  if (!box) return;
+  const s = getSession();
+  const email = s ? (s.email || "").toLowerCase().trim() : "";
+  const t = getThread(_activeThreadId);
+  if (!t) { box.innerHTML = `<div class="msg-empty">Sélectionnez une conversation.</div>`; return; }
+  const iAmBuyer = _emailEq(t.buyer_email, email);
+  const isContact = String(t.ad_id || "").startsWith("contact-");
+  const otherName = iAmBuyer ? t.seller_name : t.buyer_name;
+  const otherRole = isContact
+    ? (iAmBuyer ? "Support" : "Visiteur")
+    : (iAmBuyer ? "Vendeur" : "Acheteur");
+  const bubbles = (t.messages || []).map(m => {
+    const mine = _emailEq(m.from_email, email);
+    return `<div class="msg-bubble ${mine ? 'mine' : 'theirs'}">
+      ${msgEsc(m.text)}
+      <span class="meta">${mine ? "Vous" : msgEsc(m.from_name)} · ${msgTime(m.at)}</span>
+    </div>`;
+  }).join("");
+  box.innerHTML = `
+    <div class="msg-conv-head">
+      <strong>${msgEsc(otherName)}</strong>
+      <span class="text-muted" style="font-size:12px;">· ${otherRole}</span><br>
+      ${isContact
+        ? `<span class="text-muted" style="font-size:13px;">✉️ ${msgEsc(t.ad_titre)}</span>`
+        : `<a href="annonce.html?id=${t.ad_id}" style="font-size:13px;">📄 ${msgEsc(t.ad_titre)}</a>`}
+    </div>
+    <div class="msg-body" id="msg-body">
+      ${bubbles || `<div class="msg-empty">Aucun message. Écrivez le premier message ci-dessous.</div>`}
+    </div>
+    <div class="msg-compose">
+      <textarea id="msg-input" class="form-input" rows="2" placeholder="Votre message..."
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+      <button class="btn btn-primary" onclick="sendMessage()">Envoyer</button>
+    </div>`;
+  const body = document.getElementById("msg-body");
+  if (body) body.scrollTop = body.scrollHeight;
+}
+
+function sendMessage() {
+  const s = getSession();
+  if (!s) { alert("Veuillez vous connecter pour envoyer un message."); return; }
+  const input = document.getElementById("msg-input");
+  const text = input ? input.value.trim() : "";
+  if (!text) return;
+  addThreadMessage(_activeThreadId, s.email, (s.prenom || s.raison) || "Membre", text);
+  renderMessagesTab();
+}
+
+// ---------- Onglet Avis reçus ----------
+function renderReviewsTab() {
+  const box = $("#avis-recus");
+  if (!box) return;
+  const s = getSession();
+  const revs = s ? reviewsForSeller(s.email) : [];
+  const rating = s ? sellerRating(s.email) : null;
+  // Met à jour la note dans l'en-tête du profil
+  const hdr = $("#prof-stars");
+  if (hdr) {
+    hdr.innerHTML = rating
+      ? `<span style="color:var(--gold);">${starsHtml(rating.avg)}</span> <span class="text-muted" style="font-size:13px;">(${rating.count} avis · note ${rating.avg}/5)</span>`
+      : `<span class="text-muted" style="font-size:13px;">Pas encore d'avis</span>`;
+  }
+  if (!revs.length) {
+    box.innerHTML = `<div class="alert alert-info">Vous n'avez pas encore reçu d'avis. Les avis de vos acheteurs apparaîtront ici après vos ventes.</div>`;
+    return;
+  }
+  box.innerHTML =
+    `<div style="font-size:15px;margin-bottom:10px;">
+      <span style="color:var(--gold);font-size:22px;">${starsHtml(rating.avg)}</span>
+      <strong>${rating.avg}/5</strong> · ${rating.count} avis</div>`
+    + revs.map(r => `<div style="padding:14px;border-bottom:1px solid var(--border);">
+        <div class="stars" style="color:var(--gold);">${starsHtml(r.note)}</div>
+        <strong>${r.buyer_name || "Acheteur"}</strong>
+        <span class="text-muted" style="font-size:12px;">· ${formatAdDate(r.created_at)}</span>
+        ${r.commentaire ? `<p style="margin-top:6px;">${r.commentaire}</p>` : ""}
+      </div>`).join("");
+}
+
+// ---------- Onglet Inspections : suivi et réponse aux créneaux ----------
+// Formate une date "2026-05-25" → "25/05/2026"
+function fmtInspDate(d) {
+  if (!d) return "—";
+  const p = String(d).split("-");
+  return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d;
+}
+
+function renderInspectionsTab() {
+  const box = $("#mes-inspections");
+  if (!box) return;
+  const mine = loadMyInspections();
+
+  // Pastille sur l'onglet : nombre de demandes avec des créneaux à valider
+  const badge = document.getElementById("insp-tab-badge");
+  const toAnswer = mine.filter(r => r.status === "proposed").length;
+  if (badge) badge.innerHTML = toAnswer
+    ? `<span style="background:var(--orange);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${toAnswer}</span>`
+    : "";
+
+  if (!mine.length) {
+    box.innerHTML = `<div class="alert alert-info">Vous n'avez pas encore demandé d'inspection.
+      Vous pouvez en souscrire une lors du dépôt d'une annonce ou depuis la page
+      <a href="inspection.html">Inspection véhicule</a>.</div>`;
+    return;
+  }
+
+  box.innerHTML = mine.map(r => {
+    let statusTag, body;
+    if (r.status === "pending") {
+      statusTag = `<span class="insp-badge wait">⏳ En attente</span>`;
+      body = `<p class="text-muted" style="font-size:13px;">Votre demande a bien été transmise.
+        L'administrateur vous proposera prochainement un ou plusieurs créneaux de rendez-vous
+        selon les disponibilités du garage partenaire.</p>`;
+    } else if (r.status === "proposed") {
+      statusTag = `<span class="insp-badge propose">📅 Créneaux proposés</span>`;
+      const slots = (r.creneaux || []).map((c, i) => `
+        <div class="insp-slot">
+          <div><strong>📅 ${fmtInspDate(c.date)} à ${c.heure || "—"}</strong><br>
+            <span class="text-muted" style="font-size:13px;">🛠️ ${c.garage || "—"}</span></div>
+          <button class="btn btn-primary btn-sm" onclick="acceptCreneau('${r.id}',${i})">✓ Accepter ce créneau</button>
+        </div>`).join("");
+      body = `<p style="font-size:13px;margin-bottom:8px;">Choisissez le créneau qui vous convient :</p>
+        ${slots}
+        <button class="btn btn-outline btn-sm" style="margin-top:4px;" onclick="declineCreneaux('${r.id}')">✗ Aucun créneau ne me convient</button>
+        <p class="text-muted" style="font-size:12px;margin-top:8px;">⚠️ En acceptant un créneau, vous vous engagez
+        à vous présenter à l'heure. Toute séance annulée moins de 48 h à l'avance ou non honorée est
+        facturée à hauteur de 30 % du tarif initial.</p>`;
+    } else if (r.status === "confirmed") {
+      statusTag = `<span class="insp-badge ok">✓ Rendez-vous confirmé</span>`;
+      const c = (r.creneaux || [])[r.chosen] || {};
+      body = `<div class="insp-confirmed">
+        ✅ <strong>Votre rendez-vous d'inspection :</strong><br>
+        📅 ${fmtInspDate(c.date)} à ${c.heure || "—"}<br>🛠️ ${c.garage || "—"}
+        <div class="text-muted" style="font-size:12px;margin-top:6px;">Pensez à apporter la carte grise du véhicule.
+        Annulation moins de 48 h à l'avance ou absence : 30 % du tarif facturé.</div>
+      </div>`;
+    } else if (r.status === "declined") {
+      statusTag = `<span class="insp-badge wait">↩️ Nouvelle proposition attendue</span>`;
+      body = `<p class="text-muted" style="font-size:13px;">Vous avez refusé les créneaux proposés.
+        L'administrateur vous en proposera de nouveaux prochainement.</p>`;
+    } else {
+      statusTag = `<span class="insp-badge refused">Demande refusée</span>`;
+      body = r.refus_motif
+        ? `<div style="background:#fdecea;border:1px solid #f5c2bd;border-radius:8px;padding:10px 12px;font-size:13px;color:#a02018;">
+            🚫 <strong>Motif du refus :</strong> ${r.refus_motif}</div>`
+        : `<p class="text-muted" style="font-size:13px;">Cette demande d'inspection n'a pas pu être traitée.
+            Contactez le support pour plus d'informations.</p>`;
+    }
+    return `<div class="insp-block">
+      <div class="insp-block-head">
+        <div>
+          <strong>${r.vehicule}</strong><br>
+          <span class="text-muted" style="font-size:13px;">Inspection ${r.niveau} · ${r.formule} · ${r.prix} €${r.garage ? " · 🛠️ " + r.garage : ""}${r.paid ? " · 💳 Payée" : ""}</span>
+        </div>
+        ${statusTag}
+      </div>
+      ${body}
+      ${sellerReportHtml(r)}
+    </div>`;
+  }).join("");
+}
+
+// Bloc « rapport d'inspection » affiché au vendeur dans l'onglet Inspections
+function sellerReportHtml(r){
+  if (!(r.report && r.report.data)) return "";
+  const dt = new Date(r.report_at);
+  const when = isNaN(dt.getTime()) ? "" : " — transmis le " + dt.toLocaleDateString("fr-FR");
+  const fname = (r.report.name || "rapport-inspection").replace(/"/g,"");
+  return `<div style="background:#e8f7ee;border:1px solid #b6e3c8;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;">
+    📋 <strong>Rapport d'inspection disponible</strong>${when}<br>
+    <a href="${r.report.data}" download="${fname}">📄 Télécharger le rapport (${fname})</a>
+    ${r.badge_added
+      ? `<br><span style="color:#127a36;font-weight:600;">🎖️ Le badge Inspection ${r.niveau} a été ajouté à votre annonce.</span>`
+      : `<br><span class="text-muted">Votre badge Inspection ${r.niveau} sera ajouté à l'annonce après validation du rapport par VoiturePrepa.</span>`}
+  </div>`;
+}
+
+// Le vendeur accepte un créneau → réponse transmise à l'admin
+function acceptCreneau(id, idx) {
+  const insp = loadMyInspections().find(r => r.id === id);
+  const c = insp && insp.creneaux ? insp.creneaux[idx] : null;
+  if (!c) return;
+  if (!confirm("Confirmer le rendez-vous d'inspection le " + fmtInspDate(c.date) + " à " + (c.heure || "") + " ?\n\n" +
+    "En acceptant, vous vous engagez à vous présenter à l'heure. Toute séance annulée moins de 48 h " +
+    "à l'avance ou non honorée est facturée à hauteur de 30 % du tarif initial.")) return;
+  const _hist = (insp.responses || []).slice();
+  _hist.push({ action:"accepted", at:new Date().toISOString(),
+    creneaux:(insp.creneaux || []).slice(), chosen:idx, proposed_by:insp.proposed_by || "" });
+  updateInspection(id, { status:"confirmed", chosen:idx, seller_response_at:new Date().toISOString(), responses:_hist });
+  alert("✅ Rendez-vous confirmé. L'administrateur en est informé.");
+  renderInspectionsTab();
+}
+
+// Le vendeur refuse tous les créneaux → réponse transmise à l'admin
+function declineCreneaux(id) {
+  if (!confirm("Refuser tous les créneaux proposés ? L'administrateur vous en proposera de nouveaux.")) return;
+  const _insp = loadMyInspections().find(r => r.id === id) || {};
+  const _hist = (_insp.responses || []).slice();
+  _hist.push({ action:"declined", at:new Date().toISOString(),
+    creneaux:(_insp.creneaux || []).slice(), proposed_by:_insp.proposed_by || "" });
+  updateInspection(id, { status:"declined", seller_response_at:new Date().toISOString(), responses:_hist });
+  alert("Votre réponse a été transmise à l'administrateur. De nouveaux créneaux vous seront proposés.");
+  renderInspectionsTab();
+}
+
+// ---------- Onglet Transactions (achats & ventes) ----------
+function txnCard(t, role) {
+  const isCar = t.type === "voiture";
+  const statusMap = {
+    paid:     { txt: isCar ? "Fonds bloqués — paiement sécurisé" : "Achat en cours — en attente d'expédition", cls:"wait" },
+    shipped:  { txt:"Colis expédié — en attente de réception", cls:"propose" },
+    received: { txt:"Transaction terminée — fonds débloqués", cls:"ok" }
+  };
+  const st = statusMap[t.status] || statusMap.paid;
+  const other = role === "buyer"
+    ? "Vendeur : " + (t.seller_name || t.seller_email || "—")
+    : "Acheteur : " + (t.buyer_name || t.buyer_email || "—");
+
+  // Coordonnées dévoilées UNIQUEMENT car la transaction est engagée (paiement effectué)
+  const otherPhone = role === "buyer"
+    ? (t.seller_phone || userPhone(t.seller_email))
+    : (t.buyer_phone || userPhone(t.buyer_email));
+  const otherLabel = role === "buyer" ? "du vendeur" : "de l'acheteur";
+  const contactBlock = `<div style="margin-top:8px;background:#eef4fb;border:1px solid #cfe0f3;border-radius:7px;padding:7px 10px;font-size:12.5px;color:#2b4a6b;">
+      📞 Coordonnées ${otherLabel} (débloquées — transaction engagée) :
+      <strong>${otherPhone || "non renseignées — utilisez la messagerie sécurisée"}</strong>
+    </div>`;
+
+  // Récapitulatif des frais selon le rôle
+  const feesBits = [];
+  if (role === "buyer" && t.protection_fee != null)
+    feesBits.push("Protection acheteur : " + (t.protection_fee || 0).toLocaleString('fr-FR') + " €");
+  if (role === "seller" && t.commission != null)
+    feesBits.push("Commission vendeur " + (t.commission_rate || 0) + " % : −" + (t.commission || 0).toLocaleString('fr-FR') + " €");
+  const feesLine = feesBits.length
+    ? `<div class="text-muted" style="font-size:12px;margin-top:3px;">${feesBits.join(" · ")}</div>` : "";
+
+  let action = "";
+  if (isCar) {
+    // Voiture : pas d'expédition — l'acheteur débloque les fonds après la remise physique
+    if (role === "buyer" && t.status === "paid") {
+      action = `<div style="font-size:12.5px;color:#555;margin-bottom:6px;line-height:1.5;">
+          🔓 Débloquez les fonds <strong>uniquement</strong> après avoir récupéré le véhicule
+          et signé les papiers de vente. Cette action est définitive.
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="releaseFunds('${t.id}')">🔓 Débloquer les fonds au vendeur</button>`;
+    } else if (role === "seller" && t.status === "paid") {
+      action = `<span class="text-muted" style="font-size:13px;">⏳ Organisez la remise du véhicule avec l'acheteur. Les fonds vous seront débloqués après la signature des papiers de vente.</span>`;
+    } else if (role === "buyer" && t.status === "received") {
+      action = t.reviewed
+        ? `<span class="text-muted" style="font-size:13px;">✅ Vous avez évalué le vendeur. Merci !</span>`
+        : `<button class="btn btn-primary btn-sm" onclick="openReviewModal('${t.id}')">⭐ Évaluer le vendeur</button>`;
+    } else if (role === "seller" && t.status === "received") {
+      action = `<span class="text-muted" style="font-size:13px;">✅ Fonds reçus — transaction finalisée.</span>`;
+    }
+  } else {
+    // Pièce : expédition par le vendeur, puis réception confirmée par l'acheteur
+    if (role === "seller" && t.status === "paid") {
+      action = `<button class="btn btn-primary btn-sm" onclick="markShipped('${t.id}')">📦 Marquer comme expédié</button>`;
+    } else if (role === "buyer" && t.status === "shipped") {
+      action = `<button class="btn btn-primary btn-sm" onclick="markReceived('${t.id}')">🔓 Confirmer la réception et débloquer les fonds</button>`;
+    } else if (role === "buyer" && t.status === "paid") {
+      action = `<span class="text-muted" style="font-size:13px;">⏳ En attente de l'expédition par le vendeur.</span>`;
+    } else if (role === "seller" && t.status === "shipped") {
+      action = `<span class="text-muted" style="font-size:13px;">⏳ En attente de la confirmation de réception par l'acheteur.</span>`;
+    } else if (role === "buyer" && t.status === "received") {
+      action = t.reviewed
+        ? `<span class="text-muted" style="font-size:13px;">✅ Vous avez évalué le vendeur. Merci !</span>`
+        : `<button class="btn btn-primary btn-sm" onclick="openReviewModal('${t.id}')">⭐ Évaluer le vendeur</button>`;
+    } else if (role === "seller" && t.status === "received") {
+      action = `<span class="text-muted" style="font-size:13px;">✅ Transaction finalisée.</span>`;
+    }
+  }
+  return `<div class="insp-block">
+    <div class="insp-block-head">
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:62px;height:46px;border-radius:6px;background:#ddd center/cover no-repeat;background-image:url('${t.ad_img || ""}');"></div>
+        <div>
+          <strong>${t.ad_titre}</strong><br>
+          <span class="text-muted" style="font-size:13px;">${(t.prix || 0).toLocaleString('fr-FR')} € · ${other}</span>
+          ${feesLine}
+        </div>
+      </div>
+      <span class="insp-badge ${st.cls}">${st.txt}</span>
+    </div>
+    ${contactBlock}
+    ${action ? `<div style="margin-top:8px;">${action}</div>` : ""}
+  </div>`;
+}
+
+function renderTransactionsTab() {
+  const s = getSession();
+  const purchases = s ? myPurchases(s.email) : [];
+  const sales = s ? mySales(s.email) : [];
+  const pBox = $("#my-purchases"), sBox = $("#my-sales");
+  if (pBox) pBox.innerHTML = purchases.length
+    ? purchases.map(t => txnCard(t, "buyer")).join("")
+    : `<div class="alert alert-info">Aucun achat pour le moment.</div>`;
+  if (sBox) sBox.innerHTML = sales.length
+    ? sales.map(t => txnCard(t, "seller")).join("")
+    : `<div class="alert alert-info">Aucune vente pour le moment.</div>`;
+  // Pastille : transactions nécessitant une action de ma part
+  const badge = document.getElementById("txn-tab-badge");
+  const todo = purchases.filter(t => t.type === "voiture" && t.status === "paid").length
+             + purchases.filter(t => t.type !== "voiture" && t.status === "shipped").length
+             + sales.filter(t => t.type !== "voiture" && t.status === "paid").length
+             + purchases.filter(t => t.status === "received" && !t.reviewed).length;
+  if (badge) badge.innerHTML = todo
+    ? `<span style="background:var(--orange);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${todo}</span>`
+    : "";
+}
+
+// Le vendeur marque la transaction comme expédiée
+function markShipped(id) {
+  if (!confirm("Confirmer que le colis / véhicule a bien été expédié à l'acheteur ?")) return;
+  updateTransaction(id, { status:"shipped", shipped_at:new Date().toISOString() });
+  alert("📦 Expédition confirmée. L'acheteur pourra confirmer la réception.");
+  renderTransactionsTab();
+}
+// L'acheteur confirme la réception (pièce) → fonds débloqués, transaction terminée
+function markReceived(id) {
+  if (!confirm("Confirmer la bonne réception ?\n\nLe paiement sera alors débloqué au vendeur et la transaction clôturée.")) return;
+  updateTransaction(id, { status:"received", received_at:new Date().toISOString(), released_at:new Date().toISOString() });
+  alert("✅ Réception confirmée — fonds débloqués au vendeur. La transaction est terminée.\n\nVous pouvez maintenant évaluer le vendeur (note sur 5 étoiles).");
+  renderTransactionsTab();
+}
+
+// L'acheteur débloque les fonds (voiture) après la remise physique et la signature des papiers
+function releaseFunds(id) {
+  if (!confirm("Débloquer les fonds vers le vendeur ?\n\n" +
+    "À ne faire qu'une fois le véhicule récupéré et les papiers de vente signés.\n" +
+    "Cette action est définitive : l'argent sera versé au vendeur.")) return;
+  updateTransaction(id, {
+    status: "received",
+    released_at: new Date().toISOString(),
+    received_at: new Date().toISOString()
+  });
+  alert("✅ Fonds débloqués vers le vendeur. La transaction est terminée.\n\nVous pouvez maintenant évaluer le vendeur (note sur 5 étoiles).");
+  renderTransactionsTab();
+}
+
+// ---------- Avis sur le vendeur (après transaction finalisée) ----------
+let _revTxnId = null, _revNote = 0;
+
+function openReviewModal(txnId) {
+  const t = (loadTransactions() || []).find(x => String(x.id) === String(txnId));
+  if (!t) { alert("Transaction introuvable."); return; }
+  if (t.status !== "received") { alert("Vous pourrez évaluer le vendeur une fois la transaction finalisée."); return; }
+  if (t.reviewed) { alert("Vous avez déjà évalué ce vendeur. Merci !"); return; }
+  _revTxnId = txnId;
+  _revNote = 0;
+  const sellerEl = document.getElementById("rev-modal-seller");
+  if (sellerEl) sellerEl.textContent = "Vendeur : " + (t.seller_name || t.seller_email || "—")
+                + " · " + (t.ad_titre || "");
+  const cmt = document.getElementById("rev-modal-comment");
+  if (cmt) cmt.value = "";
+  document.querySelectorAll("#rev-modal-stars span").forEach(s => s.classList.remove("on"));
+  const m = document.getElementById("review-modal");
+  if (m) m.classList.add("open");
+}
+
+function closeReviewModal() {
+  const m = document.getElementById("review-modal");
+  if (m) m.classList.remove("open");
+  _revTxnId = null; _revNote = 0;
+}
+
+function setModalStars(n) {
+  _revNote = n;
+  document.querySelectorAll("#rev-modal-stars span").forEach(s => {
+    s.classList.toggle("on", Number(s.dataset.n) <= n);
+  });
+}
+
+function submitTxnReview() {
+  if (!_revNote) { alert("Veuillez attribuer une note de 1 à 5 étoiles."); return; }
+  const t = (loadTransactions() || []).find(x => String(x.id) === String(_revTxnId));
+  if (!t) { alert("Transaction introuvable."); return; }
+  const s = getSession();
+  const comment = (document.getElementById("rev-modal-comment") || {}).value || "";
+  addReview({
+    seller_email: t.seller_email || "",
+    ad_id: t.ad_id, ad_titre: t.ad_titre,
+    buyer_email: (s && s.email) || t.buyer_email || "",
+    buyer_name: (s && (s.prenom || s.raison)) || t.buyer_name || "Acheteur",
+    note: _revNote,
+    commentaire: comment.trim()
+  });
+  updateTransaction(_revTxnId, { reviewed:true, reviewed_at:new Date().toISOString() });
+  closeReviewModal();
+  alert("✅ Merci ! Votre avis sur le vendeur a été publié.");
+  renderTransactionsTab();
+  if (typeof renderReviewsTab === "function") renderReviewsTab();
+}
+
+function switchTab(t){
+  $$(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab===t));
+  $$(".tab-panel").forEach(p => p.classList.remove("active"));
+  $("#tab-"+t).classList.add("active");
+  // Ouvrir la messagerie marque comme lue la conversation affichée
+  if (t === "messages") {
+    const s = getSession();
+    if (s && _activeThreadId) markThreadRead(_activeThreadId, s.email);
+    renderMessagesTab();
+  }
+}
+</script>
+<
