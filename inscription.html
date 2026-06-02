@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inscription — VoiturePrepa.fr</title>
+<meta name="description" content="Créez votre compte particulier ou professionnel sur VoiturePrepa.fr pour acheter et vendre des voitures préparées.">
+<link rel="canonical" href="https://voitureprepa.fr/inscription.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VoiturePrepa.fr">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Inscription — VoiturePrepa.fr">
+<meta property="og:description" content="Créez votre compte particulier ou professionnel sur VoiturePrepa.fr pour acheter et vendre des voitures préparées.">
+<meta property="og:url" content="https://voitureprepa.fr/inscription.html">
+<meta property="og:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Inscription — VoiturePrepa.fr">
+<meta name="twitter:description" content="Créez votre compte particulier ou professionnel sur VoiturePrepa.fr pour acheter et vendre des voitures préparées.">
+<meta name="twitter:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<link rel="stylesheet" href="assets/css/style.css">
+<!-- SDK EmailJS : permet l'envoi réel de l'email de confirmation depuis le navigateur -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <div class="auth-card" style="max-width:560px;">
+    <h1>Créer un compte</h1>
+    <p class="sub">Inscription gratuite. Choisissez votre type de compte.</p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="part" onclick="switchTab('part')">👤 Particulier</button>
+      <button class="tab" data-tab="pro" onclick="switchTab('pro')">🏢 Professionnel</button>
+      <button class="tab" data-tab="garage" onclick="switchTab('garage')">🔧 Garage</button>
+    </div>
+
+    <!-- Particulier -->
+    <div id="tab-part" class="tab-panel active">
+      <form onsubmit="event.preventDefault();registerParticulier();">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Prénom <span class="req">*</span></label>
+            <input type="text" id="part-prenom" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom <span class="req">*</span></label>
+            <input type="text" id="part-nom" class="form-input" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email <span class="req">*</span></label>
+          <input type="email" id="part-email" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone <span class="req">*</span></label>
+          <input type="tel" id="part-tel" class="form-input" placeholder="06 12 34 56 78" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe <span class="req">*</span></label>
+          <input type="password" id="part-password" class="form-input" required>
+          <div class="form-hint">8 caractères minimum, 1 majuscule, 1 chiffre.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer le mot de passe <span class="req">*</span></label>
+          <input type="password" id="part-password2" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-line"><input type="checkbox" required> J'accepte les <a href="cgu.html">CGU/CGV</a> et la <a href="confidentialite.html">politique RGPD</a></label>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">Créer mon compte</button>
+      </form>
+    </div>
+
+    <!-- Professionnel -->
+    <div id="tab-pro" class="tab-panel">
+      <form onsubmit="event.preventDefault();registerPro();">
+        <div class="form-group">
+          <label class="form-label">Raison sociale <span class="req">*</span></label>
+          <input type="text" id="pro-raison" class="form-input" placeholder="Nom de l'entreprise" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">N° SIRET <span class="req">*</span></label>
+            <input type="text" id="pro-siret" class="form-input" placeholder="14 chiffres" inputmode="numeric" maxlength="17" required>
+            <div class="form-hint">Numéro SIRET de l'établissement — 14 chiffres. Un seul compte par SIRET.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">TVA intracom.</label>
+            <input type="text" class="form-input" placeholder="FR XX XXXXXXXXX">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Adresse <span class="req">*</span></label>
+          <input type="text" class="form-input" required>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">CP <span class="req">*</span></label>
+            <input type="text" class="form-input" required>
+          </div>
+          <div class="form-group" style="grid-column:span 2;">
+            <label class="form-label">Ville <span class="req">*</span></label>
+            <input type="text" class="form-input" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email pro <span class="req">*</span></label>
+            <input type="email" id="pro-email" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone pro <span class="req">*</span></label>
+            <input type="tel" id="pro-tel" class="form-input" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Logo de l'entreprise</label>
+          <input type="file" class="form-input" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe <span class="req">*</span></label>
+          <input type="password" id="pro-password" class="form-input" required>
+          <div class="form-hint">8 caractères minimum, 1 majuscule, 1 chiffre.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer le mot de passe <span class="req">*</span></label>
+          <input type="password" id="pro-password2" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Formule d'abonnement <span class="req">*</span></label>
+          <select id="pro-pack" class="form-select">
+            <option value="gratuit" data-settings='{"prix":"pack_gratuit_prix","max":"pack_gratuit_max","duree":"pack_gratuit_duree"}' data-format="Pack Gratuit — {prix} €/an · {max} annonces max · {duree} mois en ligne">Pack Gratuit — 0 €/an · 3 annonces max · 3 mois en ligne</option>
+            <option value="premium" data-launch-flag="pack_pro_premium_enabled" data-original-label="Pack Premium — 200 €/an · 10 annonces max · 6 mois en ligne" data-settings='{"prix":"pack_premium_prix","max":"pack_premium_max","duree":"pack_premium_duree"}' data-format="Pack Premium — {prix} €/an · {max} annonces max · {duree} mois en ligne">Pack Premium — 200 €/an · 10 annonces max · 6 mois en ligne</option>
+            <option value="performance" data-launch-flag="pack_pro_performance_enabled" data-original-label="Pack Performance — 400 €/an · annonces illimitées · 12 mois en ligne" data-settings='{"prix":"pack_performance_prix","duree":"pack_performance_duree"}' data-format="Pack Performance — {prix} €/an · annonces illimitées · {duree} mois en ligne">Pack Performance — 400 €/an · annonces illimitées · 12 mois en ligne</option>
+          </select>
+          <div class="form-hint">Vous pourrez changer de formule à tout moment depuis votre compte.</div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-line"><input type="checkbox" required> J'accepte les <a href="cgu.html">CGU/CGV pro</a> et la <a href="confidentialite.html">politique RGPD</a></label>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">Créer mon compte pro</button>
+      </form>
+    </div>
+
+    <!-- Garage -->
+    <div id="tab-garage" class="tab-panel">
+      <p class="text-muted" style="font-size:13px;margin-bottom:14px;">
+        Espace réservé aux garages partenaires : recevez vos demandes d'inspection et
+        transmettez vos rapports directement aux vendeurs.
+      </p>
+      <form onsubmit="event.preventDefault();registerGarage();">
+        <div class="form-group">
+          <label class="form-label">Votre garage partenaire <span class="req">*</span></label>
+          <select id="garage-select" class="form-select" required>
+            <option value="">Sélectionnez votre garage…</option>
+          </select>
+          <div class="form-hint">Choisissez le garage que vous représentez dans l'annuaire VoiturePrepa.fr.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° SIRET <span class="req">*</span></label>
+          <input type="text" id="garage-siret" class="form-input" placeholder="14 chiffres" inputmode="numeric" required>
+          <div class="form-hint">Numéro SIRET de l'établissement — 14 chiffres.</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email <span class="req">*</span></label>
+            <input type="email" id="garage-email" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone <span class="req">*</span></label>
+            <input type="tel" id="garage-tel" class="form-input" placeholder="01 23 45 67 89" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe <span class="req">*</span></label>
+          <input type="password" id="garage-password" class="form-input" required>
+          <div class="form-hint">8 caractères minimum, 1 majuscule, 1 chiffre.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer le mot de passe <span class="req">*</span></label>
+          <input type="password" id="garage-password2" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-line"><input type="checkbox" required> J'accepte les <a href="cgu.html">CGU/CGV</a> et la <a href="confidentialite.html">politique RGPD</a></label>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">Créer mon compte garage</button>
+      </form>
+    </div>
+
+    <p class="text-center mt-3" style="font-size:14px;">
+      Déjà inscrit ? <a href="connexion.html">Se connecter</a>
+    </p>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "compte";
+function initPage(){
+  const gs = document.getElementById("garage-select");
+  if (gs && typeof getGarages !== "undefined") {
+    gs.innerHTML = '<option value="">Sélectionnez votre garage…</option>' +
+      getGarages().map(g => `<option value="${g.id}">${g.nom} — ${g.ville}</option>`).join("");
+  }
+}
+function switchTab(t){
+  $$(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab===t));
+  $$(".tab-panel").forEach(p => p.classList.remove("active"));
+  $("#tab-"+t).classList.add("active");
+}
+// Vérifie le mot de passe et sa confirmation. Renvoie true si OK, sinon affiche l'erreur.
+function checkPasswords(pwd, pwd2) {
+  if (!validatePassword(pwd)) {
+    alert("⚠ Mot de passe invalide.\n\nIl doit contenir au minimum :\n• 8 caractères\n• 1 majuscule\n• 1 chiffre");
+    return false;
+  }
+  if (pwd !== pwd2) {
+    alert("⚠ Les deux mots de passe ne sont pas identiques.\n\nVeuillez ressaisir la confirmation.");
+    return false;
+  }
+  return true;
+}
+
+// Lien d'activation du compte (envoyé par email)
+function activationLink(token) {
+  return location.origin + location.pathname.replace(/inscription\.html$/, "") + "confirmation.html?token=" + token;
+}
+
+async function registerParticulier(){
+  const prenom = ($("#part-prenom").value || "").trim() || "Membre";
+  const nom = ($("#part-nom").value || "").trim();
+  const email = ($("#part-email").value || "").trim();
+  const tel = ($("#part-tel").value || "").trim();
+  const pwd = $("#part-password").value, pwd2 = $("#part-password2").value;
+  if (!checkPasswords(pwd, pwd2)) return;
+  if (!email) { alert("Veuillez saisir votre email."); return; }
+
+  // v14 — Supabase Auth : Supabase envoie automatiquement l'email d'activation
+  try {
+    const { data, error } = await VP_SB.signUp({
+      email, password: pwd,
+      type: "particulier", prenom, nom, telephone: tel
+    });
+    if (error) {
+      if ((error.message || "").toLowerCase().includes("already")) {
+        alert("⚠ Un compte existe déjà avec cet email. Connectez-vous ou utilisez « Mot de passe oublié ».");
+      } else {
+        alert("❌ Inscription impossible : " + error.message);
+      }
+      return;
+    }
+    // Redirection vers la page de confirmation (l'email a été envoyé par Supabase)
+    window.location.href = "confirmation.html?new=1&email=" + encodeURIComponent(email);
+  } catch (e) {
+    console.error(e);
+    alert("❌ Erreur technique : " + (e.message || e));
+  }
+}
+
+// Tarifs annuels des abonnements professionnels
+const PRO_PACK_PRICES = { gratuit: 0, premium: 200, performance: 400 };
+const PRO_PACK_LABELS = { gratuit: "Gratuit", premium: "Premium", performance: "Performance" };
+
+async function registerPro(){
+  const raison = ($("#pro-raison").value || "").trim() || "Mon entreprise";
+  const email = ($("#pro-email").value || "").trim();
+  const tel = ($("#pro-tel").value || "").trim();
+  const pack = $("#pro-pack").value;
+  const pwd = $("#pro-password").value, pwd2 = $("#pro-password2").value;
+  if (!email) { alert("Veuillez saisir un email pro."); return; }
+
+  // v14 — SIRET obligatoire, 14 chiffres, unique (vérifié côté Supabase)
+  const siret = (($("#pro-siret") && $("#pro-siret").value) || "").replace(/[ .\-]/g, "");
+  if (!/^[0-9]{14}$/.test(siret)) {
+    alert("Veuillez renseigner un numéro de SIRET valide (14 chiffres).");
+    return;
+  }
+  try {
+    if (typeof VP_SB !== "undefined" && VP_SB.proSiretTaken) {
+      const taken = await VP_SB.proSiretTaken(siret);
+      if (taken) {
+        alert("⚠ Un compte professionnel existe déjà pour ce numéro de SIRET (" + siret + ").\n\nUn seul compte pro est autorisé par SIRET.");
+        return;
+      }
+    }
+  } catch (e) {}
+
+  // v14 lancement : blocage des packs Premium / Performance si désactivés
+  if (pack === "premium" && typeof isFeatureEnabled === "function" && !isFeatureEnabled("pack_pro_premium_enabled")) {
+    alert("🚧 Le Pack Premium est en cours de développement.\n\nIl sera disponible très prochainement. En attendant, vous pouvez créer un compte avec le Pack Gratuit.");
+    const sel = document.getElementById("pro-pack");
+    if (sel) sel.value = "gratuit";
+    return;
+  }
+  if (pack === "performance" && typeof isFeatureEnabled === "function" && !isFeatureEnabled("pack_pro_performance_enabled")) {
+    alert("🚧 Le Pack Performance est en cours de développement.\n\nIl sera disponible très prochainement. En attendant, vous pouvez créer un compte avec le Pack Gratuit.");
+    const sel = document.getElementById("pro-pack");
+    if (sel) sel.value = "gratuit";
+    return;
+  }
+
+  if (!checkPasswords(pwd, pwd2)) return;
+
+  const packLabel = PRO_PACK_LABELS[pack] || "Gratuit";
+
+  // v14 — Supabase Auth : inscription pro
+  // (Pour Premium/Performance, le paiement reste géré ensuite via openPaymentModal côté tarifs.)
+  try {
+    const { data, error } = await VP_SB.signUp({
+      email, password: pwd,
+      type: "pro", raison_sociale: raison, siret, telephone: tel
+    });
+    if (error) {
+      if ((error.message || "").toLowerCase().includes("already")) {
+        alert("⚠ Un compte existe déjà avec cet email.");
+      } else {
+        alert("❌ Inscription impossible : " + error.message);
+      }
+      return;
+    }
+    // Met à jour le pack choisi sur le profil
+    if (pack && pack !== "gratuit") {
+      // L'utilisateur devra confirmer son email puis souscrire le pack payant
+      // depuis la page Tarifs Pro (avec paiement réel ensuite).
+    }
+    window.location.href = "confirmation.html?new=1&email=" + encodeURIComponent(email) + "&pro=1";
+  } catch (e) {
+    console.error(e);
+    alert("❌ Erreur technique : " + (e.message || e));
+  }
+}
+
+// Crée réellement le compte professionnel puis envoie l'email d'activation
+async function finalizeProRegistration(raison, email, pack, pwd, tel, siret){
+  const acc = registerAccount({ type:"pro", pack:pack, prenom:raison, nom:"", raison:raison, email:email, telephone:tel, password:pwd, siret:(siret||"") });
+  const packLabel = PRO_PACK_LABELS[pack] || "Gratuit";
+
+  const link = activationLink(acc.token);
+  await sendEmail({
+    to_email: email, to_name: raison, account_type: "Professionnel — Pack " + packLabel,
+    subject: "Activez votre compte professionnel VoiturePrepa.fr",
+    message: "Bonjour " + raison + ",\n\nMerci de votre inscription professionnelle sur VoiturePrepa.fr !\n\n"
+      + "Pour activer votre compte (Pack " + packLabel + ") et commencer à l'utiliser, cliquez sur le lien ci-dessous :\n"
+      + link + "\n\nÀ très vite,\nL'équipe VoiturePrepa.fr",
+    activation_link: link
+  });
+  window.location.href = "confirmation.html?token=" + acc.token + "&new=1";
+}
+
+// Crée un compte garage (activé immédiatement) et ouvre l'espace garage
+async function registerGarage(){
+  const sel = document.getElementById("garage-select");
+  const gid = parseInt(sel.value, 10);
+  const g = (typeof getGarages !== "undefined") ? getGarages().find(x => x.id === gid) : null;
+  if (!g) { alert("Veuillez sélectionner votre garage partenaire."); return; }
+  const siret = ($("#garage-siret").value || "").replace(/[ .-]/g, "");
+  if (!/^[0-9]{14}$/.test(siret)) {
+    alert("Veuillez renseigner un numéro de SIRET valide (14 chiffres).");
+    return;
+  }
+  const email = ($("#garage-email").value || "").trim();
+  const tel = ($("#garage-tel").value || "").trim();
+  const pwd = $("#garage-password").value, pwd2 = $("#garage-password2").value;
+  if (!checkPasswords(pwd, pwd2)) return;
+  if (!email) { alert("Veuillez saisir un email."); return; }
+  const label = g.nom + " — " + g.ville;
+
+  // v14 — Supabase Auth : inscription garage
+  try {
+    const { data, error } = await VP_SB.signUp({
+      email, password: pwd,
+      type: "garage", nom: g.nom, prenom: g.nom,
+      raison_sociale: label, siret, telephone: tel
+    });
+    if (error) {
+      if ((error.message || "").toLowerCase().includes("already")) {
+        alert("⚠ Un compte existe déjà avec cet email.");
+      } else {
+        alert("❌ Inscription impossible : " + error.message);
+      }
+      return;
+    }
+    try { await VP_SB.updateMyProfile({ garage_id: g.id, garage_label: label }); }
+    catch (e) { console.warn("update garage_id échec", e); }
+    alert("✅ Demande de compte garage enregistrée pour « " + label + " ».\n\n" +
+          "Confirmez votre email puis attendez la validation de l'administrateur avant la première connexion.");
+    window.location.href = "connexion.html";
+  } catch (e) {
+    console.error(e);
+    alert("❌ Erreur technique : " + (e.message || e));
+  }
+}
+</script>
+</body>
+</html>
