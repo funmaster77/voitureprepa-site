@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Déposer une annonce — VoiturePrepa.fr</title>
+<meta name="description" content="Déposez gratuitement votre annonce de voiture préparée ou de pièce de performance sur VoiturePrepa.fr.">
+<link rel="canonical" href="https://voitureprepa.fr/deposer.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VoiturePrepa.fr">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Déposer une annonce — VoiturePrepa.fr">
+<meta property="og:description" content="Déposez gratuitement votre annonce de voiture préparée ou de pièce de performance sur VoiturePrepa.fr.">
+<meta property="og:url" content="https://voitureprepa.fr/deposer.html">
+<meta property="og:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Déposer une annonce — VoiturePrepa.fr">
+<meta name="twitter:description" content="Déposez gratuitement votre annonce de voiture préparée ou de pièce de performance sur VoiturePrepa.fr.">
+<meta name="twitter:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+  .deposit-card { background:#fff;padding:30px;border-radius:8px;box-shadow:var(--shadow);max-width:900px;margin:20px auto; }
+  .type-choice { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px; }
+  .type-card { padding:24px;border:2px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;transition:all .15s;background:#fff; }
+  .type-card:hover { border-color:var(--orange); }
+  .type-card.active { border-color:var(--orange); background:var(--orange-light); }
+  .type-card .icon { font-size:48px; margin-bottom:10px; }
+  .step-bar { display:flex; margin-bottom:30px; gap:8px; }
+  .step {
+    flex:1; padding:10px; text-align:center; background:var(--bg-alt); border-radius:6px;
+    font-size:13px; font-weight:600; color:var(--text-muted);
+    cursor:pointer; transition:transform .12s, box-shadow .12s, background .12s;
+    user-select:none; border:2px solid transparent;
+  }
+  .step:hover { transform:translateY(-1px); box-shadow:var(--shadow); border-color:var(--orange); }
+  .step.active { background:var(--orange);color:#fff; }
+  .step.active:hover { transform:none; border-color:transparent; box-shadow:none; cursor:default; }
+  .step.done { background:var(--green);color:#fff; }
+  .step.locked { cursor:not-allowed; opacity:.55; }
+  .step.locked:hover { transform:none; box-shadow:none; border-color:transparent; }
+  .photo-grid { display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px; }
+  .photo-slot { position:relative; aspect-ratio:1; background:var(--bg-alt);border:2px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);font-size:24px;overflow:hidden; }
+  .photo-slot.add:hover { border-color:var(--orange);color:var(--orange); }
+  .photo-slot.locked { opacity:.45;cursor:not-allowed; }
+  .photo-slot.empty { cursor:default; border-style:dashed; }
+  .photo-slot.filled { background-size:cover;background-position:center;border-style:solid;border-color:var(--orange); }
+  .photo-remove {
+    position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;
+    background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;font-size:12px;
+    display:flex;align-items:center;justify-content:center;line-height:1;
+  }
+  .photo-remove:hover { background:var(--red); }
+  .photo-main-tag {
+    position:absolute;bottom:4px;left:4px;background:var(--orange);color:#fff;
+    font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;
+  }
+  @media (max-width:600px){ .photo-grid {grid-template-columns:repeat(3,1fr);} }
+  .stage-info { background:var(--orange-light);padding:10px;border-radius:6px;font-size:13px;margin-top:6px;color:var(--orange-dark); }
+  .form-input.field-error, .form-select.field-error, .form-textarea.field-error {
+    border-color:var(--red); background:#fdecea;
+  }
+  .step-error-msg {
+    background:#fdecea; border-left:4px solid var(--red); color:#931a14;
+    padding:10px 14px; border-radius:6px; margin-top:12px; font-size:14px;
+  }
+  .pieces-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px; }
+  .pieces-cat-title { font-weight:700; font-size:14px; color:var(--text); margin:16px 0 2px; }
+  .pieces-cat-title.first { margin-top:4px; }
+  @media (max-width:600px){ .pieces-grid {grid-template-columns:1fr 1fr;} .photo-grid {grid-template-columns:repeat(3,1fr);} }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <nav class="breadcrumb">
+    <a href="index.html">Accueil</a><span class="sep">›</span>
+    <span>Déposer une annonce</span>
+  </nav>
+
+  <div class="deposit-card">
+    <h1>Déposer une annonce</h1>
+    <p class="text-muted mb-3">Le dépôt est <strong>gratuit</strong> pour les particuliers et les professionnels.</p>
+
+    <div class="step-bar">
+      <div class="step active" id="step-1" onclick="goToStepClick(1)">1. Type</div>
+      <div class="step locked" id="step-2" onclick="goToStepClick(2)">2. Détails</div>
+      <div class="step locked" id="step-3" onclick="goToStepClick(3)">3. Photos &amp; prix</div>
+      <div class="step locked" id="step-4" onclick="goToStepClick(4)">4. <span id="step-4-label">Documents</span></div>
+      <div class="step locked" id="step-5" onclick="goToStepClick(5)">5. Options</div>
+    </div>
+
+    <!-- STEP 1 : type -->
+    <div id="form-step-1">
+      <h3>Que souhaitez-vous vendre ?</h3>
+      <div class="type-choice mt-2">
+        <div class="type-card" id="type-card-voiture" onclick="selectType('voiture',this)">
+          <div class="icon"><img src="assets/img/embleme-voiture.png" alt="Voiture préparée" style="height:110px;width:110px;margin:0 auto;display:block;"></div>
+          <strong>Voiture préparée / sportive</strong>
+          <p class="text-muted" style="font-size:13px;margin-top:6px;">
+            Reprogrammée, équipée pièces performance, projet à finir, etc.
+          </p>
+        </div>
+        <div class="type-card" id="type-card-piece" onclick="selectType('piece',this)">
+          <div class="icon"><img src="assets/img/pieces-auto.png" alt="Pièce détachée" style="height:120px;width:auto;margin:0 auto;display:block;"></div>
+          <strong>Pièce détachée / accessoire</strong>
+          <p class="text-muted" style="font-size:13px;margin-top:6px;">
+            Échappement, suspension, jantes, électronique, etc.
+          </p>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg mt-3" id="btn-next-1" disabled onclick="goStep(2)">Continuer →</button>
+    </div>
+
+    <!-- STEP 2 : détails -->
+    <div id="form-step-2" class="hidden">
+
+      <!-- VOITURE form -->
+      <div id="form-voiture">
+        <h3>Caractéristiques du véhicule</h3>
+        <p class="text-muted mb-2" style="font-size:13px;">Un seul véhicule par annonce.</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Marque <span class="req">*</span></label>
+            <select id="v-marque" class="form-select" onchange="updateModels()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modèle <span class="req">*</span></label>
+            <select id="v-modele" class="form-select"></select>
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Année <span class="req">*</span></label>
+            <select id="v-annee" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kilométrage chassis <span class="req">*</span></label>
+            <input type="number" id="v-km" class="form-input" placeholder="ex : 95000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kilométrage moteur</label>
+            <input type="number" id="v-km-moteur" class="form-input" placeholder="si différent">
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Carburant <span class="req">*</span></label>
+            <select id="v-carburant" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Boîte <span class="req">*</span></label>
+            <select id="v-boite" class="form-select">
+              <option value="">Sélectionner</option>
+              <option>Manuelle</option><option>Automatique</option><option>Robotisée</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Couleur</label>
+            <select id="v-couleur" class="form-select"></select>
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Nombre de portes</label>
+            <select id="v-portes" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre de places</label>
+            <select id="v-places" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <select id="v-categorie" class="form-select"></select>
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Puissance d'origine (DIN ch) <span class="req">*</span></label>
+            <input type="number" id="v-puis-ori" class="form-input" placeholder="ex : 300">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Puissance actuelle (DIN ch) <span class="req">*</span></label>
+            <input type="number" id="v-puis-cur" class="form-input" placeholder="ex : 480">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Covering</label>
+            <select id="v-cover" class="form-select"></select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Couple d'origine (Nm)</label>
+            <input type="number" id="v-coup-ori" class="form-input" placeholder="ex : 400">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Couple actuel (Nm)</label>
+            <input type="number" id="v-coup-cur" class="form-input" placeholder="ex : 600">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Stage de préparation <span class="req">*</span></label>
+          <select id="v-stage" class="form-select" onchange="showStageDesc()"></select>
+          <div id="stage-desc" class="stage-info hidden"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Pièces de performance installées</label>
+          <p class="form-hint">Cochez toutes celles présentes sur votre véhicule.</p>
+          <div id="v-pieces"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">État du véhicule <span class="req">*</span></label>
+          <select id="v-etat" class="form-select" onchange="updatePrixMin()"></select>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Région</label>
+            <select id="v-region" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Département <span class="req">*</span></label>
+            <select id="v-departement" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ville <span class="req">*</span></label>
+            <input type="text" id="v-ville" class="form-input" list="v-ville-list" autocomplete="off"
+                   placeholder="Choisissez d'abord le département" oninput="checkVilleField('v-ville','v-departement')">
+            <datalist id="v-ville-list"></datalist>
+            <div id="v-ville-hint" class="form-hint"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIECE form -->
+      <div id="form-piece" class="hidden">
+        <h3>Caractéristiques de la pièce</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Catégorie <span class="req">*</span></label>
+            <select id="p-cat" class="form-select" onchange="updatePieceSubs()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sous-catégorie</label>
+            <select id="p-sub" class="form-select"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Marque du véhicule compatible</label>
+            <select id="p-marque" class="form-select" onchange="updatePModels()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modèle compatible</label>
+            <select id="p-modele" class="form-select"></select>
+          </div>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">État</label>
+            <select id="p-etat" class="form-select">
+              <option>Neuf</option><option>Comme neuf</option>
+              <option>Très bon état</option><option>Bon état</option>
+              <option>État correct</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Poids du colis</label>
+            <input type="text" id="p-poids" class="form-input" placeholder="ex : 12 kg">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Département <span class="req">*</span></label>
+            <select id="p-departement" class="form-select"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ville <span class="req">*</span></label>
+          <input type="text" id="p-ville" class="form-input" list="p-ville-list" autocomplete="off"
+                 placeholder="Choisissez d'abord le département" oninput="checkVilleField('p-ville','p-departement')">
+          <datalist id="p-ville-list"></datalist>
+          <div id="p-ville-hint" class="form-hint"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Titre de l'annonce <span class="req">*</span></label>
+        <input type="text" id="titre" class="form-input" placeholder="ex : Audi RS3 Stage 2+ 480ch, suivi complet">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description <span class="req">*</span></label>
+        <textarea id="desc" class="form-textarea" placeholder="Décrivez votre annonce en détail : historique, entretien, modifications, défauts éventuels..."></textarea>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Retour</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 : photos + prix -->
+    <div id="form-step-3" class="hidden">
+      <h3>Photos et prix</h3>
+      <div class="form-group">
+        <label class="form-label">Photos <span class="req">*</span></label>
+        <p class="form-hint">3 photos incluses gratuitement. Souscrivez le Pack Photos+ ci-dessous pour en ajouter 7 supplémentaires.</p>
+
+        <div id="pack-photos-widget" data-launch-card="photos" style="background:var(--orange-light);border:2px dashed var(--orange);border-radius:10px;padding:14px 16px;margin:14px 0;">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <div style="font-size:30px;">📷</div>
+            <div style="flex:1;min-width:200px;">
+              <strong>Pack Photos+</strong> — <span class="price-tag" style="color:var(--orange-dark);font-weight:700;font-size:inherit;">4,99 €</span>
+              <p style="font-size:13px;color:#555;margin:2px 0 0;">
+                Débloquez <strong>7 emplacements supplémentaires</strong> (total : 10 photos).
+              </p>
+            </div>
+            <label class="checkbox-line" style="white-space:nowrap;">
+              <input type="checkbox" id="opt-pack-photos" data-launch-action onchange="togglePhotosPack(this.checked)">
+              <strong>Ajouter ce pack</strong>
+            </label>
+          </div>
+        </div>
+
+        <div class="photo-grid" id="photo-grid"></div>
+        <p class="form-hint" id="photo-count">0 / 3 photos ajoutées</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Prix de vente (€) <span class="req">*</span></label>
+        <input type="number" id="prix" class="form-input" placeholder="ex : 42500" oninput="checkPrix()">
+        <div id="prix-hint" class="form-hint"></div>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Retour</button>
+        <button class="btn btn-primary" onclick="goStep(4)">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4 : documents (voiture) / envoi (pièce) -->
+    <div id="form-step-4" class="hidden">
+      <h3 id="step4-title">Documents</h3>
+
+      <!-- Bloc spécifique VOITURE -->
+      <div id="step4-vehicle">
+        <div class="alert alert-info">
+          Vous pouvez publier votre annonce librement et gérer la vente directement avec l'acheteur
+          par messagerie. <strong>Optionnellement</strong>, vous pouvez activer la
+          <strong>vente en ligne sécurisée</strong> via notre plateforme :
+          le paiement est bloqué par dépôt fiduciaire jusqu'à la livraison du véhicule.
+        </div>
+
+        <!-- Activation de la vente en ligne -->
+        <div class="form-group" style="background:#fff;border:2px solid var(--orange);border-radius:10px;padding:16px;">
+          <label class="checkbox-line" style="align-items:flex-start;font-size:15px;cursor:pointer;">
+            <input type="checkbox" id="opt-vente-en-ligne" onchange="toggleVenteEnLigne(this.checked)" style="margin-top:4px;">
+            <div>
+              <strong>🔒 Activer la vente en ligne sécurisée via la plateforme</strong>
+              <p style="font-size:13px;color:var(--text-muted);margin:4px 0 0;font-weight:normal;">
+                Paiement bloqué par <strong>dépôt fiduciaire</strong> jusqu'à la livraison.
+                Commission de 3 % sur la vente. Tous vos documents seront vérifiés par nos services
+                pour garantir la sécurité de la transaction.
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Documents à joindre (s'affichent si vente en ligne activée) -->
+        <div id="vente-en-ligne-docs" style="display:none;">
+          <div class="alert alert-warning">
+            📎 <strong>Documents obligatoires pour activer la vente sécurisée</strong> — Merci de joindre les 3 pièces ci-dessous.
+          </div>
+          <div class="alert alert-info" style="font-size:13px;">
+            🔒 <strong>Confidentialité garantie</strong> — Ces documents ne sont <strong>jamais affichés
+            sur l'annonce publique</strong>. Ils sont accessibles uniquement à l'administrateur du site
+            pour la vérification de la transaction et la lutte contre la fraude (conformité RGPD).
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Contrôle Technique (moins de 6 mois) <span class="req">*</span></label>
+            <input type="file" id="doc-ct" class="form-input" accept="image/*,application/pdf" onchange="updateFileLabel(this)">
+            <p class="form-hint" id="doc-ct-name">PDF, JPG ou PNG · 10 Mo maximum</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Pièce d'identité <span class="req">*</span></label>
+            <input type="file" id="doc-id" class="form-input" accept="image/*,application/pdf" onchange="updateFileLabel(this)">
+            <p class="form-hint" id="doc-id-name">Carte d'identité, passeport ou permis de conduire</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Carte grise <span class="req">*</span></label>
+            <input type="file" id="doc-cg" class="form-input" accept="image/*,application/pdf" onchange="updateFileLabel(this)">
+            <p class="form-hint" id="doc-cg-name">Recto et verso si nécessaire</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloc spécifique PIÈCE -->
+      <div id="step4-piece" style="display:none;">
+        <div class="alert alert-info">
+          Vous pouvez publier votre annonce librement et gérer la vente avec l'acheteur par
+          messagerie. <strong>Optionnellement</strong>, activez la <strong>vente en ligne sécurisée</strong>
+          via la plateforme : le paiement est bloqué par dépôt fiduciaire jusqu'à la réception du colis.
+        </div>
+
+        <div class="form-group" style="background:#fff;border:2px solid var(--orange);border-radius:10px;padding:16px;">
+          <label class="checkbox-line" style="align-items:flex-start;font-size:15px;cursor:pointer;">
+            <input type="checkbox" id="opt-vente-piece" style="margin-top:4px;">
+            <div>
+              <strong>🔒 Activer la vente en ligne sécurisée via la plateforme</strong>
+              <p style="font-size:13px;color:var(--text-muted);margin:4px 0 0;font-weight:normal;">
+                Paiement bloqué par <strong>dépôt fiduciaire</strong> jusqu'à la réception.
+                Commission de 10 % sur la vente. <strong>Aucun document n'est requis</strong> pour une pièce
+                détachée. Envoi du colis via Mondial Relay (frais à la charge de l'acheteur).
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Bloc commun : CGU / certification -->
+      <div class="form-group">
+        <p class="form-hint" style="margin:0 0 10px;font-size:13px;color:var(--text-muted);">
+          ℹ️ En déposant cette annonce, vous reconnaissez avoir accepté les
+          <a href="cgu.html">CGU/CGV</a> et la <a href="confidentialite.html">politique RGPD</a> lors de votre inscription.
+        </p>
+        <label class="checkbox-line"><input type="checkbox" id="opt-certify"> Je certifie que les informations fournies sont exactes <span class="req">*</span></label>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Retour</button>
+        <button class="btn btn-primary" onclick="goStep(5)">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5 : options -->
+    <div id="form-step-5" class="hidden">
+      <h3>Options pour booster votre annonce (facultatif)</h3>
+      <p class="text-muted">Dépôt gratuit. Ces options vous permettent de gagner en visibilité.</p>
+
+      <div class="pricing-grid mt-3">
+        <div class="price-card" data-launch-card="photos">
+          <div class="name">📷 Pack Photos+</div>
+          <div class="price-tag">4,99 €</div>
+          <div class="pay-once">💳 Paiement unique, sans abonnement</div>
+          <ul>
+            <li>+7 photos sur votre annonce</li>
+            <li>Valable toute la durée de l'annonce</li>
+          </ul>
+          <label class="checkbox-line"><input type="checkbox" id="opt-pack-photos-5" data-launch-action onchange="onStep5PhotosPackChange(this.checked)"> Ajouter ce pack</label>
+        </div>
+        <div class="price-card featured" data-launch-card="urgence">
+          <div class="featured-tag">Recommandé</div>
+          <div class="name">⚡ Pack Urgence</div>
+          <div class="price-tag">5,99 €</div>
+          <div class="pay-once">💳 Paiement unique, sans abonnement</div>
+          <ul>
+            <li>Étiquette spéciale "Urgente"</li>
+            <li>Filtre dédié dans les recherches</li>
+            <li>Pendant 3 mois</li>
+          </ul>
+          <label class="checkbox-line"><input type="checkbox" id="opt-pack-urgence" data-launch-action> Ajouter ce pack</label>
+        </div>
+        <div class="price-card" data-launch-card="remontada">
+          <div class="name">🚀 Pack Remontada</div>
+          <div class="price-tag">dès 9,99 €</div>
+          <div class="pay-once">💳 Paiement unique, sans abonnement</div>
+          <ul>
+            <li>Remontée en tête de liste</li>
+            <li>Étiquette "Premium"</li>
+            <li>3 formules au choix</li>
+          </ul>
+          <label class="checkbox-line"><input type="checkbox" id="opt-remontada" data-launch-action onchange="toggleRemontada(this.checked)"> Ajouter ce pack</label>
+
+          <div id="remontada-formules" style="display:none;text-align:left;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+            <p style="font-size:12px;font-weight:700;margin-bottom:6px;">Choisissez votre formule :</p>
+            <label class="checkbox-line" style="font-size:13px;">
+              <input type="radio" name="remontada-formule" value="Quotidien">
+              <span><strong>Quotidien — 34,99 €</strong><br><span class="text-muted" style="font-size:11px;">Remontée chaque jour pendant 30 jours</span></span>
+            </label>
+            <label class="checkbox-line" style="font-size:13px;">
+              <input type="radio" name="remontada-formule" value="Hebdo court" checked>
+              <span><strong>Hebdo court — 9,99 €</strong><br><span class="text-muted" style="font-size:11px;">Remontée chaque semaine pendant 8 semaines</span></span>
+            </label>
+            <label class="checkbox-line" style="font-size:13px;">
+              <input type="radio" name="remontada-formule" value="Hebdo long">
+              <span><strong>Hebdo long — 14,99 €</strong><br><span class="text-muted" style="font-size:11px;">Remontée chaque semaine pendant 12 semaines</span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ Inspection avant-vente (voiture uniquement) ============ -->
+      <div id="inspection-section" style="display:none;margin-top:30px;">
+        <div style="background:#fff;padding:24px;border-radius:10px;box-shadow:var(--shadow);">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+            <div style="font-size:32px;">🔍</div>
+            <div>
+              <h3 style="margin:0;">Faites inspecter votre véhicule (recommandé)</h3>
+              <p class="text-muted" style="margin:2px 0 0;font-size:14px;">
+                Un badge officiel sur votre annonce qui rassure les acheteurs et accélère la vente.
+              </p>
+            </div>
+          </div>
+
+          <div class="medals">
+
+            <div class="medal-card bronze" id="inspect-bronze" data-launch-card="inspection" onclick="selectInspection('bronze')">
+              <div class="check-on">✓</div>
+              <img class="medal-illu" src="assets/img/medaille-bronze.svg" alt="Médaille Bronze">
+              <h3>Bronze — Standard</h3>
+              <div class="price">150 €</div>
+              <div class="pay-once">💳 Paiement unique, sans abonnement</div>
+              <p class="tagline">Contrôle visuel, carrosserie, pneus, freins, bruit moteur.</p>
+            </div>
+
+            <div class="medal-card silver" id="inspect-silver" data-launch-card="inspection" onclick="selectInspection('silver')">
+              <div class="check-on">✓</div>
+              <img class="medal-illu" src="assets/img/medaille-argent.svg" alt="Médaille Argent">
+              <h3>Argent — Premium</h3>
+              <div class="price">300 €</div>
+              <div class="pay-once">💳 Paiement unique, sans abonnement</div>
+              <p class="tagline">+ Test de compression, vérif. modifications, photos expert.</p>
+            </div>
+
+            <div class="medal-card gold" id="inspect-gold" data-launch-card="inspection" onclick="selectInspection('gold')">
+              <div class="check-on">✓</div>
+              <img class="medal-illu" src="assets/img/medaille-or.svg" alt="Médaille Or">
+              <h3>Or — Complète</h3>
+              <div class="price">500 €</div>
+              <div class="pay-once">💳 Paiement unique, sans abonnement</div>
+              <p class="tagline">+ Diagnostic électronique, banc de puissance, test sur route.</p>
+            </div>
+          </div>
+
+          <div id="inspect-garage-wrap" style="display:none;margin-top:14px;">
+            <label class="form-label" style="font-size:14px;font-weight:600;">Garage partenaire où réaliser l'inspection :</label>
+            <select id="inspect-garage" class="form-select" style="margin:5px 0;">
+              <option value="">Sélectionner un garage</option>
+            </select>
+            <div id="inspect-garage-map" style="height:260px;border-radius:8px;overflow:hidden;z-index:1;"></div>
+            <p class="form-hint" style="margin-top:4px;">Cliquez sur un marqueur de la carte pour choisir le garage.</p>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px;">
+            <span class="text-muted" style="font-size:13px;">
+              <span id="inspect-recap">Aucune inspection sélectionnée.</span>
+              <a href="#" onclick="event.preventDefault();selectInspection(null);">
+                <span id="inspect-cancel" style="display:none;">— retirer</span>
+              </a>
+            </span>
+            <a href="inspection.html" class="text-muted" style="font-size:13px;text-decoration:underline;" target="_blank">En savoir plus →</a>
+          </div>
+
+          <p class="text-muted" style="font-size:12px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+            📅 Après publication, l'administrateur vous proposera une date de rendez-vous selon les
+            disponibilités du garage partenaire. En l'acceptant, vous vous engagez à vous présenter à
+            l'heure convenue — toute séance annulée moins de 48 h à l'avance ou non honorée est
+            facturée à hauteur de 30 % du tarif initial.
+          </p>
+
+          <div id="inspect-unavailable" class="alert alert-warning mt-2" style="display:none;font-size:13px;">
+            ⚠️ L'inspection avant-vente est réservée aux véhicules en catégorie
+            <strong>« Projet terminé / Bon »</strong>. Modifiez l'état du véhicule à l'étape 2 pour
+            pouvoir en bénéficier.
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-ghost" onclick="goStep(4)">← Retour</button>
+        <button class="btn btn-primary btn-lg" onclick="submitAd()">✓ Publier mon annonce</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : proposition de mise à niveau quand la limite d'annonces est atteinte -->
+<div class="modal-backdrop" id="upgrade-modal" onclick="if(event.target===this)closeUpgradeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Limite d'annonces atteinte</h3>
+      <button class="close" onclick="closeUpgradeModal()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" id="upgrade-intro" style="margin-bottom:14px;"></p>
+      <div id="upgrade-packs"></div>
+      <p class="form-hint mt-2">💡 Mise à niveau immédiate : votre nouvelle annonce pourra être publiée aussitôt. Paiement sécurisé (démo — aucun débit réel).</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeUpgradeModal()">Plus tard</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "deposer";
+let chosenType = null;
+let currentStep = 1;
+let inspectionLock = false; // dépôt lancé depuis un pack inspection → voiture uniquement
+
+function initPage() {
+  // 🔒 Le dépôt d'annonce nécessite un compte
+  if (!isLoggedIn()) {
+    document.querySelector(".deposit-card").innerHTML = `
+      <div style="text-align:center;padding:30px 20px;">
+        <div style="font-size:52px;">🔒</div>
+        <h2 style="margin:10px 0;">Inscription requise</h2>
+        <p class="text-muted" style="max-width:460px;margin:0 auto 20px;">
+          Pour déposer une annonce, vous devez avoir un compte VoiturePrepa.fr.
+          L'inscription est <strong>gratuite</strong> pour les particuliers comme pour les professionnels.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <a href="inscription.html" class="btn btn-primary btn-lg">Créer un compte gratuit</a>
+          <a href="connexion.html" class="btn btn-outline btn-lg">J'ai déjà un compte</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Bandeau récap du compte + limite d'annonces
+  showAccountBanner();
+
+  // Voiture selects
+  fillSelect($("#v-marque"), Object.keys(DATA.marques_models), "Sélectionner");
+  fillSelect($("#v-annee"), DATA.annees, "Sélectionner");
+  fillSelect($("#v-carburant"), DATA.carburants, "Sélectionner");
+  fillSelect($("#v-couleur"), DATA.couleurs, "Sélectionner");
+  fillSelect($("#v-portes"), DATA.nb_portes, "Sélectionner");
+  fillSelect($("#v-places"), DATA.nb_places, "Sélectionner");
+  fillSelect($("#v-categorie"), DATA.categories_voiture, "Sélectionner");
+  fillSelect($("#v-cover"), DATA.covering, "Sélectionner");
+  fillSelect($("#v-stage"), DATA.stages.map(s=>s.stage), "Sélectionner");
+  fillSelect($("#v-etat"), DATA.etats, "Sélectionner");
+  fillSelect($("#v-region"), DATA.regions, "Sélectionner");
+  fillSelect($("#v-departement"), DATA.departements.map(d=>({value:d.code,label:d.code+" - "+d.name})), "Sélectionner");
+
+  // Pieces perf checkboxes
+  // Pièces de performance — regroupées par catégorie (Performance / Esthétique)
+  const _ppMeta = { "Performance":"⚙️ Performance", "Esthétique":"✨ Esthétique" };
+  $("#v-pieces").innerHTML = Object.keys(DATA.pieces_perf).map((cat, idx) => {
+    const items = (DATA.pieces_perf[cat] || []).map(p =>
+      `<label class="checkbox-line"><input type="checkbox" value="${p}"> ${p}</label>`
+    ).join("");
+    return `<div class="pieces-cat-title${idx===0?" first":""}">${_ppMeta[cat] || cat}</div>
+      <div class="pieces-grid">${items}</div>`;
+  }).join("");
+
+  // Piece selects
+  fillSelect($("#p-cat"), Object.keys(DATA.pieces), "Sélectionner");
+  fillSelect($("#p-marque"), Object.keys(DATA.marques_models), "Universel");
+  fillSelect($("#p-departement"), DATA.departements.map(d=>({value:d.code,label:d.code+" - "+d.name})), "Sélectionner");
+
+  // Validation ville ↔ département : recharge les communes quand le département change
+  ["v","p"].forEach(pfx => {
+    const dep = $("#"+pfx+"-departement");
+    if (dep) dep.addEventListener("change", () => onDepartementChange(pfx));
+  });
+
+  // Cohérence Région ↔ Département (formulaire voiture)
+  if ($("#v-region")) $("#v-region").addEventListener("change", syncDepartementsToRegion);
+  if ($("#v-departement")) $("#v-departement").addEventListener("change", syncRegionToDepartement);
+
+  // Garages partenaires pour l'inspection (choisis par le vendeur)
+  fillSelect($("#inspect-garage"),
+    MOCK_GARAGES.map(g => ({ value:g.nom+" — "+g.ville, label:g.nom+" ("+g.ville+")" })),
+    "Sélectionner un garage");
+
+  // Compte professionnel : les photos sont incluses dans l'abonnement
+  // → on masque le widget "Pack Photos+" (étape 3) et la carte "Pack Photos+" (étape 5)
+  if (isProAccount()) {
+    const w = $("#pack-photos-widget");
+    if (w) w.style.display = "none";
+    const cb5 = $("#opt-pack-photos-5");
+    if (cb5) { const card = cb5.closest(".price-card"); if (card) card.style.display = "none"; }
+    // Ajuste le texte d'aide sous la grille photos
+    const hint = document.querySelector("#form-step-3 .form-hint");
+    if (hint) hint.textContent = "Photos incluses dans votre abonnement professionnel (jusqu'à " + getPhotoLimit() + ").";
+  }
+
+  // Grille de photos (vide au départ)
+  renderPhotoGrid();
+
+  // Dépôt lancé depuis un pack inspection véhicule → annonce voiture uniquement
+  if (typeof getParam === "function" && getParam("inspection")) {
+    restrictToVoiture();
+  }
+}
+
+// Restreint l'étape 1 au type « voiture » (inspection véhicule commandée)
+function restrictToVoiture() {
+  inspectionLock = true;
+  const pieceCard = $("#type-card-piece");
+  if (pieceCard) {
+    pieceCard.classList.add("disabled");
+    pieceCard.style.opacity = "0.45";
+    pieceCard.style.cursor = "not-allowed";
+    pieceCard.title = "Indisponible : une inspection véhicule a été commandée.";
+    const p = pieceCard.querySelector("p");
+    if (p) p.innerHTML = "<span style=\"color:var(--red);font-weight:600;\">Indisponible — une inspection véhicule ne concerne que les voitures.</span>";
+  }
+  const h3 = document.querySelector("#form-step-1 h3");
+  if (h3 && !document.getElementById("inspection-type-note")) {
+    h3.insertAdjacentHTML("afterend",
+      "<div id=\"inspection-type-note\" class=\"alert alert-info\" style=\"font-size:13px;margin-top:8px;\">" +
+      "🔍 Vous avez commandé un pack inspection véhicule : seule une annonce de <strong>voiture</strong> est possible." +
+      "</div>");
+  }
+}
+
+function selectType(t, el) {
+  // Dépôt issu d'un pack inspection véhicule : seules les voitures sont autorisées
+  if (inspectionLock && t === "piece") {
+    alert("Une inspection véhicule a été commandée : vous ne pouvez déposer qu'une annonce de voiture.");
+    return;
+  }
+  chosenType = t;
+  $$(".type-card").forEach(c => c.classList.remove("active"));
+  el.classList.add("active");
+  $("#btn-next-1").disabled = false;
+  // Une fois un type choisi, les onglets 2 à 5 deviennent accessibles
+  for (let i = 2; i <= 5; i++) {
+    $("#step-"+i).classList.remove("locked");
+  }
+  // Label de l'étape 4 adapté au type
+  $("#step-4-label").textContent = (t === "piece") ? "Conditions" : "Documents";
+  // Passage automatique à l'étape 2 (petite pause pour voir la sélection)
+  setTimeout(() => goStep(2), 250);
+}
+
+// Cliquer sur un onglet en haut du formulaire pour naviguer librement
+function goToStepClick(n) {
+  if (n === 1) { goStep(1); return; }
+  if (!chosenType) {
+    alert("Choisissez d'abord un type d'annonce (voiture ou pièce détachée) à l'étape 1.");
+    return;
+  }
+  goStep(n);
+}
+
+// Définition des champs obligatoires de l'étape 2 selon le type d'annonce
+const REQUIRED_STEP2 = {
+  voiture: [
+    {id:"v-marque",      label:"Marque"},
+    {id:"v-modele",      label:"Modèle"},
+    {id:"v-annee",       label:"Année"},
+    {id:"v-km",          label:"Kilométrage chassis"},
+    {id:"v-carburant",   label:"Carburant"},
+    {id:"v-boite",       label:"Boîte"},
+    {id:"v-puis-ori",    label:"Puissance d'origine"},
+    {id:"v-puis-cur",    label:"Puissance actuelle"},
+    {id:"v-stage",       label:"Stage de préparation"},
+    {id:"v-etat",        label:"État du véhicule"},
+    {id:"v-departement", label:"Département"},
+    {id:"v-ville",       label:"Ville"},
+    {id:"titre",         label:"Titre de l'annonce"},
+    {id:"desc",          label:"Description"},
+  ],
+  piece: [
+    {id:"p-cat",         label:"Catégorie de pièce"},
+    {id:"p-departement", label:"Département"},
+    {id:"p-ville",       label:"Ville"},
+    {id:"titre",         label:"Titre de l'annonce"},
+    {id:"desc",          label:"Description"},
+  ]
+};
+
+function validateStep2() {
+  // Nettoie les anciens marquages d'erreur
+  $$(".field-error").forEach(el => el.classList.remove("field-error"));
+  const old = $(".step-error-msg"); if (old) old.remove();
+
+  const required = REQUIRED_STEP2[chosenType] || [];
+  const missing = [];
+  required.forEach(f => {
+    const el = $("#"+f.id);
+    if (!el) return;
+    const val = (el.value || "").trim();
+    if (!val) {
+      el.classList.add("field-error");
+      missing.push(f.label);
+    }
+  });
+
+  if (missing.length) {
+    // Affiche un message sous l'étape 2 avec la liste des champs manquants
+    const msg = document.createElement("div");
+    msg.className = "step-error-msg";
+    msg.innerHTML = "⚠ <strong>Champs obligatoires manquants :</strong><br>" + missing.map(m => "• " + m).join("<br>");
+    const stepDiv = $("#form-step-2");
+    stepDiv.insertBefore(msg, stepDiv.querySelector(".flex.gap-2.mt-3") || stepDiv.lastElementChild);
+    // Scroll au premier champ en erreur
+    const first = $(".field-error");
+    if (first) first.scrollIntoView({behavior:"smooth", block:"center"});
+    return false;
+  }
+
+  // La ville doit appartenir au département choisi (si la vérification est possible)
+  const villeId = chosenType === "voiture" ? "v-ville" : "p-ville";
+  const depId   = chosenType === "voiture" ? "v-departement" : "p-departement";
+  if (!villeIsAcceptable(villeId, depId)) {
+    const villeEl = $("#"+villeId);
+    if (villeEl) villeEl.classList.add("field-error");
+    checkVilleField(villeId, depId);
+    const msg = document.createElement("div");
+    msg.className = "step-error-msg";
+    msg.innerHTML = "⚠ <strong>La ville ne correspond pas au département choisi.</strong><br>" +
+      "Saisissez une commune du département sélectionné (utilisez les suggestions de la liste).";
+    const stepDiv = $("#form-step-2");
+    stepDiv.insertBefore(msg, stepDiv.querySelector(".flex.gap-2.mt-3") || stepDiv.lastElementChild);
+    if (villeEl) villeEl.scrollIntoView({behavior:"smooth", block:"center"});
+    return false;
+  }
+  return true;
+}
+
+// Étape 4 : toggle d'affichage des uploads de documents pour la vente sécurisée
+function toggleVenteEnLigne(active) {
+  $("#vente-en-ligne-docs").style.display = active ? "block" : "none";
+}
+
+// Affiche le nom du fichier sélectionné sous chaque input file
+function updateFileLabel(inp) {
+  const id = inp.id;
+  const lbl = $("#" + id + "-name");
+  if (!lbl) return;
+  if (inp.files && inp.files.length) {
+    lbl.innerHTML = "✅ <strong>" + inp.files[0].name + "</strong> sélectionné";
+    lbl.style.color = "var(--green)";
+    inp.classList.remove("field-error");
+  } else {
+    lbl.style.color = "";
+  }
+}
+
+// Validation de l'étape 4 (documents si vente sécurisée activée)
+function validateStep4() {
+  $$(".field-error").forEach(el => el.classList.remove("field-error"));
+  const old = $("#form-step-4 .step-error-msg"); if (old) old.remove();
+
+  // Si vente sécurisée activée pour une voiture, les 3 documents sont obligatoires
+  const venteEnLigne = $("#opt-vente-en-ligne");
+  if (chosenType === "voiture" && venteEnLigne && venteEnLigne.checked) {
+    const docs = [
+      {id:"doc-ct", label:"Contrôle Technique"},
+      {id:"doc-id", label:"Pièce d'identité"},
+      {id:"doc-cg", label:"Carte grise"}
+    ];
+    const missing = [];
+    docs.forEach(d => {
+      const el = $("#"+d.id);
+      if (!el.files || !el.files.length) {
+        el.classList.add("field-error");
+        missing.push(d.label);
+      }
+    });
+    if (missing.length) {
+      const msg = document.createElement("div");
+      msg.className = "step-error-msg";
+      msg.innerHTML = "⚠ <strong>Documents manquants pour la vente sécurisée :</strong><br>" + missing.map(m => "• " + m).join("<br>");
+      const stepDiv = $("#form-step-4");
+      stepDiv.insertBefore(msg, stepDiv.querySelector(".flex.gap-2.mt-3"));
+      $(".field-error").scrollIntoView({behavior:"smooth", block:"center"});
+      return false;
+    }
+  }
+  // Acceptation des CGU et certification obligatoires
+  const cert = $("#opt-certify");
+  const missingChecks = [];
+  if (!cert.checked) missingChecks.push("Certification de l'exactitude des informations");
+  if (missingChecks.length) {
+    const msg = document.createElement("div");
+    msg.className = "step-error-msg";
+    msg.innerHTML = "⚠ <strong>Cases obligatoires non cochées :</strong><br>" + missingChecks.map(m => "• " + m).join("<br>");
+    const stepDiv = $("#form-step-4");
+    stepDiv.insertBefore(msg, stepDiv.querySelector(".flex.gap-2.mt-3"));
+    msg.scrollIntoView({behavior:"smooth", block:"center"});
+    return false;
+  }
+  return true;
+}
+
+// Validation de l'étape 3 (Photos & prix)
+function validateStep3() {
+  $$(".field-error").forEach(el => el.classList.remove("field-error"));
+  const old = $("#form-step-3 .step-error-msg"); if (old) old.remove();
+
+  const prixEl = $("#prix");
+  const prix = parseFloat(prixEl.value) || 0;
+  const min = getMinPrix();
+  if (prix <= 0) {
+    prixEl.classList.add("field-error");
+    const msg = document.createElement("div");
+    msg.className = "step-error-msg";
+    msg.innerHTML = "⚠ <strong>Le prix de vente est obligatoire</strong> pour publier votre annonce.";
+    const stepDiv = $("#form-step-3");
+    stepDiv.insertBefore(msg, stepDiv.querySelector(".flex.gap-2.mt-3"));
+    prixEl.scrollIntoView({behavior:"smooth", block:"center"});
+    return false;
+  }
+  if (prix < min) {
+    prixEl.classList.add("field-error");
+    const msg = document.createElement("div");
+    msg.className = "step-error-msg";
+    msg.innerHTML = "⚠ Le prix saisi est inférieur au minimum autorisé (" + min.toLocaleString('fr-FR') + " €).";
+    const stepDiv = $("#form-step-3");
+    stepDiv.insertBefore(msg, stepDiv.querySelector(".flex.gap-2.mt-3"));
+    prixEl.scrollIntoView({behavior:"smooth", block:"center"});
+    return false;
+  }
+  return true;
+}
+
+// ---------- Gestion des photos réelles ----------
+let uploadedPhotos = [];          // tableau de Data URLs
+let photosPackActive = false;     // Pack Photos+ souscrit ? (particuliers uniquement)
+const MAX_FREE_PHOTOS = 3;
+
+// Un compte professionnel ?
+function isProAccount() {
+  const s = getSession();
+  return !!(s && s.type === "pro");
+}
+
+// Nombre maximum de photos selon le compte
+//  Pro : quota fixe inclus dans l'abonnement (3 / 10 / 20)
+//  Particulier : 3 de base, 10 avec le Pack Photos+
+function maxPhotos() {
+  if (isProAccount()) return getPhotoLimit();
+  return photosPackActive ? 10 : MAX_FREE_PHOTOS;
+}
+
+// Redimensionne une image et renvoie une Data URL JPEG compacte
+function resizeImage(file, maxDim, cb) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL("image/jpeg", 0.75));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderPhotoGrid() {
+  const grid = $("#photo-grid");
+  if (!grid) return;
+  const max = maxPhotos();
+  const pro = isProAccount();
+  let html = "";
+  uploadedPhotos.forEach((url, i) => {
+    html += `<div class="photo-slot filled" style="background-image:url('${url}')">
+      <button type="button" class="photo-remove" onclick="removePhoto(${i})" title="Retirer">✕</button>
+      ${i === 0 ? '<span class="photo-main-tag">Principale</span>' : ''}
+    </div>`;
+  });
+  if (uploadedPhotos.length < max) {
+    html += `<label class="photo-slot add"><input type="file" accept="image/*" hidden onchange="handlePhotoUpload(this)"><span>+</span></label>`;
+  }
+  const shown = uploadedPhotos.length + (uploadedPhotos.length < max ? 1 : 0);
+  // Nombre total d'emplacements affichés : la limite pour un pro, 10 pour un particulier
+  const totalSlots = pro ? max : 10;
+  for (let i = shown; i < totalSlots; i++) {
+    if (pro) {
+      html += `<div class="photo-slot empty"></div>`;
+    } else {
+      const locked = i >= MAX_FREE_PHOTOS && !photosPackActive;
+      html += `<div class="photo-slot ${locked ? 'locked' : 'empty'}" ${locked ? 'title="Disponible avec le Pack Photos+"' : ''}>${locked ? '🔒' : ''}</div>`;
+    }
+  }
+  grid.innerHTML = html;
+  $("#photo-count").textContent = uploadedPhotos.length + " / " + max + " photos ajoutées" +
+    (uploadedPhotos.length > 0 ? " — la 1re est la photo principale" : "");
+}
+
+function handlePhotoUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (uploadedPhotos.length >= maxPhotos()) {
+    alert(isProAccount()
+      ? "Vous avez atteint le nombre de photos inclus dans votre formule professionnelle."
+      : "Vous avez atteint le nombre maximum de photos. Souscrivez le Pack Photos+ pour en ajouter plus.");
+    return;
+  }
+  resizeImage(file, 1100, async dataUrl => {
+    const idx = uploadedPhotos.push(dataUrl) - 1;
+    renderPhotoGrid();
+    if (window.VP_SB && typeof VP_SB.uploadAdPhoto === "function") {
+      try {
+        const url = await VP_SB.uploadAdPhoto(dataUrl);
+        if (url) { uploadedPhotos[idx] = url; renderPhotoGrid(); }
+      } catch (e) { console.warn("Upload Storage KO:", e); }
+    }
+  });
+}
+
+function removePhoto(i) {
+  uploadedPhotos.splice(i, 1);
+  renderPhotoGrid();
+}
+
+// Étape 3 : la case "Pack Photos+" sert à DÉBLOQUER les emplacements supplémentaires.
+// Elle pré-coche la case de l'étape 5, mais c'est bien à l'étape 5 que le pack est confirmé.
+function togglePhotosPack(active) {
+  photosPackActive = active;
+  const cb5 = $("#opt-pack-photos-5");
+  if (cb5) cb5.checked = active;   // pré-coche l'étape 5 (l'utilisateur valide là-bas)
+  renderPhotoGrid();
+}
+
+// Étape 5 : confirmation officielle du Pack Photos+ — synchronise la case de l'étape 3
+function setPhotosPack(active) {
+  photosPackActive = active;
+  const cb3 = $("#opt-pack-photos");
+  if (cb3) cb3.checked = active;
+  renderPhotoGrid();
+}
+
+// Étape 5 : si on coche le Pack Photos+ ici, on renvoie l'utilisateur à l'étape 3
+// pour qu'il puisse ajouter ses photos supplémentaires.
+function onStep5PhotosPackChange(checked) {
+  setPhotosPack(checked);
+  if (checked) {
+    alert("📷 Pack Photos+ activé !\n\nVous allez être ramené à l'étape « Photos & prix » pour ajouter vos photos supplémentaires (jusqu'à 10 photos au total).");
+    goStep(3);
+  }
+}
+
+// Étape 5 : affiche/masque les 3 formules du Pack Remontada
+function toggleRemontada(checked) {
+  $("#remontada-formules").style.display = checked ? "block" : "none";
+}
+
+function goStep(n) {
+  // Validation : on bloque le passage à une étape >2 si les champs obligatoires de l'étape 2 ne sont pas remplis
+  if (currentStep === 2 && n > 2) {
+    if (!validateStep2()) return;
+  }
+  // Validation : on bloque le passage à une étape >3 si le prix n'est pas valide
+  if (currentStep === 3 && n > 3) {
+    if (!validateStep3()) return;
+  }
+  // Validation : on bloque le passage à une étape >4 si vente sécurisée cochée sans documents
+  if (currentStep === 4 && n > 4) {
+    if (!validateStep4()) return;
+  }
+  // Toggle forms based on type at step 2
+  if (n === 2) {
+    $("#form-voiture").classList.toggle("hidden", chosenType !== "voiture");
+    $("#form-piece").classList.toggle("hidden", chosenType !== "piece");
+  }
+  // Initialise le hint prix et le placeholder selon le type d'annonce à l'étape 3
+  if (n === 3) {
+    const prixInp = $("#prix");
+    if (prixInp) prixInp.placeholder = (chosenType === "piece") ? "ex : 250" : "ex : 42500";
+    checkPrix();
+  }
+  // Étape 4 : afficher le bloc voiture OU le bloc pièce selon le type
+  if (n === 4) {
+    const isPiece = chosenType === "piece";
+    $("#step4-title").textContent = isPiece ? "Conditions de vente & envoi" : "Documents";
+    $("#step4-vehicle").style.display = isPiece ? "none" : "block";
+    $("#step4-piece").style.display   = isPiece ? "block" : "none";
+  }
+  // Section inspection visible uniquement pour les voitures à l'étape 5
+  if (n === 5) {
+    const inspSec = $("#inspection-section");
+    if (inspSec) {
+      inspSec.style.display = (chosenType === "voiture") ? "block" : "none";
+      checkInspectionEligibility();
+    }
+  }
+  for (let i=1; i<=5; i++) {
+    $("#form-step-"+i).classList.toggle("hidden", i !== n);
+    const sb = $("#step-"+i);
+    sb.classList.remove("active","done");
+    if (i < n) sb.classList.add("done");
+    else if (i === n) sb.classList.add("active");
+  }
+  currentStep = n;
+  window.scrollTo(0,0);
+}
+
+let selectedInspection = null;
+const INSPECTION_LABELS = {
+  bronze: { name:"Inspection Standard", price:150 },
+  silver: { name:"Inspection Premium",  price:300 },
+  gold:   { name:"Inspection Complète", price:500 }
+};
+
+function selectInspection(key) {
+  selectedInspection = key;
+  ["bronze","silver","gold"].forEach(k => {
+    $("#inspect-"+k).classList.toggle("selected", k === key);
+  });
+  // Le choix du garage (avec carte de France) n'apparaît que si une inspection est sélectionnée
+  const gw = $("#inspect-garage-wrap");
+  if (gw) {
+    gw.style.display = key ? "block" : "none";
+    if (key) initGarageMiniMap("inspect-garage-map", "inspect-garage");
+  }
+  if (key) {
+    const i = INSPECTION_LABELS[key];
+    $("#inspect-recap").textContent = "✅ Inspection sélectionnée : " + i.name + " (+" + i.price + " €) ";
+    $("#inspect-cancel").style.display = "inline";
+  } else {
+    $("#inspect-recap").textContent = "Aucune inspection sélectionnée.";
+    $("#inspect-cancel").style.display = "none";
+  }
+}
+
+function checkInspectionEligibility() {
+  // L'inspection n'est dispo que pour les véhicules "Projet terminé / Bon"
+  const etat = $("#v-etat") ? $("#v-etat").value : "";
+  const eligible = etat === "Projet terminé / Bon";
+  const cards = ["inspect-bronze","inspect-silver","inspect-gold"];
+  cards.forEach(id => {
+    const c = $("#"+id);
+    if (!c) return;
+    c.style.opacity = eligible ? "1" : ".4";
+    c.style.pointerEvents = eligible ? "auto" : "none";
+  });
+  $("#inspect-unavailable").style.display = eligible ? "none" : "block";
+  if (!eligible && selectedInspection) selectInspection(null);
+}
+
+function updateModels() {
+  const m = $("#v-marque").value;
+  fillSelect($("#v-modele"), DATA.marques_models[m]||[], "Sélectionner");
+}
+function updatePModels() {
+  const m = $("#p-marque").value;
+  fillSelect($("#p-modele"), DATA.marques_models[m]||[], "Tous");
+}
+function updatePieceSubs() {
+  const c = $("#p-cat").value;
+  fillSelect($("#p-sub"), DATA.pieces[c]||[], "Sélectionner");
+}
+
+function showStageDesc() {
+  const s = $("#v-stage").value;
+  const found = DATA.stages.find(x => x.stage === s);
+  const el = $("#stage-desc");
+  if (found && found.desc) { el.textContent = found.desc; el.classList.remove("hidden"); }
+  else { el.classList.add("hidden"); }
+}
+
+function updatePrixMin(){ checkPrix(); }
+
+// Calcule le prix minimum applicable selon le type d'annonce
+function getMinPrix() {
+  const st = (typeof loadSiteSettings === "function") ? loadSiteSettings() : null;
+  if (chosenType === "piece") return st ? st.prix_min_piece : 5;
+  const etat = $("#v-etat") ? $("#v-etat").value : "";
+  if (st) return (etat === "Projet terminé / Bon") ? st.prix_min_voiture_bon : st.prix_min_voiture_endommage;
+  return (etat === "Projet terminé / Bon") ? 6000 : 2000;
+}
+
+// Retourne le texte d'information par défaut sous le champ prix
+function defaultPrixHint() {
+  const st = (typeof loadSiteSettings === "function") ? loadSiteSettings() : null;
+  const fmtEur = n => (Number(n) || 0).toLocaleString('fr-FR');
+  const piece = st ? st.prix_min_piece : 5;
+  const bon   = st ? st.prix_min_voiture_bon : 6000;
+  const endo  = st ? st.prix_min_voiture_endommage : 2000;
+  if (chosenType === "piece") {
+    return `Prix minimum pour une pièce détachée : <strong>${fmtEur(piece)} €</strong>.`;
+  }
+  return `Prix minimum pour un véhicule <strong>« Projet terminé / Bon »</strong> : ${fmtEur(bon)} €.<br>
+          Pour <strong>« Endommagé »</strong> ou <strong>« Projet à finir »</strong> : ${fmtEur(endo)} €.`;
+}
+
+function checkPrix(){
+  const prix = parseFloat($("#prix").value) || 0;
+  const hint = $("#prix-hint");
+  const min = getMinPrix();
+  if (prix > 0 && prix < min) {
+    hint.innerHTML = `<span style="color:var(--red);font-weight:600;">⚠ Le prix minimum ${chosenType === "piece" ? "pour une pièce" : "pour cet état du véhicule"} est ${min.toLocaleString('fr-FR')} €.</span>`;
+  } else {
+    hint.innerHTML = defaultPrixHint();
+  }
+}
+
+// Aucune photo uploadée → image neutre « Pas de photo » (aucune fausse photo n'est ajoutée)
+function pickPlaceholderImg(type) {
+  return noPhotoPlaceholder();
+}
+
+// ============================================================
+// Validation ville ↔ département — API officielle geo.api.gouv.fr
+// La ville saisie doit exister ET appartenir au département choisi.
+// Hors ligne / API injoignable : la publication n'est pas bloquée.
+// ============================================================
+const _communesCache = {}; // code INSEE -> { ok:bool, noms:[...], set:Set(minuscules) }
+
+// Convertit un code de DATA.departements vers le format INSEE attendu par l'API
+function deptInsee(code) {
+  code = String(code || "").trim().toUpperCase();
+  if (code === "2A" || code === "2B") return code;
+  if (/^\d$/.test(code)) return "0" + code;   // « 6 » -> « 06 »
+  return code;                                 // « 75 », « 971 »…
+}
+
+// Charge (et met en cache) la liste des communes d'un département
+function loadCommunes(deptCode) {
+  const insee = deptInsee(deptCode);
+  if (!insee) return Promise.resolve(null);
+  if (_communesCache[insee]) return Promise.resolve(_communesCache[insee]);
+  const url = "https://geo.api.gouv.fr/communes?codeDepartement=" +
+              encodeURIComponent(insee) + "&fields=nom&format=json";
+  return fetch(url)
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(list => {
+      const noms = (list || []).map(c => c.nom).filter(Boolean)
+                                .sort((a,b) => a.localeCompare(b, "fr"));
+      const entry = { ok:true, noms:noms, set:new Set(noms.map(n => n.toLowerCase())) };
+      _communesCache[insee] = entry;
+      return entry;
+    })
+    .catch(() => {
+      // API injoignable : on mémorise l'échec pour ne pas bloquer la publication
+      const entry = { ok:false, noms:[], set:new Set() };
+      _communesCache[insee] = entry;
+      return entry;
+    });
+}
+
+// Le département a changé : on recharge les communes et on vide le champ ville
+function onDepartementChange(pfx) {
+  const villeEl = $("#"+pfx+"-ville");
+  const depEl   = $("#"+pfx+"-departement");
+  const listEl  = $("#"+pfx+"-ville-list");
+  const hintEl  = $("#"+pfx+"-ville-hint");
+  if (villeEl) { villeEl.value = ""; villeEl.classList.remove("field-error"); }
+  if (listEl) listEl.innerHTML = "";
+  if (hintEl) hintEl.innerHTML = "";
+  const code = depEl ? depEl.value : "";
+  if (!code) { if (villeEl) villeEl.placeholder = "Choisissez d'abord le département"; return; }
+  if (villeEl) villeEl.placeholder = "Chargement des communes…";
+  loadCommunes(code).then(entry => {
+    if (villeEl) villeEl.placeholder = "Saisissez la ville puis choisissez dans la liste";
+    if (entry && entry.ok && listEl) {
+      listEl.innerHTML = entry.noms.map(n => '<option value="' + n + '">').join("");
+    }
+  });
+}
+
+// ---- Cohérence Région / Département au dépôt d'annonce ----
+// Normalise un code de département (retire le zéro de tête : "01" -> "1")
+function normDept(c) {
+  return String(c == null ? "" : c).trim().toUpperCase().replace(/^0+(?=[0-9])/, "");
+}
+// Région correspondant à un code de département
+function regionForDept(code) {
+  const nc = normDept(code);
+  for (const r in REGION_DEPTS) {
+    if (REGION_DEPTS[r].indexOf(nc) !== -1) return r;
+  }
+  return "";
+}
+// Recharge la liste des départements selon la région choisie
+function syncDepartementsToRegion() {
+  const reg = ($("#v-region") || {}).value || "";
+  const dep = $("#v-departement");
+  if (!dep) return;
+  const prev = dep.value;
+  const codes = REGION_DEPTS[reg];
+  const list = codes
+    ? DATA.departements.filter(d => codes.indexOf(normDept(d.code)) !== -1)
+    : DATA.departements;
+  fillSelect(dep, list.map(d => ({ value:d.code, label:d.code + " - " + d.name })), "Sélectionner");
+  const stillValid = prev && list.some(d => d.code === prev);
+  if (stillValid) { dep.value = prev; }
+  else { onDepartementChange("v"); }
+}
+// Aligne automatiquement la région sur le département choisi
+function syncRegionToDepartement() {
+  const dep = $("#v-departement"), reg = $("#v-region");
+  if (!dep || !reg || !dep.value) return;
+  const r = regionForDept(dep.value);
+  if (r && reg.value !== r) {
+    const code = dep.value;
+    reg.value = r;
+    const codes = REGION_DEPTS[r] || [];
+    const list = DATA.departements.filter(d => codes.indexOf(normDept(d.code)) !== -1);
+    fillSelect(dep, list.map(d => ({ value:d.code, label:d.code + " - " + d.name })), "Sélectionner");
+    dep.value = code;
+  }
+}
+
+// Vérifie en direct que la ville saisie appartient bien au département choisi
+function checkVilleField(villeId, depId) {
+  const villeEl = $("#"+villeId), depEl = $("#"+depId), hintEl = $("#"+villeId+"-hint");
+  if (!villeEl || !depEl) return;
+  const ville = (villeEl.value || "").trim(), code = depEl.value;
+  if (!ville || !code) { villeEl.classList.remove("field-error"); if (hintEl) hintEl.innerHTML = ""; return; }
+  const entry = _communesCache[deptInsee(code)];
+  if (!entry || !entry.ok) { villeEl.classList.remove("field-error"); if (hintEl) hintEl.innerHTML = ""; return; }
+  if (entry.set.has(ville.toLowerCase())) {
+    villeEl.classList.remove("field-error");
+    if (hintEl) hintEl.innerHTML = '<span style="color:var(--green);font-weight:600;">✓ Commune valide pour ce département.</span>';
+  } else {
+    villeEl.classList.add("field-error");
+    if (hintEl) hintEl.innerHTML = '<span style="color:var(--red);font-weight:600;">⚠ Cette commune n\'existe pas dans le département sélectionné.</span>';
+  }
+}
+
+// Renvoie true si la ville est valide OU si la vérification est impossible (hors ligne)
+function villeIsAcceptable(villeId, depId) {
+  const villeEl = $("#"+villeId), depEl = $("#"+depId);
+  if (!villeEl || !depEl) return true;
+  const ville = (villeEl.value || "").trim(), code = depEl.value;
+  if (!ville || !code) return true;            // l'absence est gérée par « champ obligatoire »
+  const entry = _communesCache[deptInsee(code)];
+  if (!entry || !entry.ok) return true;        // API indisponible : on ne bloque pas
+  return entry.set.has(ville.toLowerCase());
+}
+
+function getDepartementLabel() {
+  const sel = $(chosenType === "voiture" ? "#v-departement" : "#p-departement");
+  if (!sel) return "";
+  const code = sel.value;
+  const dep = DATA.departements.find(d => d.code === code);
+  return dep ? (dep.code + " " + dep.name) : code;
+}
+
+function getInspectionBadge() {
+  if (chosenType !== "voiture") return null;
+  return selectedInspection; // "bronze" | "silver" | "gold" | null
+}
+
+// Lit un fichier document et renvoie {name, type, data} (Data URL) — images compressées
+function readDocFile(file) {
+  return new Promise(resolve => {
+    if (!file) { resolve(null); return; }
+    if (file.type && file.type.startsWith("image/")) {
+      resizeImage(file, 1400, dataUrl => resolve({ name:file.name, type:file.type, data:dataUrl }));
+    } else {
+      const r = new FileReader();
+      r.onload = e => resolve({ name:file.name, type:(file.type||"application/octet-stream"), data:e.target.result });
+      r.onerror = () => resolve({ name:file.name, type:(file.type||""), data:null });
+      r.readAsDataURL(file);
+    }
+  });
+}
+
+// Collecte les documents joints (admin only) — stocke le CONTENU pour visualisation par l'admin
+async function collectDocuments() {
+  const venteEnLigne = $("#opt-vente-en-ligne");
+  if (chosenType !== "voiture" || !venteEnLigne || !venteEnLigne.checked) return null;
+  const ct = $("#doc-ct"), id = $("#doc-id"), cg = $("#doc-cg");
+  return {
+    controle_technique: await readDocFile(ct && ct.files ? ct.files[0] : null),
+    piece_identite:     await readDocFile(id && id.files ? id.files[0] : null),
+    carte_grise:        await readDocFile(cg && cg.files ? cg.files[0] : null)
+  };
+}
+
+function buildAdObject(documents) {
+  const id = Date.now(); // identifiant unique basé sur le timestamp
+  const ville = (chosenType === "voiture" ? $("#v-ville").value : $("#p-ville").value).trim();
+  const dept = getDepartementLabel();
+  const localisation = ville ? (dept + " · " + ville) : dept;
+  // Photos réelles uploadées (Data URLs). La 1re sert d'image principale.
+  const photos = uploadedPhotos.slice();
+  const mainImg = photos.length ? photos[0] : pickPlaceholderImg(chosenType);
+
+  // Badges + options souscrites à l'étape 5
+  const badges = [];
+  const options = [];
+  const optChecks = $$("#form-step-5 input[type='checkbox']:checked");
+  optChecks.forEach(cb => {
+    const card = cb.closest(".price-card");
+    if (!card) return;
+    const name = (card.querySelector(".name")?.textContent || "").trim();
+    if (name.includes("Urgence"))   { badges.push("urgent");  options.push("Pack Urgence"); }
+    if (name.includes("Remontada")) {
+      badges.push("premium");
+      const f = document.querySelector('input[name="remontada-formule"]:checked');
+      options.push("Pack Remontada" + (f ? " — " + f.value : ""));
+    }
+    if (name.includes("Photos+"))   { options.push("Pack Photos+"); }
+  });
+  // Le Pack Photos+ peut aussi avoir été activé depuis l'étape 3
+  if (photosPackActive && !options.includes("Pack Photos+")) options.push("Pack Photos+");
+  // Badge inspection
+  const insp = getInspectionBadge();
+  // Le badge Or/Argent/Bronze n'est PAS ajouté ici : il sera posé manuellement
+  // par l'administrateur une fois le rapport d'inspection du garage reçu.
+  if (insp === "bronze") { options.push("Inspection Bronze"); }
+  if (insp === "silver") { options.push("Inspection Argent"); }
+  if (insp === "gold")   { options.push("Inspection Or"); }
+
+  // Compte professionnel : badge "Pro" automatique sur les 3 packs
+  const session = getSession();
+  const isPro = !!(session && session.type === "pro");
+  if (isPro && !badges.includes("pro")) badges.push("pro");
+
+  if (chosenType === "voiture") {
+    // Récupère les pièces de performance cochées
+    const piecesPerf = $$('#v-pieces input[type="checkbox"]:checked').map(cb => cb.value);
+    return {
+      id, type:"voiture",
+      titre: $("#titre").value.trim(),
+      marque: $("#v-marque").value,
+      modele: $("#v-modele").value,
+      annee: parseInt($("#v-annee").value) || null,
+      km:    parseInt($("#v-km").value) || 0,
+      km_moteur: parseInt($("#v-km-moteur").value) || null,
+      prix:  parseFloat($("#prix").value) || 0,
+      carburant: $("#v-carburant").value,
+      boite:     $("#v-boite").value,
+      couleur:   $("#v-couleur").value,
+      stage:     $("#v-stage").value,
+      etat:      $("#v-etat").value,
+      categorie: $("#v-categorie").value,
+      nb_portes: $("#v-portes").value,
+      nb_places: $("#v-places").value,
+      covering:  $("#v-cover").value,
+      puissance_origine: parseInt($("#v-puis-ori").value) || null,
+      puissance_actuelle:parseInt($("#v-puis-cur").value) || null,
+      couple_origine:    parseInt($("#v-coup-ori").value) || null,
+      couple_actuel:     parseInt($("#v-coup-cur").value) || null,
+      pieces_perf: piecesPerf,
+      description: $("#desc").value.trim(),
+      ville: ville,
+      departement: localisation,
+      pro: isPro, vues: 0, favoris: 0,
+      pro_pack: isPro ? (session.pack || "gratuit") : null,
+      duration_months: getAdDurationMonths(),
+      badges,
+      options: options,
+      photos: photos,
+      img: mainImg,
+      owner_email: session ? (session.email || "") : "", // rattache l'annonce au compte
+      documents: documents,       // ⚠ admin only — jamais affiché publiquement
+      vente_en_ligne: !!($("#opt-vente-en-ligne") && $("#opt-vente-en-ligne").checked),
+      status: "pending",          // en attente de validation par l'administrateur
+      submitted_at: new Date().toISOString(), // date de soumission (info admin)
+      created_at: new Date().toISOString()    // sera remplacée par la date de validation admin
+    };
+  } else {
+    return {
+      id, type:"piece",
+      titre: $("#titre").value.trim(),
+      cat:   $("#p-cat").value,
+      sous:  $("#p-sub").value,
+      marque:$("#p-marque").value,
+      modele:$("#p-modele").value,
+      prix:  parseFloat($("#prix").value) || 0,
+      description: $("#desc").value.trim(),
+      ville: ville,
+      departement: localisation,
+      pro: isPro, vues: 0, favoris: 0,
+      pro_pack: isPro ? (session.pack || "gratuit") : null,
+      duration_months: getAdDurationMonths(),
+      badges,
+      options: options,
+      photos: photos,
+      img: mainImg,
+      owner_email: session ? (session.email || "") : "", // rattache l'annonce au compte
+      vente_en_ligne: !!($("#opt-vente-piece") && $("#opt-vente-piece").checked),
+      status: "pending",          // en attente de validation par l'administrateur
+      submitted_at: new Date().toISOString(), // date de soumission (info admin)
+      created_at: new Date().toISOString()    // sera remplacée par la date de validation admin
+    };
+  }
+}
+
+// Affiche un bandeau récapitulatif du compte connecté + sa limite d'annonces
+function showAccountBanner() {
+  const s = getSession();
+  if (!s) return;
+  const limit = getAdLimit();
+  const used = countMyAds();
+  const limitTxt = limit === Infinity ? "illimité" : limit;
+  const typeTxt = s.type === "pro"
+    ? `Professionnel — Pack ${ {gratuit:"Gratuit",premium:"Premium",performance:"Performance"}[s.pack] || s.pack }`
+    : "Particulier";
+  const atLimit = used >= limit;
+  const upgradeBtn = (atLimit && s.type === "pro")
+    ? `<div style="margin-top:8px;"><button type="button" class="btn btn-primary btn-sm" onclick="openUpgradeModal()">⬆ Passer à une formule supérieure</button></div>`
+    : "";
+  const html = `<div id="account-banner" class="alert ${atLimit?'alert-warning':'alert-info'}" style="margin-bottom:18px;">
+    👤 Connecté en tant que <strong>${s.prenom||""}</strong> · Compte ${typeTxt}<br>
+    Annonces utilisées : <strong>${used} / ${limitTxt}</strong>${atLimit?' — <strong>limite atteinte</strong>, passez à une formule supérieure pour publier davantage.':''}
+    ${upgradeBtn}
+  </div>`;
+  const card = document.querySelector(".deposit-card");
+  const h1 = card.querySelector("h1");
+  h1.insertAdjacentHTML("afterend", html);
+}
+
+// Modale de mise à niveau : proposée quand un compte pro atteint sa limite d'annonces
+function openUpgradeModal() {
+  const s = getSession();
+  if (!s || s.type !== "pro") return;
+  const cur = PRO_PACKS[s.pack || "gratuit"] || PRO_PACKS.gratuit;
+  const higher = Object.keys(PRO_PACKS).filter(k => PRO_PACKS[k].rang > cur.rang);
+  $("#upgrade-intro").textContent =
+    "Votre " + cur.label + " autorise " + cur.annoncesLabel.toLowerCase() + ". " +
+    "Pour publier cette annonce supplémentaire, choisissez une formule supérieure :";
+  $("#upgrade-packs").innerHTML = higher.map(k => {
+    const p = PRO_PACKS[k];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border:2px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div>
+        <div style="font-weight:800;font-size:16px;">${p.label} — ${p.prixLabel}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:3px;">${p.annoncesLabel} · ${p.duree} mois en ligne · ${p.photos} photos par annonce</div>
+      </div>
+      <button class="btn btn-primary" onclick="chooseUpgrade('${k}')">Choisir ${p.label}</button>
+    </div>`;
+  }).join("");
+  $("#upgrade-modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeUpgradeModal() {
+  $("#upgrade-modal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+function chooseUpgrade(packKey) {
+  const p = PRO_PACKS[packKey];
+  if (!p) return;
+  const PACK_PRICES = { premium: 200, performance: 400 };
+  const montant = PACK_PRICES[packKey] || 0;
+
+  // Applique réellement la mise à niveau (après acceptation du paiement)
+  const apply = function () {
+    addRevenue({ category:"abonnement", label:"Mise à niveau Pack " + p.label, amount:montant,
+                 payer:(getSession() && getSession().email) || "" });
+    upgradeProPack(packKey);
+    const b = document.getElementById("account-banner");
+    if (b) b.remove();
+    showAccountBanner();
+    alert("✅ Votre compte est maintenant en " + p.label + ".\nVotre annonce va être publiée.");
+    submitAd();
+  };
+
+  closeUpgradeModal();
+
+  // Mise à niveau payante : paiement obligatoire (comme la souscription d'abonnement pro)
+  if (montant > 0) {
+    openPaymentModal(montant, "Mise à niveau — " + p.label, apply, null, {
+      breakdown: [ { label: "Abonnement " + p.label + " (1 an)", value: montant.toLocaleString('fr-FR') + " €" } ],
+      footnote: "Mise à niveau de l'abonnement professionnel. La nouvelle formule est activée une fois le paiement accepté."
+    });
+  } else {
+    apply();
+  }
+}
+
+// Tarifs des formules du Pack Remontada (€)
+const REMONTADA_FORMULE_PRICES = { "Quotidien": 34.99, "Hebdo court": 9.99, "Hebdo long": 14.99 };
+
+// Calcule le montant total des options boost payantes + le détail pour le paiement
+function boostOptionsToPay(options) {
+  let total = 0;
+  const lines = [];
+  const euro = n => n.toFixed(2).replace(".", ",") + " €";
+  // v15 : consulte les feature flags pour ne PAS facturer un pack désactivé
+  const flags = (typeof loadLaunchFlags === "function") ? loadLaunchFlags() : {};
+  // Tarifs dynamiques depuis les paramètres admin (fallback aux valeurs par défaut)
+  const settings = (typeof loadSiteSettings === "function") ? loadSiteSettings() : {};
+  const priceOf = (key, fallback) => {
+    const v = parseFloat(settings[key]);
+    return (!isNaN(v) && v >= 0) ? v : fallback;
+  };
+  (options || []).forEach(opt => {
+    if (opt === "Pack Photos+") {
+      // Pack Photos+ : gratuit si flag pack_photos_paid désactivé
+      if (flags.pack_photos_paid) {
+        const p = priceOf("prix_photos_plus", 4.99);
+        total += p; lines.push({ label: "Pack Photos+", value: euro(p), amount: p });
+      }
+      // sinon : on ne facture rien — l'option reste sur l'annonce (débloque 7 photos)
+    } else if (opt === "Pack Urgence") {
+      // Skipped si flag désactivé (sécurité, ne devrait pas pouvoir être coché)
+      if (flags.pack_urgence_enabled) {
+        const p = priceOf("prix_urgence", 5.99);
+        total += p; lines.push({ label: "Pack Urgence", value: euro(p), amount: p });
+      }
+    } else if (opt.indexOf("Pack Remontada") === 0) {
+      if (flags.pack_remontada_enabled) {
+        const parts = opt.split("—");
+        const formule = parts[1] ? parts[1].trim() : "Hebdo court";
+        const p = REMONTADA_FORMULE_PRICES[formule] || 9.99;
+        total += p;
+        lines.push({ label: "Pack Remontada — " + formule, value: euro(p), amount: p });
+      }
+    }
+    // Les options « Inspection ... » sont réglées séparément
+  });
+  return { total: Math.round(total * 100) / 100, lines: lines };
+}
+
+async function submitAd() {
+  // 🔒 Vérification du compte et de la limite d'annonces
+  if (!isLoggedIn()) { alert("Vous devez être connecté pour publier une annonce."); return; }
+  const limit = getAdLimit();
+  if (countMyAds() >= limit) {
+    const s = getSession();
+    if (s && s.type === "pro") {
+      // Compte professionnel à la limite : on propose les formules supérieures
+      openUpgradeModal();
+    } else {
+      alert("⚠ Limite d'annonces atteinte\n\n" +
+            "Votre formule autorise " + limit + " annonce(s) en ligne maximum.\n" +
+            "Contactez le support pour augmenter votre limite.");
+    }
+    return;
+  }
+
+  // Validation : si plus de 3 photos, le Pack Photos+ doit être coché à l'étape 5
+  // (uniquement pour les particuliers — pour les pros les photos sont incluses dans l'abonnement)
+  if (!isProAccount() && uploadedPhotos.length > MAX_FREE_PHOTOS) {
+    const cb5 = $("#opt-pack-photos-5");
+    if (!cb5 || !cb5.checked) {
+      alert("⚠ Vous avez ajouté " + uploadedPhotos.length + " photos.\n\n" +
+            "Les 3 premières sont gratuites. Pour publier une annonce avec plus de 3 photos, " +
+            "vous devez cocher « Ajouter ce pack » sur le Pack Photos+ ci-dessous (4,99 €).");
+      // Met en évidence la carte Pack Photos+
+      const card = cb5 ? cb5.closest(".price-card") : null;
+      if (card) {
+        card.style.boxShadow = "0 0 0 3px var(--orange)";
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => { card.style.boxShadow = ""; }, 3000);
+      }
+      return;
+    }
+  }
+  // Inspection sélectionnée : un garage partenaire doit être choisi
+  if (selectedInspection && (!$("#inspect-garage") || !$("#inspect-garage").value)) {
+    alert("Vous avez choisi une inspection. Veuillez sélectionner le garage partenaire où la réaliser (étape 5).");
+    goStep(5);
+    return;
+  }
+
+  const documents = await collectDocuments();
+  const ad = buildAdObject(documents);
+
+  // Options boost payantes (Pack Photos+, Urgence, Remontada) : paiement OBLIGATOIRE
+  // avant publication, comme la souscription d'un abonnement professionnel.
+  const boost = boostOptionsToPay(ad.options);
+  if (boost.total > 0) {
+    // Le résultat du paiement (accepté / refusé) est enregistré sur l'annonce
+    // pour que l'administrateur le voie au moment de la modération.
+    openPaymentModal(boost.total, "Options de visibilité — " + ad.titre,
+      function () {
+        ad.payment = { required:true, amount:boost.total, status:"accepté", reason:"" };
+        const payer = (getSession() && getSession().email) || "";
+        boost.lines.forEach(l => addRevenue({ category:"pack", label:l.label, amount:l.amount, payer:payer }));
+        finalizeSubmit(ad);
+      },
+      function () {
+        ad.payment = { required:true, amount:boost.total, status:"non payé",
+          reason: (typeof lastPaymentDecline === "function" && lastPaymentDecline())
+                  || "Paiement annulé — non finalisé par le déposant" };
+        finalizeSubmit(ad);
+      },
+      {
+        breakdown: boost.lines,
+        footnote: "Options de visibilité de l'annonce. Le statut du paiement est transmis à l'administrateur avec l'annonce."
+      });
+    return;
+  }
+  // Aucune option payante
+  ad.payment = { required:false };
+  finalizeSubmit(ad);
+}
+
+// Enregistre l'annonce, puis gère l'éventuel paiement de l'inspection
+async function finalizeSubmit(ad) {
+  // v15 : saveUserAd est ASYNC — on doit attendre avant de prétendre que c'est OK.
+  // Sans await, la Promise truthy bypassait le check et affichait un faux succès.
+  const saved = await saveUserAd(ad);
+  if (!saved) return; // échec : alerte déjà affichée par saveUserAd, on s'arrête là
+
+  // Pas d'inspection : message de succès puis redirection
+  if (!selectedInspection) {
+    const payKo = ad.payment && ad.payment.required && ad.payment.status !== "accepté";
+    alert("✅ Votre annonce a été soumise !\n\n" +
+          (payKo ? "⚠ Le paiement des options de visibilité n'a pas abouti — l'administrateur en sera informé lors de la modération.\n\n" : "") +
+          "Elle est en attente de validation par un administrateur (modération avant publication). " +
+          "Vous la retrouvez dès maintenant dans votre tableau de bord avec le statut « En attente ». " +
+          "Dès qu'elle sera validée, elle apparaîtra dans le listing public.");
+    window.location.href = "profil.html";
+    return;
+  }
+
+  // Inspection : paiement sécurisé (simulé) puis création de la demande de rendez-vous
+  const ni = INSPECTION_NIVEAUX[normInspKey(selectedInspection)];
+  const garage = $("#inspect-garage").value;
+  const s = getSession();
+  openPaymentModal(ni.prix, "Inspection " + ni.niveau + " — " + ad.titre,
+    function () {
+      addInspectionRequest({
+        niveau: ni.niveau, formule: ni.formule, prix: ni.prix,
+        vehicule: ad.titre, ad_id: ad.id,
+        owner_email: (s && s.email) || "", owner_name: (s && (s.prenom || s.raison)) || "",
+        source: "Dépôt d'annonce", garage: garage, paid: true
+      });
+      addRevenue({ category:"inspection", label:"Inspection " + ni.niveau, amount:ni.prix, payer:(s && s.email) || "" });
+      alert("✅ Votre annonce a été soumise et votre inspection " + ni.niveau +
+        " réglée (" + ni.prix + " €).\n\n" +
+        "L'administrateur vous proposera des créneaux de rendez-vous au garage choisi.\n\n" + INSPECTION_POLICY);
+      window.location.href = "profil.html";
+    },
+    function () {
+      alert("Votre annonce a été soumise. L'inspection n'a pas été réglée — vous pourrez la " +
+        "commander plus tard depuis la page « Inspection véhicule ».");
+      window.location.href = "profil.html";
+    });
+}
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  // v15 : applique l'état des flags de lancement (packs payants on/off + photos gratuit)
+  if (typeof applyLaunchFlagsToPacks === "function") applyLaunchFlagsToPacks();
+});
+</script>
+</body>
+</html>
