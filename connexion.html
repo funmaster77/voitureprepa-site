@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion — VoiturePrepa.fr</title>
+<meta name="description" content="Connectez-vous à votre compte VoiturePrepa.fr pour gérer vos annonces, vos favoris et votre messagerie sécurisée.">
+<link rel="canonical" href="https://voitureprepa.fr/connexion.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VoiturePrepa.fr">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Connexion — VoiturePrepa.fr">
+<meta property="og:description" content="Connectez-vous à votre compte VoiturePrepa.fr pour gérer vos annonces, vos favoris et votre messagerie sécurisée.">
+<meta property="og:url" content="https://voitureprepa.fr/connexion.html">
+<meta property="og:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Connexion — VoiturePrepa.fr">
+<meta name="twitter:description" content="Connectez-vous à votre compte VoiturePrepa.fr pour gérer vos annonces, vos favoris et votre messagerie sécurisée.">
+<meta name="twitter:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .email-suggest-wrap { position:relative; }
+  .email-suggest {
+    position:absolute; left:0; right:0; top:100%;
+    background:#fff; border:1px solid var(--border);
+    border-radius:0 0 6px 6px; box-shadow:0 8px 18px rgba(0,0,0,.14);
+    z-index:60; max-height:230px; overflow-y:auto; display:none;
+  }
+  .email-suggest.open { display:block; }
+  .email-suggest .head {
+    padding:7px 12px; font-size:11px; text-transform:uppercase;
+    letter-spacing:.4px; color:var(--text-muted); background:var(--bg-alt);
+  }
+  .email-suggest .row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 12px; cursor:pointer; font-size:14px; gap:8px;
+  }
+  .email-suggest .row:hover { background:var(--orange-light); }
+  .email-suggest .row .mail { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .email-suggest .row .del {
+    border:none; background:none; color:var(--text-muted); cursor:pointer;
+    font-size:13px; padding:2px 7px; border-radius:4px; flex-shrink:0;
+  }
+  .email-suggest .row .del:hover { background:#fdecea; color:var(--red); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="auth-card">
+    <h1>Se connecter</h1>
+    <p class="sub">Pour déposer des annonces, échanger des messages et suivre vos favoris.</p>
+
+    <form onsubmit="event.preventDefault();fakeLogin();">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <div class="email-suggest-wrap">
+          <input type="email" id="login-email" class="form-input" placeholder="votre@email.fr"
+                 autocomplete="off" required
+                 onfocus="renderEmailSuggestions(true)"
+                 oninput="renderEmailSuggestions(false)"
+                 onblur="hideEmailSuggestions()">
+          <div id="email-suggest" class="email-suggest" onmousedown="event.preventDefault();"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" id="login-password" class="form-input" required>
+      </div>
+      <div class="form-group flex-between">
+        <label class="checkbox-line"><input type="checkbox" id="login-remember"> Se souvenir de moi</label>
+        <a href="#" style="font-size:13px;" onclick="event.preventDefault();forgotPassword();">Mot de passe oublié ?</a>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" onclick="event.preventDefault();fakeLogin();return false;">Se connecter</button>
+    </form>
+
+    <p class="text-center mt-3" style="font-size:14px;">
+      Pas encore inscrit ? <a href="inscription.html">Créer un compte gratuitement</a>
+    </p>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "compte";
+const REMEMBER_KEY = "voitureprepa_remember_email";
+const KNOWN_EMAILS_KEY = "voitureprepa_known_emails";
+
+// Emails déjà utilisés pour se connecter (proposés en autocomplétion)
+function loadKnownEmails(){
+  try { return JSON.parse(localStorage.getItem(KNOWN_EMAILS_KEY) || "[]"); }
+  catch(e){ return []; }
+}
+function saveKnownEmails(list){
+  try { localStorage.setItem(KNOWN_EMAILS_KEY, JSON.stringify(list)); } catch(e){}
+}
+function rememberEmail(email){
+  email = (email || "").trim();
+  if (!email) return;
+  let list = loadKnownEmails().filter(e => e.toLowerCase() !== email.toLowerCase());
+  list.unshift(email);          // le plus récent en tête
+  list = list.slice(0, 20);     // on conserve jusqu'à 20 comptes
+  saveKnownEmails(list);
+}
+
+// Affiche la liste déroulante des comptes déjà utilisés.
+// showAll = true (focus) : tous les comptes ; sinon filtrés par la saisie.
+function renderEmailSuggestions(showAll){
+  const box = $("#email-suggest");
+  if (!box) return;
+  const all = loadKnownEmails();
+  const typed = ($("#login-email").value || "").trim().toLowerCase();
+  const list = (showAll || !typed)
+    ? all
+    : all.filter(e => e.toLowerCase().includes(typed));
+  if (!list.length) { box.classList.remove("open"); box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="head">Comptes déjà utilisés</div>` + list.map(e => {
+    const esc = e.replace(/'/g, "\\'");
+    return `<div class="row" onclick="pickEmail('${esc}')">
+      <span class="mail">📧 ${e}</span>
+      <button type="button" class="del" title="Oublier ce compte"
+        onclick="event.stopPropagation();removeEmail('${esc}')">✕</button>
+    </div>`;
+  }).join("");
+  box.classList.add("open");
+}
+function pickEmail(email){
+  $("#login-email").value = email;
+  $("#email-suggest").classList.remove("open");
+  $("#login-password").focus();
+}
+function removeEmail(email){
+  saveKnownEmails(loadKnownEmails().filter(e => e.toLowerCase() !== email.toLowerCase()));
+  renderEmailSuggestions(true);
+}
+// Masque la liste après un court délai (laisse le clic se déclencher)
+function hideEmailSuggestions(){
+  setTimeout(() => {
+    const box = $("#email-suggest");
+    if (box) box.classList.remove("open");
+  }, 180);
+}
+
+function initPage(){
+  // Pré-remplit l'email si "Se souvenir de moi" avait été coché
+  const remembered = localStorage.getItem(REMEMBER_KEY);
+  if (remembered) {
+    $("#login-email").value = remembered;
+    $("#login-remember").checked = true;
+  }
+}
+
+async function fakeLogin(){
+  console.log("[fakeLogin] appelée - début");
+  // v15 : check préalable que VP_SB et $ sont disponibles, sinon erreur visible
+  try {
+    if (typeof $ === "undefined") {
+      alert("⚠ Le script app.js n'a pas fini de charger. Rechargez la page (Ctrl+Maj+R).");
+      return;
+    }
+    if (typeof VP_SB === "undefined" || !VP_SB.client) {
+      alert("⚠ La connexion à Supabase n'est pas prête. Rechargez la page (Ctrl+Maj+R).");
+      return;
+    }
+  } catch (e) {
+    alert("❌ Erreur d'initialisation : " + (e.message || e));
+    return;
+  }
+  const emailEl = $("#login-email");
+  const pwdEl = $("#login-password");
+  const remEl = $("#login-remember");
+  if (!emailEl || !pwdEl) {
+    alert("❌ Champs du formulaire introuvables. Rechargez la page.");
+    return;
+  }
+  const email = (emailEl.value || "").trim();
+  const password = pwdEl.value;
+  const remember = remEl ? remEl.checked : false;
+  if (!email || !password) { alert("Veuillez saisir email et mot de passe."); return; }
+
+  // v14 — Supabase Auth : connexion réelle
+  try {
+    const { data, error } = await VP_SB.signIn(email, password);
+    if (error) {
+      if ((error.message || "").toLowerCase().includes("email not confirmed")) {
+        alert("⚠ Votre compte n'est pas encore activé.\n\n" +
+              "Vous devez d'abord confirmer votre inscription en cliquant sur le lien reçu par email.");
+        return;
+      }
+      alert("❌ Connexion impossible : " + (error.message || "identifiants invalides"));
+      return;
+    }
+    // Récupère le profil pour connaître le type
+    const profile = await VP_SB.getMyProfile();
+    if (!profile) {
+      alert("⚠ Compte authentifié mais profil introuvable. Contactez le support.");
+      return;
+    }
+    // Compte banni : on coupe la session immédiatement
+    if (profile.banned) {
+      await VP_SB.signOut();
+      alert("🚫 Ce compte a été suspendu par l'administration."
+        + (profile.banned_reason ? "\n\nMotif : " + profile.banned_reason : "")
+        + "\n\nPour toute question, contactez le support.");
+      return;
+    }
+    // Garage en attente de validation admin ?
+    if (profile.type === "garage" && profile.role !== "admin" && !profile.garage_id) {
+      // Pour l'instant on autorise la connexion garage ; un futur flag d'activation pourra être ajouté.
+    }
+    // Mémorise l'email
+    if (remember && email) localStorage.setItem(REMEMBER_KEY, email);
+    else localStorage.removeItem(REMEMBER_KEY);
+    rememberEmail(profile.email || email);
+    // v16 : si flag must_change_password, on bloque la redirection et on ouvre la modale obligatoire
+    if (profile.must_change_password) {
+      showForcePwdModal();
+      return;
+    }
+    // Compatibilité avec l'ancien code app.js (qui lit voitureprepa_session)
+    loginAs({
+      id: profile.id,
+      type: profile.type,
+      pack: profile.pack || "gratuit",
+      prenom: profile.prenom || "",
+      nom: profile.nom || "",
+      raison: profile.raison_sociale || "",
+      telephone: profile.telephone || "",
+      email: profile.email || email,
+      pack_expires_at: profile.pack_expires_at,
+      garage_id: profile.garage_id,
+      garage_label: profile.garage_label,
+      siret: profile.siret
+    });
+    alert("✅ Connexion réussie ! Bon retour sur VoiturePrepa.fr.");
+    window.location.href = (profile.type === "garage") ? "espace-garage.html" : "profil.html";
+  } catch (e) {
+    console.error(e);
+    alert("❌ Erreur technique : " + (e.message || e));
+  }
+}
+
+// v16 : si le profil porte must_change_password, on bloque la redirection et on affiche la modale
+function showForcePwdModal() {
+  const m = document.getElementById("forcepwd-modal");
+  if (m) { m.style.display = "flex"; document.body.style.overflow = "hidden"; }
+}
+// v16 : validation en temps réel des règles de mot de passe
+function fpValidate() {
+  const p1 = document.getElementById("fp-pwd1").value;
+  const p2 = document.getElementById("fp-pwd2").value;
+  const setRule = (id, ok) => {
+    const el = document.getElementById(id);
+    if (!el) return ok;
+    el.style.color = ok ? "#16a34a" : "#999";
+    el.textContent = el.textContent.replace(/^[○✓]\s/, (ok ? "✓ " : "○ "));
+    return ok;
+  };
+  const okLen   = setRule("fp-rule-len",   p1.length >= 8);
+  const okUpper = setRule("fp-rule-upper", /[A-Z]/.test(p1));
+  const okDigit = setRule("fp-rule-digit", /[0-9]/.test(p1));
+  const okMatch = setRule("fp-rule-match", p1.length > 0 && p1 === p2);
+  return okLen && okUpper && okDigit && okMatch;
+}
+
+async function submitForcePwd() {
+  const p1 = document.getElementById("fp-pwd1").value;
+  const p2 = document.getElementById("fp-pwd2").value;
+  const err = document.getElementById("fp-error");
+  err.style.display = "none";
+  // Validation client en miroir des règles
+  if (p1.length < 8) {
+    err.textContent = "Le mot de passe doit faire au moins 8 caractères.";
+    err.style.display = "block"; fpValidate(); return;
+  }
+  if (!/[A-Z]/.test(p1)) {
+    err.textContent = "Le mot de passe doit contenir au moins 1 majuscule.";
+    err.style.display = "block"; fpValidate(); return;
+  }
+  if (!/[0-9]/.test(p1)) {
+    err.textContent = "Le mot de passe doit contenir au moins 1 chiffre.";
+    err.style.display = "block"; fpValidate(); return;
+  }
+  if (p1 !== p2) {
+    err.textContent = "Les deux mots de passe ne correspondent pas.";
+    err.style.display = "block"; fpValidate(); return;
+  }
+  const btn = document.getElementById("fp-submit");
+  btn.disabled = true; btn.textContent = "Enregistrement…";
+  try {
+    const { error } = await VP_SB.updatePassword(p1);
+    if (error) throw error;
+    await VP_SB.clearMustChangePassword();
+    alert("✅ Mot de passe défini. Vous allez être redirigé vers votre espace.");
+    const profile = await VP_SB.getMyProfile();
+    window.location.href = (profile && profile.type === "garage") ? "espace-garage.html" : "profil.html";
+  } catch(e) {
+    err.textContent = "❌ " + (e.message || e);
+    err.style.display = "block";
+    btn.disabled = false; btn.textContent = "Définir mon mot de passe";
+  }
+}
+
+async function forgotPassword(){
+  const email = prompt(
+    "Mot de passe oublié ?\n\nSaisissez l'adresse email de votre compte. Un lien de réinitialisation vous sera envoyé :",
+    ($("#login-email").value || "").trim()
+  );
+  if (email === null) return;
+  if (!email.trim()) { alert("Veuillez saisir une adresse email."); return; }
+  // v14 — Supabase Auth : email de récupération réel
+  try {
+    const { error } = await VP_SB.resetPassword(email.trim());
+    if (error) {
+      alert("⚠ Impossible d'envoyer l'email : " + error.message);
+      return;
+    }
+    alert("✅ Email de réinitialisation envoyé à " +
+      email.trim() + ".\nVérifiez votre boîte de réception (pensez à regarder les spams).");
+  } catch (e) {
+    console.error(e);
+    alert("Erreur réseau. Veuillez réessayer.");
+  }
+}
+</script>
+
+<!-- v16 : Modale obligatoire de changement de mot de passe au 1er login -->
+<div class="modal-backdrop" id="forcepwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:10px;max-width:480px;width:100%;box-shadow:0 12px 44px rgba(0,0,0,.4);">
+    <div style="padding:14px 20px;border-bottom:1px solid #e6e6e6;background:#fff8e6;border-radius:10px 10px 0 0;">
+      <strong style="font-size:16px;color:#854d0e;">🔐 Changement de mot de passe obligatoire</strong>
+    </div>
+    <div style="padding:20px;">
+      <p style="font-size:13.5px;color:#555;margin:0 0 14px;">
+        Bienvenue. Pour la première connexion, vous devez choisir un nouveau mot de passe personnel.
+        Cette étape est obligatoire pour sécuriser votre compte.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Nouveau mot de passe</label>
+        <input type="password" id="fp-pwd1" class="form-input" placeholder="Votre mot de passe" autocomplete="new-password" oninput="fpValidate()">
+      </div>
+      <!-- v16 : règles affichées en temps réel -->
+      <div id="fp-rules" style="background:#f7f8fa;border:1px solid #e6e6e6;border-radius:6px;padding:10px 12px;margin:0 0 12px;font-size:12.5px;">
+        <div style="font-weight:600;color:#555;margin-bottom:4px;">🔒 Le mot de passe doit contenir :</div>
+        <div id="fp-rule-len" style="color:#999;">○ au moins 8 caractères</div>
+        <div id="fp-rule-upper" style="color:#999;">○ au moins 1 lettre majuscule</div>
+        <div id="fp-rule-digit" style="color:#999;">○ au moins 1 chiffre</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmation</label>
+        <input type="password" id="fp-pwd2" class="form-input" autocomplete="new-password" oninput="fpValidate()">
+        <div id="fp-rule-match" style="font-size:12px;color:#999;margin-top:4px;">○ les deux mots de passe doivent être identiques</div>
+      </div>
+      <div id="fp-error" style="display:none;color:var(--red);background:#fdecec;border:1px solid #f3bcbc;border-radius:6px;padding:8px 12px;font-size:13px;margin:8px 0;"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding:12px 20px;border-top:1px solid #e6e6e6;">
+      <button id="fp-submit" onclick="submitForcePwd()" style="padding:9px 18px;background:#854d0e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;">Définir mon mot de passe</button>
+    </div>
+  </div>
+</div>
+</body>
