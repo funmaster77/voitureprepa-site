@@ -1,0 +1,3283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Espace administrateur de la plateforme VoiturePrepa.fr — accès restreint.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://voitureprepa.fr/admin.html">
+<title>Administration — VoiturePrepa.fr</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  body { background:#eef1f4; }
+  .admin-header {
+    background:linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    color:#fff; padding:0;
+  }
+  .admin-header-inner {
+    max-width:1280px; margin:0 auto; padding:16px 20px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  }
+  .admin-logo { font-weight:900; font-size:20px; }
+  .admin-logo .tag { background:var(--orange); padding:3px 8px; border-radius:5px; font-size:12px; vertical-align:middle; margin-left:8px; }
+  .admin-header a { color:#cbd5e1; font-size:14px; }
+  .admin-header a:hover { color:#fff; }
+
+  .admin-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin:22px 0; }
+  @media (max-width:900px){ .admin-stats { grid-template-columns:repeat(2,1fr); } }
+  .astat {
+    background:#fff; border-radius:10px; padding:18px; box-shadow:var(--shadow);
+    border-left:4px solid var(--orange);
+  }
+  .astat .n { font-size:28px; font-weight:900; color:var(--text); }
+  .astat .l { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .astat.warn { border-left-color:#e08a00; }
+  .astat.warn .n { color:#e08a00; }
+  .astat.ok { border-left-color:var(--green); }
+  .astat.blue { border-left-color:var(--bleu); }
+
+  .admin-panel { background:#fff; border-radius:10px; box-shadow:var(--shadow); padding:24px; }
+
+  /* Onglets admin répartis sur plusieurs lignes (au lieu d'un défilement horizontal) */
+  .admin-panel .tabs { flex-wrap:wrap; overflow-x:visible; row-gap:2px; }
+
+  /* File de modération */
+  .mod-ad {
+    display:grid; grid-template-columns:160px 1fr 220px; gap:18px;
+    border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px;
+  }
+  @media (max-width:800px){ .mod-ad { grid-template-columns:1fr; } }
+  .mod-ad .mphoto { width:100%; height:120px; background:#ddd center/cover no-repeat; border-radius:6px; }
+  .mod-ad h4 { margin:0 0 4px; }
+  .mod-ad .mprice { color:var(--prix); font-weight:800; font-size:18px; }
+  .mod-ad .mmeta { font-size:13px; color:var(--text-muted); margin:4px 0; }
+  .mod-ad .mdesc { font-size:13px; color:#444; margin-top:6px; max-height:60px; overflow:hidden; }
+  .mod-docs { background:#fff8e1; border:1px solid #f0d68a; border-radius:6px; padding:8px 10px; margin-top:8px; font-size:12px; }
+  .mod-actions { display:flex; flex-direction:column; gap:8px; }
+  .mod-badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px; background:var(--orange-light); color:var(--orange-dark); margin:2px 3px 2px 0; }
+  .doc-item { display:inline-block; margin:3px 8px 3px 0; font-size:12px; }
+  .doc-view { color:var(--bleu); font-weight:600; text-decoration:none; background:#fff; border:1px solid #f0d68a; padding:3px 8px; border-radius:5px; }
+  .doc-view:hover { background:var(--orange-light); border-color:var(--orange); }
+  .doc-missing { color:var(--text-muted); font-style:italic; }
+
+  /* Tableaux d'admin */
+  .admin-table { width:100%; border-collapse:collapse; }
+  .admin-table th, .admin-table td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); font-size:14px; }
+  .admin-table th { background:var(--bg-alt); font-weight:700; }
+  .admin-table input { width:110px; padding:6px 8px; border:1px solid var(--border); border-radius:4px; }
+  .admin-table .unit { color:var(--text-muted); font-size:13px; }
+
+  .pay-status { font-size:12px; font-weight:700; padding:2px 8px; border-radius:10px; }
+  .pay-status.ok { background:#e8f7ee; color:var(--green); }
+  .pay-status.pending { background:#fff8e1; color:#8a5b00; }
+
+  /* Annonces refusées */
+  .rej-ad {
+    display:grid; grid-template-columns:140px 1fr 200px; gap:16px;
+    border:1px solid var(--border); border-left:4px solid var(--red);
+    border-radius:10px; padding:14px; margin-bottom:14px;
+  }
+  @media (max-width:800px){ .rej-ad { grid-template-columns:1fr; } }
+  .rej-ad .rphoto { width:100%; height:100px; background:#ddd center/cover no-repeat; border-radius:6px; }
+  .rej-ad h4 { margin:0 0 4px; }
+  .rej-reason { background:#fdecea; border:1px solid #f5c2bd; border-radius:6px; padding:8px 10px; margin-top:8px; font-size:13px; color:#a02018; }
+
+  /* Cartes utilisateurs */
+  .user-card { border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .user-card .uhead { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; }
+  .user-card .uname { font-weight:800; font-size:16px; }
+  .user-card .umeta { font-size:13px; color:var(--text-muted); margin-top:3px; }
+  .u-tag { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:4px; }
+  .u-tag.pro { background:var(--orange-light); color:var(--orange-dark); }
+  .u-tag.part { background:#e8f0fa; color:var(--bleu); }
+  .u-tag.ok { background:#e8f7ee; color:var(--green); }
+  .u-tag.wait { background:#fff8e1; color:#8a5b00; }
+  .u-docs { background:#fff8e1; border:1px solid #f0d68a; border-radius:8px; padding:10px 12px; margin-top:10px; font-size:12px; }
+  .u-doc-ad { padding:6px 0; border-bottom:1px dashed #f0d68a; }
+  .u-doc-ad:last-child { border-bottom:none; }
+
+  /* Demandes d'inspection */
+  .insp-card { border:1px solid var(--border); border-left:4px solid var(--bleu); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .insp-card.scheduled { border-left-color:var(--green); }
+  .insp-card .ihead { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; }
+  .insp-card .iveh { font-weight:800; font-size:15px; }
+  .insp-card .imeta { font-size:13px; color:var(--text-muted); margin-top:3px; }
+  .insp-niveau { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:10px; }
+  .insp-niveau.or { background:#fbe9c0; color:#8a6100; }
+  .insp-niveau.argent { background:#e6e6ea; color:#555; }
+  .insp-niveau.bronze { background:#f0ddc8; color:#8a5a2a; }
+  .insp-rdv-form { background:var(--bg-alt); border-radius:8px; padding:12px; margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .insp-rdv-form label { font-size:12px; font-weight:600; display:block; margin-bottom:3px; }
+  .insp-rdv-form input, .insp-rdv-form select { padding:7px 9px; border:1px solid var(--border); border-radius:5px; font-size:13px; }
+  .insp-rdv-box { background:#e8f7ee; border:1px solid #b6e3c8; border-radius:8px; padding:10px 12px; margin-top:10px; font-size:13px; }
+  .creneaux-box { margin-top:6px; }
+  .cr-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px; }
+  .cr-row input, .cr-row select { padding:7px 9px; border:1px solid var(--border); border-radius:5px; font-size:13px; }
+
+  /* Emails automatiques */
+  .email-card { border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:18px; }
+  .email-head { background:var(--bg-alt); padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; }
+  .email-head .subject { font-weight:700; font-size:15px; color:var(--text); margin-top:2px; }
+  .email-body { padding:18px 20px; font-size:14px; line-height:1.6; }
+  .email-option { background:var(--bg-alt); border-radius:8px; padding:12px 14px; margin:10px 0; }
+  .email-option .opt-name { font-weight:700; }
+  .email-cta { display:inline-block; background:var(--orange); color:#fff !important; text-decoration:none; padding:10px 22px; border-radius:6px; font-weight:700; margin-top:10px; }
+  .email-formula { font-size:13px; padding:3px 0; }
+  .email-sched-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; font-size:14px; flex-wrap:wrap; }
+  .email-sched-tag { font-size:12px; font-weight:700; padding:3px 9px; border-radius:12px; }
+  .email-sched-tag.sent { background:#e8f7ee; color:var(--green); }
+  .email-sched-tag.planned { background:#fff8e1; color:#8a5b00; }
+  /* États des transactions */
+  .txn-state { font-size:12px; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+  .txn-state.paid { background:#fff8e1; color:#8a5b00; }
+  .txn-state.shipped { background:#e8f0fa; color:var(--bleu); }
+  .txn-state.done { background:#e8f7ee; color:var(--green); }
+  .email-sched-item { margin-bottom:8px; }
+  .email-sched-item .email-sched-row { margin-bottom:0; }
+  .email-sched-item .email-sched-row:hover { background:var(--bg-alt); }
+  .email-sched-detail { padding:0 2px 6px; }
+  /* Édition des modèles d'emails */
+  .email-edit { border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px; }
+  .email-edit-head { font-weight:800; font-size:15px; margin-bottom:8px; }
+  .email-edit-head span { display:block; font-weight:400; font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .eml-label { display:block; font-size:12px; font-weight:600; margin:10px 0 3px; }
+  .eml-input, .eml-textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; }
+  .eml-textarea { resize:vertical; line-height:1.5; }
+  /* Barres de filtres + export Excel (Statistiques, Suivi comptable) */
+  .adm-filters {
+    display:flex; gap:10px 14px; align-items:flex-end; flex-wrap:wrap;
+    background:var(--bg-alt); border:1px solid var(--border);
+    border-radius:9px; padding:12px 14px; margin-bottom:14px;
+  }
+  .adm-filters .fld { display:flex; flex-direction:column; gap:3px; }
+  .adm-filters label { font-size:12px; font-weight:600; color:var(--text-muted); }
+  .adm-filters select, .adm-filters input {
+    padding:7px 9px; border:1px solid var(--border); border-radius:5px;
+    font-size:13px; font-family:inherit;
+  }
+  .adm-filters .spacer { flex:1 1 auto; }
+  .btn-export {
+    background:#127a36; color:#fff; border:none; border-radius:6px;
+    padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .btn-export:hover { background:#0e6a2e; }
+  .admin-table tfoot td { border-top:2px solid var(--border); }
+  /* Tableaux défilables horizontalement sur téléphone */
+  @media (max-width: 700px) {
+    .admin-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  }
+
+/* v15 — toggle switch pour les flags */
+.switch { position:relative; display:inline-block; width:46px; height:24px; vertical-align:middle; }
+.switch input { opacity:0; width:0; height:0; }
+.switch .slider {
+  position:absolute; cursor:pointer; inset:0; background:#cccccc;
+  border-radius:24px; transition:.18s;
+}
+.switch .slider:before {
+  position:absolute; content:""; height:18px; width:18px; left:3px; top:3px;
+  background:#fff; border-radius:50%; transition:.18s; box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.switch input:checked + .slider { background:var(--green, #2ea44f); }
+.switch input:checked + .slider:before { transform:translateX(22px); }
+.switch input:disabled + .slider { opacity:.5; cursor:not-allowed; }
+</style>
+</head>
+<body>
+<div id="admin-gate" style="display:none;position:fixed;inset:0;background:rgba(15,18,40,.95);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:10px;padding:30px;max-width:440px;width:100%;box-shadow:0 12px 50px rgba(0,0,0,.4);">
+    <h2 style="margin:0 0 4px;color:var(--orange);font-size:22px;">🔒 Espace administrateur</h2>
+    <p class="text-muted" style="margin:0 0 18px;font-size:13px;">Connexion en 2 étapes : mot de passe + code reçu par email.</p>
+    <form onsubmit="event.preventDefault();submitAdminGate();">
+      <div id="ag-step-credentials">
+        <label class="form-label">Email</label>
+        <input id="ag-email" type="email" autocomplete="username" required class="form-input" style="width:100%;">
+        <label class="form-label" style="margin-top:10px;">Mot de passe</label>
+        <input id="ag-pwd" type="password" autocomplete="current-password" required class="form-input" style="width:100%;">
+      </div>
+      <div id="ag-step-otp" style="display:none;">
+        <div style="margin-bottom:10px;padding:10px 12px;background:#eef6ff;border:1px solid #bbd6ff;border-radius:6px;font-size:13px;color:#1f3d6b;">
+          📩 Un code à 6 chiffres a été envoyé à <strong id="ag-email-display"></strong>. Il expire dans 60 minutes.
+        </div>
+        <label class="form-label">Code reçu par email</label>
+        <input id="ag-otp" type="text" inputmode="numeric" pattern="[0-9]{4,10}" maxlength="10" autocomplete="one-time-code" class="form-input" style="width:100%;letter-spacing:.3em;text-align:center;font-size:18px;">
+        <button type="button" onclick="resetAdminGateToCredentials()" style="background:none;border:none;color:#6b7280;font-size:12px;margin-top:8px;cursor:pointer;text-decoration:underline;">← Revenir au mot de passe</button>
+      </div>
+      <div id="ag-error" style="display:none;background:#fdecec;border:1px solid #f3bcbc;color:#c0211f;border-radius:6px;padding:8px 11px;font-size:13px;margin-top:12px;"></div>
+      <button id="ag-submit-btn" class="btn btn-primary" style="width:100%;margin-top:16px;padding:12px;">Continuer</button>
+    </form>
+    <p style="margin-top:14px;font-size:12px;color:#6b7280;line-height:1.55;">
+      Le compte doit avoir le rôle « administrateur » côté serveur. Le code 2FA est envoyé via Brevo.
+    </p>
+  </div>
+</div>
+
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <span class="admin-logo">🔧 VoiturePrepa.fr <span class="tag">ADMINISTRATION</span></span>
+    <a href="index.html">← Retour au site public</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="admin-stats" id="admin-stats"></div>
+
+  <div class="admin-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 14px;padding:9px 12px;background:#eef4fb;border:1px solid #b9d4ef;border-radius:8px;font-size:13px;">
+      <span style="color:#1c4f86;font-weight:600;">🔒 Session admin active — expire dans 30 min après connexion</span>
+      <button class="btn btn-ghost btn-sm" onclick="adminLogoutAndReload()" style="color:var(--red);">↩ Déconnexion</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="moderation" onclick="adminTab('moderation')">
+        🛡️ Modération <span id="mod-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="inspections" onclick="adminTab('inspections')">
+        🔍 Inspections <span id="insp-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="publiees" onclick="adminTab('publiees')">
+        ✅ Annonces publiées <span id="pub-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="refusees" onclick="adminTab('refusees')">
+        ❌ Annonces refusées <span id="ref-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="vendues" onclick="adminTab('vendues')">
+        🏁 Annonces vendues <span id="sold-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="transactions" onclick="adminTab('transactions')">
+        🤝 Transactions <span id="txn-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="signalements" onclick="adminTab('signalements')">
+        🚩 Signalements <span id="rep-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="messages" onclick="adminTab('messages')">
+        📨 Messages <span id="contact-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="utilisateurs" onclick="adminTab('utilisateurs')">
+        👥 Utilisateurs <span id="users-count-badge"></span>
+      </button>
+      <button class="tab" data-tab="stats" onclick="adminTab('stats')">📊 Statistiques</button>
+      <button class="tab" data-tab="emails" onclick="adminTab('emails')">📧 Emails automatiques</button>
+      <button class="tab" data-tab="tarifs" onclick="adminTab('tarifs')">💶 Tarifs & formules</button>
+      <button class="tab" data-tab="commissions" onclick="adminTab('commissions')">💳 Commissions & paiements</button>
+      <button class="tab" data-tab="avis" onclick="adminTab('avis')">⭐ Avis</button>
+      <button class="tab" data-tab="garagespart" onclick="adminTab('garagespart')">🔧 Garages partenaires <span id="gar-count-badge"></span></button>
+      <button class="tab" data-tab="seo" onclick="adminTab('seo')">🔍 SEO</button>
+    </div>
+
+    <!-- ===================== MODÉRATION ===================== -->
+    <div id="atab-moderation" class="tab-panel active">
+      <h3 class="mb-2">Annonces en attente de validation</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Vérifiez chaque annonce avant publication. Une fois validée, elle apparaît dans le listing public.
+      </p>
+      <div id="mod-queue"></div>
+    </div>
+
+    <!-- ===================== ANNONCES PUBLIÉES ===================== -->
+    <div id="atab-publiees" class="tab-panel">
+      <h3 class="mb-2">Annonces validées et en ligne</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Liste des annonces approuvées, actuellement visibles dans le listing public.
+      </p>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+        <label style="font-size:14px;font-weight:600;">Trier par :</label>
+        <select id="pub-sort" class="form-select" style="width:auto;padding:7px 10px;" onchange="renderPublished()">
+          <option value="recent">Plus récentes</option>
+          <option value="ancien">Plus anciennes</option>
+          <option value="prix-desc">Prix décroissant</option>
+          <option value="prix-asc">Prix croissant</option>
+          <option value="expire">Expiration la plus proche</option>
+          <option value="type">Type d'annonce</option>
+        </select>
+        <label style="font-size:14px;font-weight:600;margin-left:8px;">Type :</label>
+        <select id="pub-filter-type" class="form-select" style="width:auto;padding:7px 10px;" onchange="renderPublished()">
+          <option value="">Tous</option>
+          <option value="voiture">🏎️ Voitures</option>
+          <option value="piece">🔧 Pièces</option>
+        </select>
+        <label style="font-size:14px;font-weight:600;margin-left:8px;">Statut :</label>
+        <select id="pub-filter-etat" class="form-select" style="width:auto;padding:7px 10px;" onchange="renderPublished()">
+          <option value="">Toutes</option>
+          <option value="active">En ligne (actives)</option>
+          <option value="expired">Expirées</option>
+        </select>
+      </div>
+
+      <table class="admin-table">
+        <thead><tr><th></th><th>Annonce</th><th>Type</th><th>Prix</th><th>Mise en ligne</th><th>Expire le</th><th>Actions</th></tr></thead>
+        <tbody id="published-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- ===================== ANNONCES REFUSÉES ===================== -->
+    <div id="atab-refusees" class="tab-panel">
+      <h3 class="mb-2">Annonces refusées</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Annonces rejetées lors de la modération ou retirées du listing public. Le motif est visible
+        par le vendeur sur son tableau de bord. Vous pouvez revalider une annonce et la republier.
+      </p>
+      <div id="rejected-list"></div>
+    </div>
+
+    <!-- ===================== ANNONCES VENDUES ===================== -->
+    <div id="atab-vendues" class="tab-panel">
+      <h3 class="mb-2">Annonces vendues</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Annonces marquées comme vendues par leur vendeur. Elles sont retirées du listing public
+        et conservées ici comme historique des ventes.
+      </p>
+      <div id="sold-list"></div>
+    </div>
+
+    <!-- ===================== TRANSACTIONS ===================== -->
+    <div id="atab-transactions" class="tab-panel">
+      <h3 class="mb-2">Transactions — ventes en ligne sécurisées</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Suivi de l'état des achats réalisés via la plateforme : du paiement à la finalisation.
+      </p>
+      <div id="transactions-list"></div>
+    </div>
+
+    <!-- ===================== SIGNALEMENTS ===================== -->
+    <div id="atab-signalements" class="tab-panel">
+      <h3 class="mb-2">Annonces signalées</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Annonces signalées par des visiteurs. Vérifiez chaque annonce signalée, puis retirez-la
+        si le signalement est justifié, ou classez le signalement sans suite.
+      </p>
+      <div id="reports-list"></div>
+    </div>
+
+    <!-- ===================== MESSAGES DE CONTACT ===================== -->
+    <div id="atab-messages" class="tab-panel">
+      <h3 class="mb-2">Messages reçus — formulaire de contact</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Messages envoyés via la page « Nous contacter » : questions, partenariats garages, presse…
+        Répondez directement depuis cet onglet — votre réponse est transmise par email à l'expéditeur.
+      </p>
+      <div id="contact-messages-list"></div>
+    </div>
+
+    <!-- ===================== UTILISATEURS ===================== -->
+    <div id="atab-utilisateurs" class="tab-panel">
+      <h3 class="mb-2">Utilisateurs inscrits</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Comptes créés sur le site. Les membres (particuliers et professionnels) et les garages
+        partenaires sont séparés dans deux onglets ci-dessous.
+      </p>
+      <div id="garage-alert"></div>
+      <div class="tabs" id="users-subtabs">
+        <button class="tab active" data-utab="membres" onclick="usersSubTab('membres')">👤 Membres <span id="utab-membres-count"></span></button>
+        <button class="tab" data-utab="garages" onclick="usersSubTab('garages')">🔧 Garages <span id="utab-garages-count"></span></button>
+      </div>
+      <div id="users-list-membres" style="margin-top:14px;"></div>
+      <div id="users-list-garages" style="margin-top:14px;display:none;">
+        <button class="btn btn-primary btn-sm" onclick="openCreateGarageModal()" style="margin-bottom:12px;">+ Créer un compte garage</button>
+        <div id="garage-accounts-container"></div>
+      </div>
+    </div>
+
+    <!-- ===================== INSPECTIONS ===================== -->
+    <div id="atab-inspections" class="tab-panel">
+      <h3 class="mb-2">Demandes d'inspection — rendez-vous à valider</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Un vendeur a souscrit une inspection (Or, Argent ou Bronze). Proposez une date et une heure
+        de rendez-vous selon les disponibilités du garage partenaire concerné.
+      </p>
+      <div class="alert alert-warning" style="font-size:13px;">
+        ⚠️ <strong>Politique de rendez-vous :</strong> en acceptant le créneau proposé, le vendeur
+        s'engage à se présenter à l'heure convenue. Toute séance annulée moins de 48 h à l'avance
+        ou non honorée est facturée à hauteur de 30 % du tarif initial.
+      </div>
+      <div class="tabs" id="insp-subtabs">
+        <button class="tab active" data-itab="encours" onclick="inspSubTab('encours')">⏳ En cours — attente de créneau <span id="itab-encours-count"></span></button>
+        <button class="tab" data-itab="valide" onclick="inspSubTab('valide')">📅 Créneau validé <span id="itab-valide-count"></span></button>
+        <button class="tab" data-itab="rapport" onclick="inspSubTab('rapport')">📋 Rapport fourni <span id="itab-rapport-count"></span></button>
+      </div>
+      <div id="insp-list-encours" style="margin-top:14px;"></div>
+      <div id="insp-list-valide" style="margin-top:14px;display:none;"></div>
+      <div id="insp-list-rapport" style="margin-top:14px;display:none;"></div>
+    </div>
+
+    <!-- ===================== STATISTIQUES ===================== -->
+    <div id="atab-stats" class="tab-panel">
+      <h3 class="mb-2">Statistiques du site</h3>
+      <div id="stats-content"></div>
+
+      <h3 class="mb-2 mt-3">📅 Activité mensuelle</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Activité du site mois par mois : annonces déposées, vues, favoris, ventes et recettes.
+        Filtrez la période et le type d'annonce, classez par date, puis exportez au format Excel.
+      </p>
+      <div class="adm-filters">
+        <div class="fld">
+          <label>Type d'annonce</label>
+          <select id="st-type" onchange="renderStatsMonthly()">
+            <option value="">Toutes</option>
+            <option value="voiture">🏎️ Voitures</option>
+            <option value="piece">🔧 Pièces</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Du (mois)</label>
+          <input type="month" id="st-from" onchange="renderStatsMonthly()">
+        </div>
+        <div class="fld">
+          <label>Au (mois)</label>
+          <input type="month" id="st-to" onchange="renderStatsMonthly()">
+        </div>
+        <div class="fld">
+          <label>Classement par date</label>
+          <select id="st-sort" onchange="renderStatsMonthly()">
+            <option value="desc">Mois le plus récent d'abord</option>
+            <option value="asc">Mois le plus ancien d'abord</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn-export" onclick="exportStatsMonthly()">⬇ Exporter en Excel</button>
+      </div>
+      <div id="stats-monthly"></div>
+    </div>
+
+    <!-- ===================== EMAILS AUTOMATIQUES ===================== -->
+    <div id="atab-emails" class="tab-panel">
+      <h3 class="mb-2">Emails automatiques</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Le site envoie automatiquement 2 emails aux vendeurs : une suggestion d'options 14 jours
+        après le dépôt (si aucune option payante n'a été souscrite), et un rappel de renouvellement
+        2 semaines avant l'expiration de l'annonce.
+      </p>
+      <h4 style="margin:18px 0 8px;">Calendrier d'envoi — annonces en ligne</h4>
+      <div id="email-schedule"></div>
+      <h4 style="margin:22px 0 10px;">Modèles d'emails envoyés</h4>
+      <div id="email-previews"></div>
+    </div>
+
+    <!-- ===================== TARIFS ===================== -->
+    <div id="atab-tarifs" class="tab-panel">
+      <h3 class="mb-2">Gestion des tarifs, formules et limites</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        Modifiez les prix des options, les durées et les limites des services payants.
+      </p>
+
+      <!-- v15 : Activation/désactivation des offres payantes -->
+      <h4 style="margin:22px 0 6px;">🚦 Activation des offres payantes</h4>
+      <p class="text-muted mb-2" style="font-size:13px;">
+        Désactivez temporairement une offre pour la masquer côté public — utile pendant le lancement
+        ou si le service n'est pas encore prêt. Les cartes du site afficheront « En cours de développement ».
+      </p>
+      <table class="admin-table">
+        <thead><tr><th style="width:55%;">Offre</th><th style="width:30%;">Statut</th><th>Effet</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>⚡ Pack Urgence</strong> <span class="text-muted" style="font-size:12px;">(particulier)</span></td>
+            <td><label class="switch"><input type="checkbox" id="flg-pack_urgence_enabled" onchange="toggleLaunchFlag('pack_urgence_enabled', this.checked)"><span class="slider"></span></label> <span id="flg-pack_urgence_enabled-lbl" style="font-size:12px;font-weight:600;"></span></td>
+            <td class="text-muted" style="font-size:13px;">Disponible à la souscription au dépôt</td>
+          </tr>
+          <tr>
+            <td><strong>🚀 Pack Remontada</strong> <span class="text-muted" style="font-size:12px;">(particulier)</span></td>
+            <td><label class="switch"><input type="checkbox" id="flg-pack_remontada_enabled" onchange="toggleLaunchFlag('pack_remontada_enabled', this.checked)"><span class="slider"></span></label> <span id="flg-pack_remontada_enabled-lbl" style="font-size:12px;font-weight:600;"></span></td>
+            <td class="text-muted" style="font-size:13px;">3 formules disponibles à la souscription</td>
+          </tr>
+          <tr>
+            <td><strong>🔧 Pack Inspection</strong> <span class="text-muted" style="font-size:12px;">(particulier — Bronze/Argent/Or)</span></td>
+            <td><label class="switch"><input type="checkbox" id="flg-inspection_enabled" onchange="toggleLaunchFlag('inspection_enabled', this.checked)"><span class="slider"></span></label> <span id="flg-inspection_enabled-lbl" style="font-size:12px;font-weight:600;"></span></td>
+            <td class="text-muted" style="font-size:13px;">Cartes Bronze/Argent/Or au dépôt et page Inspection</td>
+          </tr>
+          <tr>
+            <td><strong>💼 Pack Pro Premium</strong> <span class="text-muted" style="font-size:12px;">(professionnel)</span></td>
+            <td><label class="switch"><input type="checkbox" id="flg-pack_pro_premium_enabled" onchange="toggleLaunchFlag('pack_pro_premium_enabled', this.checked)"><span class="slider"></span></label> <span id="flg-pack_pro_premium_enabled-lbl" style="font-size:12px;font-weight:600;"></span></td>
+            <td class="text-muted" style="font-size:13px;">Inscription Pro Premium + page Tarifs Pro</td>
+          </tr>
+          <tr>
+            <td><strong>🏎 Pack Pro Performance</strong> <span class="text-muted" style="font-size:12px;">(professionnel)</span></td>
+            <td><label class="switch"><input type="checkbox" id="flg-pack_pro_performance_enabled" onchange="toggleLaunchFlag('pack_pro_performance_enabled', this.checked)"><span class="slider"></span></label> <span id="flg-pack_pro_performance_enabled-lbl" style="font-size:12px;font-weight:600;"></span></td>
+            <td class="text-muted" style="font-size:13px;">Inscription Pro Performance + page Tarifs Pro</td>
+          </tr>
+          <tr style="background:#fff8e6;">
+            <td><strong>📷 Pack Photos+</strong> <span class="text-muted" style="font-size:12px;">(particulier — logique inversée)</span></td>
+            <td><label class="switch"><input type="checkbox" id="flg-pack_photos_paid" onchange="toggleLaunchFlag('pack_photos_paid', this.checked)"><span class="slider"></span></label> <span id="flg-pack_photos_paid-lbl" style="font-size:12px;font-weight:600;"></span></td>
+            <td class="text-muted" style="font-size:13px;"><strong>Activé = payant</strong> · Désactivé = gratuit pour tous</td>
+          </tr>
+          <tr>
+            <td><strong>🔧 Garages spécialisés</strong> <span class="text-muted" style="font-size:12px;">(page publique)</span></td>
+            <td><label class="switch"><input type="checkbox" id="flg-garages_enabled" onchange="toggleLaunchFlag('garages_enabled', this.checked)"><span class="slider"></span></label> <span id="flg-garages_enabled-lbl" style="font-size:12px;font-weight:600;"></span></td>
+            <td class="text-muted" style="font-size:13px;">Affiche / masque la page annuaire des garages partenaires</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin:18px 0 8px;">Options à l'unité (particuliers)</h4>
+      <table class="admin-table">
+        <thead><tr><th>Option</th><th>Prix</th><th>Détail</th></tr></thead>
+        <tbody>
+          <tr><td>📷 Pack Photos+</td><td><input type="number" id="tar-prix_photos_plus" value="4.99" step="0.5"> <span class="unit">€</span></td><td>7 photos supplémentaires</td></tr>
+          <tr><td>⚡ Pack Urgence</td><td><input type="number" id="tar-prix_urgence" value="5.99" step="0.5"> <span class="unit">€</span></td><td>Étiquette "Urgente" 3 mois</td></tr>
+          <tr><td>🚀 Remontada — Quotidien</td><td><input type="number" id="tar-prix_remontada_quotidien" value="34.99" step="0.5"> <span class="unit">€</span></td><td>Chaque jour / 30 jours</td></tr>
+          <tr><td>🚀 Remontada — Hebdo court</td><td><input type="number" id="tar-prix_remontada_hebdo_court" value="9.99" step="0.5"> <span class="unit">€</span></td><td>Chaque semaine / 8 semaines</td></tr>
+          <tr><td>🚀 Remontada — Hebdo long</td><td><input type="number" id="tar-prix_remontada_hebdo_long" value="14.99" step="0.5"> <span class="unit">€</span></td><td>Chaque semaine / 12 semaines</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin:22px 0 8px;">Inspections véhicule</h4>
+      <table class="admin-table">
+        <thead><tr><th>Formule</th><th>Prix</th><th>Badge</th></tr></thead>
+        <tbody>
+          <tr><td>🥉 Inspection Standard</td><td><input type="number" id="tar-prix_inspection_bronze" value="150" step="10"> <span class="unit">€</span></td><td>Bronze</td></tr>
+          <tr><td>🥈 Inspection Premium</td><td><input type="number" id="tar-prix_inspection_argent" value="300" step="10"> <span class="unit">€</span></td><td>Argent</td></tr>
+          <tr><td>🥇 Inspection Complète</td><td><input type="number" id="tar-prix_inspection_or" value="500" step="10"> <span class="unit">€</span></td><td>Or</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin:22px 0 8px;">Abonnements professionnels</h4>
+      <table class="admin-table">
+        <thead><tr><th>Pack</th><th>Tarif / an</th><th>Annonces max</th><th>Durée annonce</th></tr></thead>
+        <tbody>
+          <tr><td>Pack Gratuit</td><td><input type="number" id="tar-pack_gratuit_prix" value="0"> <span class="unit">€</span></td><td><input type="number" id="tar-pack_gratuit_max" value="3"></td><td><input type="number" id="tar-pack_gratuit_duree" value="3"> <span class="unit">mois</span></td></tr>
+          <tr><td>Pack Premium</td><td><input type="number" id="tar-pack_premium_prix" value="200"> <span class="unit">€</span></td><td><input type="number" id="tar-pack_premium_max" value="10"></td><td><input type="number" id="tar-pack_premium_duree" value="6"> <span class="unit">mois</span></td></tr>
+          <tr><td>Pack Performance</td><td><input type="number" id="tar-pack_performance_prix" value="400"> <span class="unit">€</span></td><td><input type="number" id="tar-pack_performance_max" value="999"> <span class="unit">(illimité)</span></td><td><input type="number" id="tar-pack_performance_duree" value="12"> <span class="unit">mois</span></td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin:22px 0 8px;">Paramètres généraux</h4>
+      <table class="admin-table">
+        <tbody>
+          <tr><td>Durée de mise en ligne d'une annonce (particulier)</td><td><input type="number" id="tar-particulier_duree" value="3"> <span class="unit">mois</span></td></tr>
+          <tr><td>Délai email "suggestion d'options" après dépôt</td><td><input type="number" id="tar-email_suggestion_jours" value="14"> <span class="unit">jours</span></td></tr>
+          <tr><td>Délai email "renouvellement" avant expiration</td><td><input type="number" id="tar-email_renouvellement_jours" value="14"> <span class="unit">jours</span></td></tr>
+          <tr><td>Prix minimum véhicule « Projet terminé / Bon »</td><td><input type="number" id="tar-prix_min_voiture_bon" value="6000" step="500"> <span class="unit">€</span></td></tr>
+          <tr><td>Prix minimum véhicule « Endommagé / À finir »</td><td><input type="number" id="tar-prix_min_voiture_endommage" value="2000" step="500"> <span class="unit">€</span></td></tr>
+          <tr><td>Prix minimum d'une pièce détachée</td><td><input type="number" id="tar-prix_min_piece" value="5"> <span class="unit">€</span></td></tr>
+        </tbody>
+      </table>
+
+      <button class="btn btn-primary mt-3" onclick="saveTarifsForm()">Enregistrer les modifications</button>
+    </div>
+
+    <!-- ===================== COMMISSIONS ===================== -->
+    <div id="atab-commissions" class="tab-panel">
+      <h3 class="mb-2">📊 Suivi comptable — toutes les recettes</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Récapitulatif de toutes les recettes de la plateforme pour l'étude comptable :
+        abonnements professionnels, packs boost, inspections, commissions de vente
+        et frais de protection acheteur.
+      </p>
+      <div id="accounting-summary"></div>
+
+      <h3 class="mb-2 mt-3">Détail de toutes les recettes</h3>
+      <p class="text-muted mb-2" style="font-size:14px;">
+        L'ensemble des recettes de la plateforme : abonnements, packs boost, inspections,
+        commissions de vente et frais de protection. Filtrez par catégorie et par période,
+        classez, puis exportez au format Excel.
+      </p>
+      <div class="adm-filters">
+        <div class="fld">
+          <label>Catégorie</label>
+          <select id="acc-cat" onchange="renderAccounting()">
+            <option value="">Toutes les catégories</option>
+            <option value="abonnement">Abonnement pro</option>
+            <option value="pack">Pack boost</option>
+            <option value="inspection">Inspection</option>
+            <option value="commission">Commission de vente</option>
+            <option value="protection">Protection acheteur</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Du</label>
+          <input type="date" id="acc-from" onchange="renderAccounting()">
+        </div>
+        <div class="fld">
+          <label>Au</label>
+          <input type="date" id="acc-to" onchange="renderAccounting()">
+        </div>
+        <div class="fld">
+          <label>Classement</label>
+          <select id="acc-sort" onchange="renderAccounting()">
+            <option value="date-desc">Date la plus récente</option>
+            <option value="date-asc">Date la plus ancienne</option>
+            <option value="montant-desc">Montant décroissant</option>
+            <option value="montant-asc">Montant croissant</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn-export" onclick="exportAccounting()">⬇ Exporter en Excel</button>
+      </div>
+      <div id="ledger-table" class="mb-3"></div>
+
+      <h3 class="mb-2">Commissions & frais de protection</h3>
+      <table class="admin-table" style="max-width:560px;">
+        <thead><tr><th>Type d'opération</th><th>Taux</th></tr></thead>
+        <tbody>
+          <tr><td>Commission vendeur — vente de voiture</td><td><input type="number" value="3" step="0.5"> <span class="unit">%</span></td></tr>
+          <tr><td>Commission vendeur — vente de pièce détachée</td><td><input type="number" value="10" step="0.5"> <span class="unit">%</span></td></tr>
+          <tr><td>Protection acheteur — payée par l'acheteur</td><td><input type="number" value="2" step="0.5"> <span class="unit">%</span></td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-primary mt-2" onclick="alert('✅ Taux mis à jour (démo).')">Enregistrer</button>
+
+      <h3 class="mb-2 mt-3">Revenus sur les ventes réalisées</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Chaque vente conclue via la plateforme génère un revenu pour le site : la
+        commission vendeur (3 % voiture / 10 % pièce) et les frais de protection
+        acheteur (2 %). Le revenu est encaissé lorsque la transaction est finalisée
+        (fonds débloqués par l'acheteur).
+      </p>
+      <div id="commission-summary"></div>
+      <table class="admin-table">
+        <thead><tr><th>Date</th><th>Vente</th><th>Montant</th><th>Revenu site</th><th>Statut</th></tr></thead>
+        <tbody id="payments-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- ===================== AVIS ===================== -->
+    <div id="atab-avis" class="tab-panel">
+      <h3 class="mb-2">⭐ Avis — tous les comptes</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Tous les avis déposés par les acheteurs sur les vendeurs, tous comptes confondus.
+      </p>
+      <div id="admin-reviews-list"></div>
+    </div>
+
+    <!-- ===================== GARAGES PARTENAIRES ===================== -->
+    <div id="atab-garagespart" class="tab-panel">
+      <h3 class="mb-2">🔧 Garages partenaires</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Référencez les garages et préparateurs partenaires. Tout garage ajouté apparaît
+        aussitôt dans l'annuaire « Garages spécialisés », sur la carte de France et dans
+        le choix du garage lors d'une souscription d'inspection.
+      </p>
+
+      <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:22px;">
+        <h4 style="margin:0 0 14px;">➕ Ajouter un garage partenaire</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label class="form-label">Nom du garage *</label>
+            <input type="text" id="ng-nom" class="form-input" placeholder="ex : BR Performance Paris">
+          </div>
+          <div>
+            <label class="form-label">Prestations *</label>
+            <input type="text" id="ng-prest" class="form-input" placeholder="ex : Reprogrammation, Stage 1 à 3, banc de puissance">
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <label class="form-label">Ville *</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="ng-ville" class="form-input" placeholder="ex : Paris"
+                   style="flex:1;min-width:200px;" oninput="resetGarageGeo()">
+            <button type="button" class="btn btn-outline btn-sm" onclick="geocodeNewGarage()">📍 Vérifier la ville &amp; le département</button>
+          </div>
+          <p class="form-hint" style="margin-top:5px;">
+            Le département est déterminé automatiquement d'après la ville, pour garantir
+            leur cohérence. Saisissez la ville puis cliquez sur « Vérifier ».
+          </p>
+        </div>
+        <div style="margin-top:14px;background:#f7f8fa;border:1px solid var(--border);border-radius:6px;padding:12px 14px;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <strong style="font-size:13px;">Localisation :</strong>
+            <span id="ng-geo-status" style="font-size:13px;color:var(--text-muted);">en attente — saisissez la ville puis cliquez sur « Vérifier ».</span>
+          </div>
+          <div id="ng-geo-detail" style="font-size:13px;color:#555;margin-top:6px;display:none;">
+            Département : <strong id="ng-dept-label">—</strong>
+            · Coordonnées : <span id="ng-coord-label">—</span>
+          </div>
+        </div>
+        <input type="hidden" id="ng-dept">
+        <input type="hidden" id="ng-lat">
+        <input type="hidden" id="ng-lng">
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" onclick="submitNewGarage()">Ajouter le garage</button>
+          <span id="ng-form-msg" style="margin-left:12px;font-size:14px;font-weight:600;"></span>
+        </div>
+      </div>
+
+      <h4 style="margin:0 0 10px;">Garages référencés</h4>
+      <div id="garages-part-list"></div>
+    </div>
+
+    <!-- ===================== SEO / MÉTADONNÉES ===================== -->
+    <div id="atab-seo" class="tab-panel">
+      <h3 class="mb-2">🔍 SEO — balises meta éditables</h3>
+      <p class="text-muted mb-3" style="font-size:14px;">
+        Modifiez ici le titre et la description meta de chaque page publique. Les
+        valeurs personnalisées s'appliquent au chargement de la page concernée et
+        remplacent aussi les balises Open Graph et Twitter Card associées. Sur un
+        site en production, ces valeurs seraient stockées en base et servies par
+        le serveur (rendu côté serveur).
+      </p>
+      <div id="seo-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const SKIP_CHROME = true;
+
+// Génère un document de démonstration visualisable (image SVG en Data URL)
+function demoDoc(label) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="595" height="842">`
+    + `<rect width="595" height="842" fill="#f4f4f4"/>`
+    + `<rect x="40" y="40" width="515" height="762" fill="#ffffff" stroke="#cccccc" stroke-width="2"/>`
+    + `<text x="297" y="370" font-size="26" text-anchor="middle" fill="#999999" font-family="sans-serif">Document de démonstration</text>`
+    + `<text x="297" y="415" font-size="20" text-anchor="middle" fill="#bbbbbb" font-family="sans-serif">${label}</text>`
+    + `<text x="297" y="470" font-size="14" text-anchor="middle" fill="#cccccc" font-family="sans-serif">VoiturePrepa.fr — espace administrateur</text>`
+    + `</svg>`;
+  return "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+}
+
+// ----- Visionneuse de documents -----
+// Les navigateurs bloquent l'ouverture d'une URL « data: » dans un onglet :
+// les documents sont donc affichés dans une modale intégrée.
+const _docRegistry = {};
+let _docSeq = 0;
+
+// Construit le lien de visualisation d'un document fourni
+function docLink(label, doc) {
+  if (!doc) return `<span class="doc-item doc-missing">${label} : non fourni</span>`;
+  if (typeof doc === "string") return `<span class="doc-item">${label} : ${doc}</span>`;
+  if (doc.data) {
+    const key = "doc" + (++_docSeq);
+    _docRegistry[key] = { label: label, name: doc.name || "document", type: doc.type || "", data: doc.data };
+    return `<a class="doc-item doc-view" href="#" onclick="viewDocument('${key}');return false;">📄 ${label} — ${doc.name||"voir"} ↗</a>`;
+  }
+  return `<span class="doc-item">${label} : ${doc.name||"fichier"}</span>`;
+}
+
+// Injecte (une seule fois) la modale de visualisation des documents
+function injectDocModal() {
+  if (document.getElementById("doc-modal")) return;
+  const html = `
+  <div id="doc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;padding:28px 16px;overflow:auto;" onclick="if(event.target===this)closeDocModal()">
+    <div style="background:#fff;border-radius:10px;max-width:840px;width:100%;box-shadow:0 12px 44px rgba(0,0,0,.35);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-bottom:1px solid #e6e6e6;">
+        <strong id="doc-modal-title" style="font-size:15px;">Document</strong>
+        <button onclick="closeDocModal()" aria-label="Fermer" style="background:none;border:none;font-size:21px;line-height:1;cursor:pointer;color:#888;">✕</button>
+      </div>
+      <div id="doc-modal-body" style="padding:16px;background:#f4f4f4;max-height:72vh;overflow:auto;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid #e6e6e6;">
+        <a id="doc-modal-download" href="#" download style="text-decoration:none;padding:8px 14px;border:1px solid #ccc;border-radius:6px;color:#333;font-size:14px;">⬇ Télécharger le fichier</a>
+        <button onclick="closeDocModal()" style="padding:8px 16px;background:var(--orange,#e8590c);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;">Fermer</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+// Affiche un document fourni dans la modale (image en grand, PDF en aperçu)
+function viewDocument(key) {
+  const d = _docRegistry[key];
+  if (!d) { alert("Document introuvable."); return; }
+  injectDocModal();
+  document.getElementById("doc-modal-title").textContent = d.label + " — " + d.name;
+  const body = document.getElementById("doc-modal-body");
+  const isImage = /^data:image\//i.test(d.data) || /image\//i.test(d.type) || /\.(png|jpe?g|gif|webp|svg)$/i.test(d.name);
+  const isPdf = /pdf/i.test(d.type) || /^data:application\/pdf/i.test(d.data) || /\.pdf$/i.test(d.name);
+  if (isImage) {
+    body.innerHTML = `<img src="${d.data}" alt="${d.label}" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:6px;">`;
+  } else if (isPdf) {
+    body.innerHTML = `<iframe src="${d.data}" title="${d.label}" style="width:100%;height:72vh;border:none;background:#fff;border-radius:6px;"></iframe>`;
+  } else {
+    body.innerHTML = `<p style="padding:34px 20px;text-align:center;color:#666;font-size:14px;">Aperçu indisponible pour ce type de fichier.<br>Utilisez le bouton « Télécharger le fichier » ci-dessous.</p>`;
+  }
+  const dl = document.getElementById("doc-modal-download");
+  if (dl) { dl.href = d.data; dl.setAttribute("download", d.name); }
+  document.getElementById("doc-modal").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+function closeDocModal() {
+  const m = document.getElementById("doc-modal");
+  if (m) m.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+// Annonces démo en attente de modération (en plus des vraies annonces utilisateur "pending")
+const DEMO_PENDING = [
+  { id:9001, type:"voiture", titre:"Golf 7 GTI Clubsport Stage 2", marque:"VOLKSWAGEN", modele:"Golf",
+    prix:31000, km:74000, annee:2017, carburant:"Essence", etat:"Projet terminé / Bon",
+    stage:"Stage 2", departement:"67 Bas-Rhin · Strasbourg", description:"GTI Clubsport préparée, entretien complet, factures disponibles.",
+    badges:["urgent"], options:["Pack Urgence"], pieces_perf:["décata","admission","ligne complète"],
+    img:"https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=600",
+    vente_en_ligne:true, documents:{
+      controle_technique:{name:"ct_golf.pdf", type:"image/svg+xml", data:demoDoc("Contrôle technique")},
+      piece_identite:{name:"cni_golf.jpg", type:"image/svg+xml", data:demoDoc("Pièce d'identité")},
+      carte_grise:{name:"cg_golf.pdf", type:"image/svg+xml", data:demoDoc("Carte grise")}
+    },
+    pro:false, owner_email:"lucas.bernard@email.fr", submitted_at:new Date().toISOString(), created_at:new Date().toISOString(), status:"pending" },
+  { id:9002, type:"piece", titre:"Ligne d'échappement complète Milltek", marque:"AUDI", modele:"S3",
+    prix:1290, cat:"Echappement", sous:"Ligne complète", departement:"33 Gironde · Bordeaux",
+    description:"Ligne Milltek non-resonated, état neuf, montée 200 km.",
+    badges:[], options:[], img:"https://images.unsplash.com/photo-1486754735734-325b5831c3ad?w=600",
+    pro:true, owner_email:"contact@gtperformance.fr", created_at:new Date().toISOString(), status:"pending" },
+];
+
+// Ventes fictives (illustration de l'historique des commissions)
+const DEMO_PAYMENTS = [
+  { date:"18/05/2026", label:"🏎️ Vente véhicule #1 — dépôt fiduciaire", montant:"42 500 €",
+    commission:"1 275 € (3 %)", commValue:1275, finalized:false, statut:"pending" },
+  { date:"17/05/2026", label:"🔧 Vente pièce #103 — Mondial Relay", montant:"1 450 €",
+    commission:"145 € (10 %)", commValue:145, finalized:true, statut:"ok" },
+];
+
+let demoPendingState = DEMO_PENDING.slice();
+
+// Annonce démo refusée (illustration — en plus des vraies annonces utilisateur "rejected")
+const DEMO_REJECTED = [
+  { id:9101, type:"voiture", titre:"BMW 320d E90 — préparation esthétique", marque:"BMW", modele:"Série 3",
+    prix:7800, km:210000, annee:2008, carburant:"Diesel", etat:"Projet terminé / Bon",
+    stage:"Stage 1", departement:"38 Isère · Grenoble",
+    description:"Berline avec covering et jantes, préparation moteur légère.",
+    badges:[], options:[], img:"https://images.unsplash.com/photo-1555215695-3004980ad54e?w=600",
+    pro:false, owner_email:"sophie.martin@email.fr",
+    status:"rejected",
+    reject_reason:"Photos de mauvaise qualité — merci de fournir des photos nettes du véhicule entier.",
+    submitted_at:new Date().toISOString(), created_at:new Date().toISOString() },
+];
+let demoRejectedState = DEMO_REJECTED.slice();
+
+// Annonce démo vendue (illustration — en plus des vraies annonces utilisateur "sold")
+const DEMO_SOLD = [
+  { id:9201, type:"voiture", titre:"Subaru Impreza WRX STI 400ch", prix:28900,
+    img:"https://images.unsplash.com/photo-1568844293986-8d0400bd4745?w=600",
+    owner_email:"lucas.bernard@email.fr", status:"sold",
+    sold_at:new Date(Date.now()-3*86400000).toISOString() },
+];
+let demoSoldState = DEMO_SOLD.slice();
+
+// Signalement de démonstration (en plus des vrais signalements visiteurs)
+const DEMO_REPORTS = [
+  { id:"rep-demo-1", ad_id:104, ad_titre:"Jantes BBS LM 19 pouces",
+    motif:"Prix anormalement bas — annonce potentiellement frauduleuse.",
+    status:"pending", reported_at:new Date(Date.now()-5*3600000).toISOString() },
+];
+let demoReportsState = DEMO_REPORTS.slice();
+
+// Transaction de démonstration (en plus des vraies transactions)
+const DEMO_TRANSACTIONS = [
+  { id:"txn-demo-1", ad_id:102, ad_titre:"Échappement complet inox Akrapovic BMW M3",
+    ad_img:"https://images.unsplash.com/photo-1486754735734-325b5831c3ad?w=600",
+    prix:2400, type:"piece",
+    seller_email:"contact@gtperformance.fr", seller_name:"GT Performance",
+    buyer_email:"lucas.bernard@email.fr", buyer_name:"Lucas Bernard",
+    status:"shipped", created_at:new Date(Date.now()-2*86400000).toISOString() },
+];
+let demoTxnState = DEMO_TRANSACTIONS.slice();
+
+// Comptes de démonstration (utilisés tant qu'aucun compte réel n'existe / en complément)
+const DEMO_ACCOUNTS = [
+  { type:"particulier", prenom:"Lucas", nom:"Bernard", email:"lucas.bernard@email.fr",
+    confirmed:true, created_at:"2026-04-12T10:20:00Z" },
+  { type:"pro", pack:"premium", prenom:"GT Performance", nom:"", raison:"GT Performance",
+    email:"contact@gtperformance.fr", confirmed:true, created_at:"2026-03-02T09:00:00Z" },
+  { type:"particulier", prenom:"Sophie", nom:"Martin", email:"sophie.martin@email.fr",
+    confirmed:false, created_at:"2026-05-19T16:45:00Z" },
+];
+
+// Liste consolidée des comptes : comptes réellement inscrits + comptes démo (sans doublon d'email)
+function getAllAccounts() {
+  const real = loadAccounts();
+  const realEmails = real.map(a => (a.email||"").toLowerCase());
+  // v15 : intègre aussi les profils Supabase (source de vérité depuis v14)
+  const supa = (typeof _allSupabaseProfiles !== "undefined" ? _allSupabaseProfiles : [])
+    .filter(p => !realEmails.includes((p.email || "").toLowerCase()))
+    .map(p => ({
+      id: p.id,
+      email: p.email || "",
+      type: p.type || "particulier",
+      role: p.role || "user",
+      prenom: p.prenom || "",
+      nom: p.nom || "",
+      raison: p.raison_sociale || "",
+      raison_sociale: p.raison_sociale || "",
+      telephone: p.telephone || "",
+      siret: p.siret || "",
+      pack: p.pack || "gratuit",
+      pack_expires_at: p.pack_expires_at,
+      garage_id: p.garage_id,
+      garage_label: p.garage_label,
+      banned: !!p.banned,
+      banned_reason: p.banned_reason || "",
+      confirmed: (p.confirmed !== false), // null/undefined → confirmé par défaut, sauf si explicitement false
+      created_at: p.created_at,
+      _supabase: true
+    }));
+  const supaEmails = supa.map(a => a.email.toLowerCase());
+  // Démo : uniquement si l'email n'est ni dans localStorage ni dans Supabase
+  const demo = DEMO_ACCOUNTS.filter(a => {
+    const e = (a.email||"").toLowerCase();
+    return !realEmails.includes(e) && !supaEmails.includes(e);
+  });
+  return [...real, ...supa, ...demo];
+}
+
+// Demandes d'inspection de démonstration (en plus des vraies demandes vendeur)
+const DEMO_INSPECTIONS = [
+  { id:"insp-demo-1", niveau:"Or", formule:"Inspection Complète", prix:500,
+    vehicule:"Porsche 911 GT3 RS - Projet à finir", ad_id:3,
+    owner_email:"contact@gtperformance.fr", owner_name:"GT Performance",
+    source:"Annonce déjà en ligne", status:"pending",
+    requested_at:new Date().toISOString(), garage:"BR Performance Paris — Paris", paid:true, creneaux:[], chosen:null },
+  { id:"insp-demo-2", niveau:"Argent", formule:"Inspection Premium", prix:300,
+    vehicule:"BMW M3 E92 Préparée 450ch", ad_id:2,
+    owner_email:"lucas.bernard@email.fr", owner_name:"Lucas Bernard",
+    source:"Dépôt d'annonce", status:"pending",
+    requested_at:new Date(Date.now()-86400000).toISOString(), garage:"GTI Tuning Lyon — Lyon", paid:true, creneaux:[], chosen:null },
+];
+let demoInspState = DEMO_INSPECTIONS.slice();
+
+// MAQUETTE RÉINITIALISÉE — toutes les données de démonstration de l'espace
+// admin sont neutralisées : seules les vraies données (localStorage) s'affichent.
+demoPendingState  = [];
+demoRejectedState = [];
+demoSoldState     = [];
+demoReportsState  = [];
+demoTxnState      = [];
+demoInspState     = [];
+DEMO_PAYMENTS.length = 0;
+DEMO_ACCOUNTS.length = 0;
+
+// ===================== GARAGES PARTENAIRES =====================
+// Réinitialise la localisation vérifiée. Appelé dès que la ville est modifiée,
+// pour qu'un département ne reste jamais associé à une autre ville.
+function resetGarageGeo() {
+  ["ng-dept","ng-lat","ng-lng"].forEach(id => {
+    const e = document.getElementById(id); if (e) e.value = "";
+  });
+  const st = document.getElementById("ng-geo-status");
+  if (st) {
+    st.textContent = "en attente — saisissez la ville puis cliquez sur « Vérifier ».";
+    st.style.color = "var(--text-muted)";
+  }
+  const det = document.getElementById("ng-geo-detail");
+  if (det) det.style.display = "none";
+}
+
+// Vérifie la ville via Nominatim (OpenStreetMap) et en déduit le département
+// et les coordonnées. Le département n'est jamais saisi à la main : il découle
+// de la ville, ce qui garantit que ville et département restent cohérents.
+async function geocodeNewGarage() {
+  const ville = (document.getElementById("ng-ville").value || "").trim();
+  const status = document.getElementById("ng-geo-status");
+  if (!ville) {
+    status.textContent = "Saisissez d'abord la ville.";
+    status.style.color = "var(--red)";
+    return;
+  }
+  status.textContent = "🔄 Vérification de la ville...";
+  status.style.color = "var(--text-muted)";
+  try {
+    const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=fr&q="
+      + encodeURIComponent(ville);
+    const res = await fetch(url, { headers: { "Accept-Language": "fr" } });
+    const data = await res.json();
+    if (!data.length) {
+      status.textContent = "❌ Ville introuvable — vérifiez l'orthographe.";
+      status.style.color = "var(--red)";
+      return;
+    }
+    const hit = data[0];
+    const addr = hit.address || {};
+    const cp = (addr.postcode || "").replace(/\s/g, "");
+    const deptCode = cp ? cp.substring(0, 2).replace(/^0/, "") : "";
+    const deptObj = (DATA.departements || []).find(d => d.code === deptCode);
+    if (!deptObj) {
+      status.textContent = "❌ Département indéterminé pour cette ville — précisez davantage la saisie.";
+      status.style.color = "var(--red)";
+      return;
+    }
+    const villeNom = addr.city || addr.town || addr.village || addr.municipality || ville;
+    document.getElementById("ng-ville").value = villeNom;
+    document.getElementById("ng-dept").value = deptObj.code;
+    document.getElementById("ng-lat").value = parseFloat(hit.lat).toFixed(5);
+    document.getElementById("ng-lng").value = parseFloat(hit.lon).toFixed(5);
+    status.textContent = "✅ " + villeNom + " — " + deptObj.name + " (" + deptObj.code + ")";
+    status.style.color = "var(--green)";
+    document.getElementById("ng-dept-label").textContent = deptObj.code + " — " + deptObj.name;
+    document.getElementById("ng-coord-label").textContent =
+      document.getElementById("ng-lat").value + ", " + document.getElementById("ng-lng").value;
+    document.getElementById("ng-geo-detail").style.display = "block";
+  } catch (e) {
+    status.textContent = "❌ Erreur réseau — réessayez.";
+    status.style.color = "var(--red)";
+  }
+}
+
+// Valide et enregistre un nouveau garage partenaire
+function submitNewGarage() {
+  const msg = document.getElementById("ng-form-msg");
+  const nom   = document.getElementById("ng-nom").value.trim();
+  const ville = document.getElementById("ng-ville").value.trim();
+  const prest = document.getElementById("ng-prest").value.trim();
+  const dept  = document.getElementById("ng-dept").value;
+  const lat   = parseFloat(document.getElementById("ng-lat").value);
+  const lng   = parseFloat(document.getElementById("ng-lng").value);
+  const fail  = t => { msg.textContent = t; msg.style.color = "var(--red)"; };
+  if (!nom)   return fail("Indiquez le nom du garage.");
+  if (!ville) return fail("Indiquez la ville.");
+  if (!prest) return fail("Indiquez au moins une prestation.");
+  if (!dept || isNaN(lat) || isNaN(lng))
+    return fail("Cliquez sur « Vérifier la ville & le département » pour valider la localisation.");
+  addPartnerGarage({ nom: nom, ville: ville, dept: dept, prestations: prest, lat: lat, lng: lng });
+  ["ng-nom","ng-ville","ng-prest"].forEach(id => document.getElementById(id).value = "");
+  resetGarageGeo();
+  msg.textContent = "✅ Garage « " + nom + " » ajouté.";
+  msg.style.color = "var(--green)";
+  renderPartnerGaragesAdmin();
+}
+
+// Supprime un garage ajouté par l'administrateur (les garages par défaut restent)
+function removePartnerGarage(id) {
+  const g = getGarages().find(x => x.id === id);
+  if (!g) return;
+  if (!confirm("Supprimer le garage « " + g.nom + " » ? Il disparaîtra de l'annuaire.")) return;
+  deletePartnerGarage(id);
+  renderPartnerGaragesAdmin();
+}
+
+// Affiche le tableau de tous les garages (par défaut + ajoutés par l'admin)
+function renderPartnerGaragesAdmin() {
+  const all = getGarages();
+  const added = all.filter(g => g.custom);
+  const badge = document.getElementById("gar-count-badge");
+  if (badge) badge.innerHTML = added.length
+    ? `<span style="background:var(--bleu);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${added.length}</span>`
+    : "";
+  const box = document.getElementById("garages-part-list");
+  if (!box) return;
+  const rows = all.map(g => `
+    <tr>
+      <td><strong>${g.nom}</strong></td>
+      <td>${g.dept} · ${escHtml(g.ville)}</td>
+      <td style="font-size:13px;color:#555;">${g.prestations || "—"}</td>
+      <td style="font-size:12px;color:#888;white-space:nowrap;">${(+g.lat).toFixed(3)}, ${(+g.lng).toFixed(3)}</td>
+      <td>${g.custom
+        ? '<span style="background:#e8f0ff;color:var(--bleu);border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">Ajouté</span>'
+        : '<span style="background:#f0f0f0;color:#888;border-radius:4px;padding:2px 8px;font-size:12px;">Par défaut</span>'}</td>
+      <td style="text-align:right;white-space:nowrap;">${g.custom
+        ? `<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="removePartnerGarage(${g.id})">🗑 Supprimer</button>`
+        : '<span style="color:#bbb;font-size:12px;">—</span>'}</td>
+    </tr>`).join("");
+  box.innerHTML = `
+    <table class="admin-table">
+      <thead><tr>
+        <th>Garage</th><th>Localisation</th><th>Prestations</th>
+        <th>Coordonnées</th><th>Type</th><th style="text-align:right;">Action</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="text-muted" style="font-size:13px;margin-top:8px;">
+      ${all.length} garage${all.length>1?"s":""} référencé${all.length>1?"s":""}
+      — dont ${added.length} ajouté${added.length>1?"s":""} par l'administrateur.
+      Les garages par défaut ne peuvent pas être supprimés.
+    </p>`;
+}
+
+// ----- Porte d'authentification (overlay) -----
+function showAdminGate() {
+  document.getElementById("admin-gate").style.display = "flex";
+  document.body.style.overflow = "hidden";
+  setTimeout(() => { const e = document.getElementById("ag-email"); if (e) e.focus(); }, 60);
+}
+let _adminAuthStep = "credentials";
+let _adminAuthEmail = "";
+
+function resetAdminGateToCredentials() {
+  _adminAuthStep = "credentials";
+  _adminAuthEmail = "";
+  try { sessionStorage.removeItem("vp_admin_otp_pending"); } catch (e) {}
+  document.getElementById("ag-step-credentials").style.display = "";
+  document.getElementById("ag-step-otp").style.display = "none";
+  document.getElementById("ag-error").style.display = "none";
+  document.getElementById("ag-submit-btn").textContent = "Continuer";
+}
+
+async function submitAdminGate() {
+  const box = document.getElementById("ag-error");
+  const btn = document.getElementById("ag-submit-btn");
+  box.style.display = "none";
+  if (btn) { btn.disabled = true; btn.textContent = "Vérification…"; }
+  try {
+    if (_adminAuthStep === "credentials") {
+      const email = (document.getElementById("ag-email").value || "").trim().toLowerCase();
+      const pwd   = document.getElementById("ag-pwd").value || "";
+      if (!email || !pwd) { box.textContent = "Email et mot de passe requis."; box.style.display="block"; return; }
+      const err = await adminVerifyCredentials(email, pwd);
+      if (err) { box.textContent = err; box.style.display = "block"; return; }
+      const otpErr = await adminSendOtp(email);
+      if (otpErr) { box.textContent = otpErr; box.style.display = "block"; return; }
+      _adminAuthEmail = email;
+      _adminAuthStep = "otp";
+      try { sessionStorage.setItem("vp_admin_otp_pending", email); } catch (e) {}
+      document.getElementById("ag-step-credentials").style.display = "none";
+      document.getElementById("ag-step-otp").style.display = "block";
+      document.getElementById("ag-email-display").textContent = email;
+      document.getElementById("ag-submit-btn").textContent = "Valider le code";
+      setTimeout(() => { const e = document.getElementById("ag-otp"); if (e) e.focus(); }, 60);
+    } else {
+      const code = (document.getElementById("ag-otp").value || "").trim();
+      if (!code || code.length < 4) { box.textContent = "Saisissez le code reçu par email."; box.style.display="block"; return; }
+      let pending = "";
+      try { pending = sessionStorage.getItem("vp_admin_otp_pending") || ""; } catch (e) {}
+      if (pending && pending !== _adminAuthEmail) {
+        box.textContent = "Session expirée. Recommencez."; box.style.display="block";
+        resetAdminGateToCredentials(); return;
+      }
+      const err = await adminVerifyOtp(_adminAuthEmail, code);
+      if (err) { box.textContent = err; box.style.display = "block"; return; }
+      try { sessionStorage.removeItem("vp_admin_otp_pending"); } catch (e) {}
+      _adminAuthStep = "credentials";
+      document.getElementById("admin-gate").style.display = "none";
+      document.body.style.overflow = "";
+      _runAdminInit();
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = _adminAuthStep === "otp" ? "Valider le code" : "Continuer";
+    }
+  }
+}
+async function adminLogoutAndReload() {
+  // v15 : suppression du confirm() (parfois bloqué par le navigateur après plusieurs popups)
+  // et redirection vers index.html (plus fiable qu'un reload qui peut boucler sur le gate)
+  const btn = document.activeElement;
+  if (btn && btn.tagName === "BUTTON") {
+    btn.disabled = true;
+    btn.textContent = "Déconnexion…";
+  }
+  try { await adminLogout(); } catch (e) { console.warn("adminLogout:", e); }
+  window.location.href = "index.html";
+}
+
+// ===================== SEO — onglet admin =====================
+const SEO_PAGES = {
+  "index.html":          "Accueil",
+  "annonces.html":       "Annonces",
+  "garages.html":        "Garages spécialisés",
+  "inspection.html":     "Inspection",
+  "protection.html":     "Protection des achats",
+  "tarifs.html":         "Tarifs / Boost",
+  "abonnement-pro.html": "Abonnement pro",
+  "apropos.html":        "À propos",
+  "contact.html":        "Contact",
+  "cgu.html":            "CGU / CGV",
+  "mentions.html":       "Mentions légales",
+  "confidentialite.html":"Politique de confidentialité"
+};
+const SEO_DEFAULTS = {
+  "index.html": {
+    title: "VoiturePrepa.fr — Annonces de voitures préparées et pièces de performance",
+    description: "Plateforme d'annonces spécialisée dans les voitures préparées, sportives et pièces détachées de performance. Achat / vente sécurisé entre particuliers et pros."
+  },
+  "annonces.html": {
+    title: "Annonces — VoiturePrepa.fr",
+    description: "Parcourez les annonces de voitures préparées, sportives et pièces de performance. Filtres par marque, stage, budget et région."
+  },
+  "garages.html": {
+    title: "Garages spécialisés — VoiturePrepa.fr",
+    description: "Annuaire des garages et préparateurs spécialisés en France : reprogrammation, stages de préparation et performance moteur."
+  },
+  "inspection.html": {
+    title: "Inspection véhicule — VoiturePrepa.fr",
+    description: "Faites inspecter un véhicule préparé par un expert avant la vente : formules Bronze, Argent et Or sur VoiturePrepa.fr."
+  },
+  "protection.html": {
+    title: "Protection des Achats — VoiturePrepa.fr",
+    description: "La Protection des Achats VoiturePrepa : paiement sécurisé, fonds conservés jusqu'à validation, contrôle des documents et vérification HistoVec."
+  },
+  "tarifs.html": {
+    title: "Boostez votre annonce — VoiturePrepa.fr",
+    description: "Boostez votre annonce VoiturePrepa.fr : Pack Photos+, Pack Urgence et Pack Remontada pour vendre plus vite."
+  },
+  "abonnement-pro.html": {
+    title: "Abonnement Pro — VoiturePrepa.fr",
+    description: "Découvrez les abonnements professionnels VoiturePrepa.fr : plus d'annonces, plus de visibilité et des outils dédiés aux pros."
+  },
+  "apropos.html": {
+    title: "À propos — VoiturePrepa.fr",
+    description: "VoiturePrepa.fr, la plateforme française dédiée aux voitures préparées, sportives et pièces de performance. Découvrez notre projet."
+  },
+  "contact.html": {
+    title: "Contact — VoiturePrepa.fr",
+    description: "Contactez l'équipe VoiturePrepa.fr pour toute question sur les annonces, la Protection des Achats ou votre compte."
+  },
+  "cgu.html": {
+    title: "CGU / CGV — VoiturePrepa.fr",
+    description: "Conditions générales d'utilisation et de vente de la plateforme d'annonces VoiturePrepa.fr."
+  },
+  "mentions.html": {
+    title: "Mentions légales — VoiturePrepa.fr",
+    description: "Mentions légales de VoiturePrepa.fr : éditeur, hébergeur et informations légales de la plateforme."
+  },
+  "confidentialite.html": {
+    title: "Politique de confidentialité — VoiturePrepa.fr",
+    description: "Politique de confidentialité de VoiturePrepa.fr : comment vos données personnelles sont collectées, utilisées et protégées."
+  }
+};
+
+function renderSeoTab() {
+  const box = document.getElementById("seo-list");
+  if (!box) return;
+  const overrides = loadSeoOverrides();
+  box.innerHTML = Object.keys(SEO_PAGES).map(id => {
+    const def = SEO_DEFAULTS[id] || { title: "", description: "" };
+    const ov  = overrides[id] || {};
+    const t = (ov.title != null) ? ov.title : def.title;
+    const d = (ov.description != null) ? ov.description : def.description;
+    const isOv = (ov.title != null) || (ov.description != null);
+    const badge = isOv
+      ? '<span style="background:#fff8e1;color:#8a5b00;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;">personnalisé</span>'
+      : '<span style="color:#999;font-size:11px;">par défaut</span>';
+    return `
+      <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;">
+          <strong style="font-size:14px;">📄 ${emlEscHtml(SEO_PAGES[id])} <span class="text-muted" style="font-weight:400;font-size:12px;">— ${id}</span></strong>
+          ${badge}
+        </div>
+        <label class="form-label" style="font-size:12px;">Titre (balise &lt;title&gt; + og:title + twitter:title)</label>
+        <input type="text" id="seo-t-${id}" class="form-input" style="width:100%;margin-bottom:8px;" value="${emlEscAttr(t)}" maxlength="120">
+        <label class="form-label" style="font-size:12px;">Description (meta description + og:description + twitter:description)</label>
+        <textarea id="seo-d-${id}" class="form-input" rows="2" maxlength="200" style="width:100%;font-family:inherit;">${emlEscHtml(d)}</textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary btn-sm" onclick="saveSeoPage('${id}')">💾 Enregistrer</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetSeoPage('${id}')">↺ Réinitialiser au défaut</button>
+          <span id="seo-msg-${id}" style="font-size:12px;font-weight:600;"></span>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function saveSeoPage(id) {
+  const t = (document.getElementById("seo-t-" + id).value || "").trim();
+  const d = (document.getElementById("seo-d-" + id).value || "").trim();
+  const overrides = loadSeoOverrides();
+  const def = SEO_DEFAULTS[id] || { title: "", description: "" };
+  // On n'enregistre que ce qui diffère du défaut (sinon ce serait une surcharge inutile)
+  const ov = {};
+  if (t && t !== def.title) ov.title = t;
+  if (d && d !== def.description) ov.description = d;
+  if (Object.keys(ov).length) overrides[id] = ov;
+  else delete overrides[id];
+  saveSeoOverrides(overrides);
+  const m = document.getElementById("seo-msg-" + id);
+  m.textContent = Object.keys(ov).length ? "✅ Surcharge enregistrée" : "✅ Retour aux valeurs par défaut";
+  m.style.color = "var(--green)";
+  setTimeout(() => { if (m) m.textContent = ""; }, 2500);
+  renderSeoTab();
+}
+
+function resetSeoPage(id) {
+  if (!confirm("Réinitialiser le titre et la description de cette page aux valeurs par défaut ?")) return;
+  const overrides = loadSeoOverrides();
+  delete overrides[id];
+  saveSeoOverrides(overrides);
+  renderSeoTab();
+}
+
+// ===== Tarifs & formules — chargement et sauvegarde depuis l'admin =====
+const TARIFS_FIELDS = [
+  "pack_gratuit_prix","pack_gratuit_max","pack_gratuit_duree",
+  "pack_premium_prix","pack_premium_max","pack_premium_duree",
+  "pack_performance_prix","pack_performance_max","pack_performance_duree",
+  "particulier_duree","email_suggestion_jours","email_renouvellement_jours",
+  "prix_min_voiture_bon","prix_min_voiture_endommage","prix_min_piece",
+  "prix_photos_plus","prix_urgence",
+  "prix_remontada_quotidien","prix_remontada_hebdo_court","prix_remontada_hebdo_long",
+  "prix_inspection_bronze","prix_inspection_argent","prix_inspection_or"
+];
+
+function populateTarifsForm() {
+  const s = loadSiteSettings();
+  TARIFS_FIELDS.forEach(k => {
+    const el = document.getElementById("tar-" + k);
+    if (el && s[k] != null) el.value = s[k];
+  });
+}
+
+function saveTarifsForm() {
+  const cur = loadSiteSettings();
+  const bad = [];
+  TARIFS_FIELDS.forEach(k => {
+    const el = document.getElementById("tar-" + k);
+    if (!el) return;
+    const v = parseFloat(el.value);
+    if (isNaN(v) || v < 0) { bad.push(k); return; }
+    cur[k] = v;
+  });
+  if (bad.length) { alert("⚠ Valeurs invalides : " + bad.join(", ")); return; }
+  saveSiteSettings(cur);
+  alert("✅ Paramètres enregistrés.\n\n" +
+        "Les nouvelles valeurs prennent effet immédiatement :\n" +
+        "  • Durée d'affichage des annonces (particulier et pro)\n" +
+        "  • Limites du nombre d'annonces selon le pack pro\n" +
+        "  • Prix minimum au dépôt (voiture et pièce)\n" +
+        "  • Calendrier d'envoi des emails automatiques\n\n" +
+        "Pour les tarifs des options et inspections affichés sur les pages publiques, " +
+        "le rechargement de ces pages prendra en compte les nouvelles valeurs.");
+  if (typeof refreshPricesFromSettings === "function") refreshPricesFromSettings();
+  if (typeof refreshPricesFromSettings === "function") refreshPricesFromSettings();
+  if (typeof renderEmailsTab === "function") renderEmailsTab();
+}
+
+// v15 — Activation/désactivation des offres payantes (Tarifs & formules)
+const LAUNCH_FLAG_LABELS = {
+  pack_urgence_enabled: { on:"Activé", off:"Désactivé" },
+  pack_remontada_enabled: { on:"Activé", off:"Désactivé" },
+  inspection_enabled: { on:"Activé", off:"Désactivé" },
+  pack_pro_premium_enabled: { on:"Activé", off:"Désactivé" },
+  pack_pro_performance_enabled: { on:"Activé", off:"Désactivé" },
+  pack_photos_paid: { on:"Payant (4,99 €)", off:"Gratuit pour tous" },
+  garages_enabled: { on:"Activé", off:"Désactivé" }
+};
+function hydrateLaunchFlagsUI() {
+  if (typeof loadLaunchFlags !== "function") return;
+  const flags = loadLaunchFlags();
+  Object.keys(LAUNCH_FLAG_LABELS).forEach(k => {
+    const cb = document.getElementById("flg-" + k);
+    const lbl = document.getElementById("flg-" + k + "-lbl");
+    if (cb) cb.checked = !!flags[k];
+    if (lbl) {
+      const d = LAUNCH_FLAG_LABELS[k];
+      lbl.textContent = flags[k] ? d.on : d.off;
+      lbl.style.color = flags[k] ? "var(--green, #2ea44f)" : "var(--text-muted)";
+    }
+  });
+}
+async function toggleLaunchFlag(key, value) {
+  const cb = document.getElementById("flg-" + key);
+  // Désactive le contrôle pendant l'écriture pour éviter le double clic
+  if (cb) cb.disabled = true;
+  try {
+    const current = (typeof loadLaunchFlags === "function") ? loadLaunchFlags() : {};
+    const next = Object.assign({}, current, { [key]: !!value });
+    if (typeof saveLaunchFlags === "function") await saveLaunchFlags(next);
+    hydrateLaunchFlagsUI();
+    if (typeof applyDisplayedPrices === "function") { try { applyDisplayedPrices(); } catch(e) {} }
+    if (typeof applyLaunchFlagsToPacks === "function") { try { applyLaunchFlagsToPacks(); } catch(e) {} }
+  } catch (e) {
+    console.error("toggleLaunchFlag KO:", key, e);
+    if (cb) cb.checked = !value; // rollback visuel
+    alert("❌ Impossible d'enregistrer l'état de cette offre : " + (e.message || e));
+  } finally {
+    if (cb) cb.disabled = false;
+  }
+}
+
+async function initPage() {
+  const ok = await isAdminAuthed();
+  if (!ok) { showAdminGate(); return; }
+  if (typeof refreshSupabaseProfiles === "function") await refreshSupabaseProfiles();
+  // v15 : synchronise les flags depuis Supabase avant d'hydrater l'UI
+  if (typeof _refreshLaunchFlagsFromDb === "function") {
+    try { await _refreshLaunchFlagsFromDb(); } catch(e) {}
+  }
+  _runAdminInit();
+  try { hydrateLaunchFlagsUI(); } catch(e) {}
+}
+
+function _runAdminInit() {
+  // Chaque section est rendue de façon isolée : si l'une échoue,
+  // les autres (dont l'éditeur d'emails automatiques) s'affichent quand même.
+  [renderStats, renderModQueue, renderPublished, renderRejected, renderSold,
+   renderTransactions, renderReports, renderContactMessages, renderUsers, renderInspections,
+   renderStatsTab, renderStatsMonthly, renderAccounting, renderPayments, renderAdminReviews,
+   renderEmailsTab, renderPartnerGaragesAdmin, renderSeoTab, populateTarifsForm].forEach(fn => {
+    try { fn(); }
+    catch (e) { console.error("Admin — échec du rendu de " + fn.name + " :", e); }
+  });
+}
+
+// ===================== DEMANDES D'INSPECTION =====================
+// Formate une date d'input ("2026-05-25" → "25/05/2026")
+function formatRdv(d) {
+  if (!d) return "—";
+  const p = String(d).split("-");
+  return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d;
+}
+
+// Options du sélecteur de garage partenaire
+function garageOptions(selected) {
+  return getGarages().map(g => {
+    const val = g.nom + " — " + g.ville;
+    return `<option value="${val}"${val === selected ? " selected" : ""}>${g.nom} (${escHtml(g.ville)})</option>`;
+  }).join("");
+}
+
+// Met à jour une demande d'inspection (vraie demande ou démo)
+function setInspectionRdv(id, patch) {
+  const list = loadInspections();
+  const r = list.find(x => x.id === id);
+  if (r) { Object.assign(r, patch); saveInspections(list); return true; }
+  const d = demoInspState.find(x => x.id === id);
+  if (d) { Object.assign(d, patch); return true; }
+  return false;
+}
+
+// Ligne de saisie d'un créneau (date + heure + garage)
+function creneauRowHtml(cr) {
+  cr = cr || {};
+  return `<div class="cr-row">
+    <input type="date" class="cr-date" value="${cr.date || ""}">
+    <input type="time" class="cr-heure" value="${cr.heure || ""}">
+    <select class="cr-garage">${garageOptions(cr.garage)}</select>
+    <button type="button" class="btn btn-ghost btn-sm" title="Retirer ce créneau" onclick="this.closest('.cr-row').remove()">✕</button>
+  </div>`;
+}
+// Ajoute une ligne de créneau vide au formulaire d'une demande
+function addCreneauRow(id) {
+  const box = document.getElementById("creneaux-" + id);
+  if (box) box.insertAdjacentHTML("beforeend", creneauRowHtml({ garage: box.dataset.garage || "" }));
+}
+// Étiquette de statut d'une demande d'inspection
+function inspStatusTag(status) {
+  if (status === "pending")   return `<span class="u-tag wait">⏳ Nouvelle demande</span>`;
+  if (status === "proposed")  return `<span class="u-tag" style="background:#fff1d6;color:#8a5b00;">📅 Créneaux proposés</span>`;
+  if (status === "confirmed") return `<span class="u-tag ok">✓ Rendez-vous confirmé</span>`;
+  if (status === "declined")  return `<span class="u-tag" style="background:#fdecea;color:#a02018;">↩️ Créneaux refusés</span>`;
+  if (status === "refused")   return `<span class="u-tag" style="background:#fdecea;color:#a02018;">Demande refusée</span>`;
+  return "";
+}
+
+function renderInspections() {
+  const all = [...loadInspections(), ...demoInspState];
+  const badge = document.getElementById("insp-count-badge");
+  const todo = all.filter(r => r.status === "pending" || r.status === "declined").length;
+  const badgesPending = all.filter(r => r.report && r.report.data && !r.badge_added).length;
+  const totalTodo = todo + badgesPending;
+  if (badge) badge.innerHTML = totalTodo
+    ? `<span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${totalTodo}</span>`
+    : "";
+
+  // Construit la carte d'une demande d'inspection
+  function inspCardHtml(r) {
+    const nivCls = (r.niveau || "").toLowerCase();
+    const who = r.owner_email || r.owner_name || "vendeur";
+    const head = `<div class="ihead">
+        <div>
+          <div class="iveh">🚗 ${r.vehicule}</div>
+          <div class="imeta">Inspection <span class="insp-niveau ${nivCls}">${r.niveau}</span> · ${r.formule} · ${r.prix} € · 👤 ${who}</div>
+          <div class="imeta">🗓️ Demande ${formatAdDate(r.requested_at)}${r.source ? " · " + r.source : ""}${r.garage ? " · 🛠️ " + r.garage : ""}${r.paid ? ' · <span style="color:var(--green);font-weight:600;">💳 Payée</span>' : ' · <span style="color:#a02018;">Non payée</span>'}</div>
+        </div>
+        ${inspStatusTag(r.status)}
+      </div>`;
+
+    let cls = "insp-card", style = "", inner = "";
+
+    if (r.status === "refused") {
+      style = "border-left-color:var(--red);opacity:.7;";
+      inner = r.refus_motif
+        ? `<div class="insp-rdv-box" style="background:#fdecea;border-color:#f5c2bd;color:#a02018;">🚫 <strong>Motif du refus :</strong> ${r.refus_motif}</div>`
+        : "";
+    } else if (r.status === "confirmed") {
+      cls = "insp-card scheduled";
+      const cr = (r.creneaux || [])[r.chosen] || {};
+      inner = `<div class="insp-rdv-box">
+          ✅ <strong>Créneau accepté par le vendeur :</strong><br>
+          📅 ${formatRdv(cr.date)} à ${cr.heure || "—"} · 🛠️ ${cr.garage || "—"}
+          <div style="margin-top:6px;color:var(--text-muted);font-size:12px;">
+            Le vendeur s'est engagé à honorer ce créneau — annulation moins de 48 h à l'avance
+            ou absence : 30 % du tarif facturé.
+          </div>
+        </div>`;
+    } else if (r.status === "proposed") {
+      style = "border-left-color:#e08a00;";
+      const lignes = (r.creneaux || []).map(c =>
+        `<li>📅 ${formatRdv(c.date)} à ${c.heure || "—"} · 🛠️ ${c.garage || "—"}</li>`
+      ).join("");
+      const byTxt = r.proposed_by === "garage"
+        ? "🔧 Créneaux proposés par le garage"
+        : (r.proposed_by === "admin" ? "🛡️ Créneaux proposés par l'administrateur" : "Créneaux proposés");
+      const byColor = r.proposed_by === "garage" ? "#1c4f86" : "#8a5b00";
+      inner = `<div class="insp-rdv-box" style="background:#fff8e1;border-color:#f0d68a;">
+          <div style="font-weight:700;color:${byColor};margin-bottom:2px;">${byTxt}</div>
+          ⏳ <strong>En attente de la réponse du vendeur :</strong>
+          <ul style="margin:6px 0 0 18px;">${lignes}</ul>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-outline btn-sm" onclick="editCreneaux('${r.id}')">✏️ Modifier les créneaux</button>
+        </div>`;
+    } else {
+      const declinedNote = r.status === "declined"
+        ? `<div class="alert alert-warning" style="font-size:13px;margin:8px 0;">↩️ Le vendeur a refusé les créneaux précédents. Proposez-en de nouveaux.</div>`
+        : "";
+      const base = (r.creneaux && r.creneaux.length) ? r.creneaux : [{ garage: r.garage || "" }];
+      const rows = base.map(c => creneauRowHtml(c)).join("");
+      inner = `${declinedNote}
+        <div style="margin-top:10px;font-size:13px;font-weight:600;">Proposez un ou plusieurs créneaux de rendez-vous :</div>
+        <div id="creneaux-${r.id}" class="creneaux-box" data-garage="${r.garage || ""}">${rows}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="addCreneauRow('${r.id}')">＋ Ajouter un créneau</button>
+          <button class="btn btn-primary btn-sm" onclick="proposeCreneaux('${r.id}')">📅 Proposer au vendeur</button>
+          <button class="btn btn-ghost btn-sm" onclick="refuseInspection('${r.id}')">Refuser la demande</button>
+        </div>`;
+    }
+
+    const reportBlock = (r.status !== "refused") ? inspReportAdminHtml(r) : "";
+    return `<div class="${cls}"${style ? ` style="${style}"` : ""}>${head}${inner}${inspHistoryAdminHtml(r)}${reportBlock}</div>`;
+  }
+
+  // Répartition en 3 onglets selon l'avancement
+  const rapport = all.filter(r => r.report && r.report.data);
+  const valide  = all.filter(r => !(r.report && r.report.data) && r.status === "confirmed");
+  const encours = all.filter(r => !(r.report && r.report.data) && r.status !== "confirmed");
+
+  const fill = (id, list, emptyMsg) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = list.length
+      ? list.map(inspCardHtml).join("")
+      : `<div class="alert alert-info">${emptyMsg}</div>`;
+  };
+  fill("insp-list-encours", encours, "Aucune inspection en attente de validation de créneau.");
+  fill("insp-list-valide", valide, "Aucune inspection avec créneau validé en attente de rapport.");
+  fill("insp-list-rapport", rapport, "Aucun rapport d'inspection reçu pour le moment.");
+
+  const setCount = (id, n) => {
+    const e = document.getElementById(id);
+    if (e) e.textContent = n ? "(" + n + ")" : "";
+  };
+  setCount("itab-encours-count", encours.length);
+  setCount("itab-valide-count", valide.length);
+  const rc = document.getElementById("itab-rapport-count");
+  if (rc) rc.innerHTML = (rapport.length ? "(" + rapport.length + ")" : "")
+    + (badgesPending ? ` <span style="background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;">${badgesPending} badge${badgesPending>1?"s":""} à ajouter</span>` : "");
+}
+
+// Bascule entre les sous-onglets des inspections
+function inspSubTab(t) {
+  document.querySelectorAll("#insp-subtabs .tab").forEach(b =>
+    b.classList.toggle("active", b.dataset.itab === t));
+  ["encours","valide","rapport"].forEach(k => {
+    const el = document.getElementById("insp-list-" + k);
+    if (el) el.style.display = (k === t) ? "" : "none";
+  });
+}
+
+// Bloc « rapport d'inspection » affiché par l'admin sous chaque demande
+function inspReportAdminHtml(r) {
+  const tplLink = `<a href="assets/Modele-inspection-${emlEscAttr(r.niveau||"Bronze")}.docx" download class="doc-view">⬇ Modèle ${emlEscHtml(r.niveau||"")} (.docx)</a>`;
+  let body;
+  if (r.report && r.report.data) {
+    const badgeBtn = r.badge_added
+      ? `<span class="u-tag ok" style="margin-left:0;">🎖️ Badge ${r.niveau} ajouté à l'annonce</span>`
+      : `<button class="btn btn-primary btn-sm" onclick="addInspectionBadge('${r.id}')">🎖️ Ajouter le badge ${r.niveau} à l'annonce</button>`;
+    body = `<div style="background:#e8f7ee;border:1px solid #b6e3c8;border-radius:6px;padding:8px 11px;font-size:13px;">
+        ✅ <strong>Rapport d'inspection reçu</strong>${r.report_at ? " le " + formatAdDate(r.report_at) : ""}${r.report_by === "garage" ? " (transmis par le garage)" : " (ajouté par l'admin)"}<br>
+        <a class="doc-view" style="margin-top:5px;display:inline-block;" href="${r.report.data}" download="${emlEscAttr(r.report.name || "rapport-inspection")}">📄 ${emlEscHtml(r.report.name || "Télécharger le rapport")}</a>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        ${badgeBtn}
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">↻ Remplacer le rapport
+          <input type="file" id="arep-${r.id}" accept=".doc,.docx,.pdf,image/*" style="display:none;" onchange="uploadAdminReport('${r.id}','arep-${r.id}')">
+        </label>
+      </div>`;
+  } else {
+    body = `<p class="text-muted" style="font-size:12.5px;margin:0 0 6px;">
+        Aucun rapport reçu. Le garage peut le transmettre depuis son espace, ou vous pouvez l'ajouter ici.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        ${tplLink}
+        <input type="file" id="arep-${r.id}" accept=".doc,.docx,.pdf,image/*">
+        <button class="btn btn-primary btn-sm" onclick="uploadAdminReport('${r.id}','arep-${r.id}')">Ajouter le rapport</button>
+      </div>`;
+  }
+  const pendingBadge = !!(r.report && r.report.data && !r.badge_added);
+  return `<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:10px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:5px;">📋 Rapport d'inspection${pendingBadge ? ` <span style="background:#fdecea;color:#a02018;border-radius:8px;padding:1px 8px;font-size:11px;">⚠ Badge à ajouter</span>` : ""}</div>
+    ${body}
+  </div>`;
+}
+
+// Historique des réponses du vendeur aux créneaux proposés
+function inspHistoryAdminHtml(r) {
+  const h = r.responses || [];
+  if (!h.length) return "";
+  const rows = h.map(e => {
+    const who = e.proposed_by === "garage" ? "le garage" : (e.proposed_by === "admin" ? "l'administration" : "—");
+    if (e.action === "accepted") {
+      const c = (e.creneaux || [])[e.chosen] || {};
+      return `<li><span style="color:var(--green);font-weight:700;">✓ Créneau accepté</span> : `
+        + `${formatRdv(c.date)} à ${c.heure || "—"} `
+        + `<span class="text-muted">— proposé par ${who}, réponse le ${formatAdDate(e.at)}</span></li>`;
+    }
+    const slots = (e.creneaux || []).map(c => formatRdv(c.date) + " à " + (c.heure || "—")).join(" · ");
+    return `<li><span style="color:#a02018;font-weight:700;">✗ Créneaux refusés</span> : `
+      + `${slots || "—"} <span class="text-muted">— proposés par ${who}, refus le ${formatAdDate(e.at)}</span></li>`;
+  }).join("");
+  return `<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:4px;">📜 Historique des réponses du vendeur</div>
+    <ul style="margin:0 0 0 18px;font-size:12.5px;color:#444;line-height:1.6;">${rows}</ul>
+  </div>`;
+}
+
+// L'admin téléverse lui-même le rapport d'inspection
+function uploadAdminReport(inspId, inputId) {
+  const inp = document.getElementById(inputId);
+  if (!inp || !inp.files || !inp.files[0]) { alert("Veuillez choisir un fichier de rapport."); return; }
+  const file = inp.files[0];
+  if (file.size > 4 * 1024 * 1024) { alert("Fichier trop volumineux (4 Mo maximum)."); return; }
+  const fr = new FileReader();
+  fr.onload = () => {
+    updateInspection(inspId, {
+      report: { name:file.name, type:file.type, data:fr.result },
+      report_at: new Date().toISOString(), report_by: "admin"
+    });
+    alert("✅ Rapport d'inspection enregistré. Le vendeur peut désormais le consulter.");
+    renderInspections();
+  };
+  fr.onerror = () => alert("Échec de la lecture du fichier. Veuillez réessayer.");
+  fr.readAsDataURL(file);
+}
+
+// L'admin ajoute manuellement le badge d'inspection à l'annonce + informe le vendeur
+function addInspectionBadge(inspId) {
+  const r = [...loadInspections(), ...demoInspState].find(x => x.id === inspId);
+  if (!r) { alert("Demande d'inspection introuvable."); return; }
+  if (!(r.report && r.report.data)) {
+    alert("Le rapport d'inspection doit d'abord être reçu avant d'ajouter le badge.");
+    return;
+  }
+  const badgeKey = { Or:"or", Argent:"argent", Bronze:"bronze" }[r.niveau] || (r.niveau || "").toLowerCase();
+  const ad = loadUserAds().find(a => String(a.id) === String(r.ad_id));
+  if (!ad) {
+    alert("L'annonce liée à cette inspection est introuvable (elle a peut-être été supprimée).");
+    return;
+  }
+  if (!confirm("Ajouter le badge « Inspection " + r.niveau + " » à l'annonce « " + (ad.titre || "") + " » ? Le vendeur en sera informé.")) return;
+  const badges = (ad.badges || []).slice();
+  if (badges.indexOf(badgeKey) === -1) badges.push(badgeKey);
+  updateUserAd(ad.id, { badges: badges });
+  syncMemAd(ad.id);
+  updateInspection(inspId, { badge_added:true, badge_added_at:new Date().toISOString() });
+  try {
+    const t = getOrCreateThread({
+      ad_id: ad.id, ad_titre: ad.titre || "Votre annonce",
+      buyer_email: r.owner_email, buyer_name: r.owner_name || "Vendeur",
+      seller_email: "support@voitureprepa.fr", seller_name: "Support VoiturePrepa"
+    });
+    addThreadMessage(t.id, "support@voitureprepa.fr", "Support VoiturePrepa",
+      "Bonjour, le rapport de votre inspection " + r.niveau + " a été validé. Le badge « Inspection "
+      + r.niveau + " » vient d'être ajouté à votre annonce « " + (ad.titre || "")
+      + " ». Le rapport complet est disponible dans « Mon compte › Inspections ».");
+  } catch (e) { console.error("Notification badge :", e); }
+  alert("✅ Badge « Inspection " + r.niveau + " » ajouté à l'annonce. Le vendeur a été informé par message.");
+  renderInspections();
+  renderPublished();
+  renderModQueue();
+}
+
+// L'admin propose un ou plusieurs créneaux au vendeur
+function proposeCreneaux(id) {
+  const box = document.getElementById("creneaux-" + id);
+  if (!box) return;
+  const creneaux = [];
+  box.querySelectorAll(".cr-row").forEach(row => {
+    const date = row.querySelector(".cr-date").value;
+    const heure = row.querySelector(".cr-heure").value;
+    const garage = row.querySelector(".cr-garage").value;
+    if (date && heure) creneaux.push({ date:date, heure:heure, garage:garage, note:"" });
+  });
+  if (!creneaux.length) {
+    alert("Veuillez renseigner au moins un créneau complet (date + heure).");
+    return;
+  }
+  setInspectionRdv(id, { creneaux:creneaux, status:"proposed", chosen:null, proposed_by:"admin" });
+  alert("✅ " + creneaux.length + " créneau(x) proposé(s) au vendeur.\n\n" +
+    "Le vendeur pourra les accepter ou les refuser depuis son espace « Mon compte ».");
+  renderInspections();
+}
+
+// Rouvre le formulaire pour modifier les créneaux déjà proposés
+function editCreneaux(id) {
+  setInspectionRdv(id, { status:"pending" });
+  renderInspections();
+}
+
+function refuseInspection(id) {
+  const motif = prompt(
+    "Motif du refus de la demande d'inspection (il sera visible par le vendeur) :",
+    "Le véhicule ne remplit pas les conditions requises pour une inspection."
+  );
+  if (motif === null) return; // annulé
+  if (!motif.trim()) { alert("Veuillez indiquer un motif de refus."); return; }
+  setInspectionRdv(id, { status:"refused", refus_motif:motif.trim() });
+  alert("Demande d'inspection refusée. Le vendeur verra le motif sur son espace « Mon compte ».");
+  renderInspections();
+}
+
+// Liste des annonces vendues (historique des ventes)
+function renderSold() {
+  const userSold = loadUserAds().filter(a => getAdStatus(a) === "sold");
+  const all = [...userSold, ...demoSoldState];
+  const box = document.getElementById("sold-list");
+  const badge = document.getElementById("sold-count-badge");
+  if (badge) badge.innerHTML = all.length
+    ? `<span style="background:var(--bleu);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${all.length}</span>`
+    : "";
+  if (!all.length) {
+    box.innerHTML = `<div class="alert alert-info">Aucune annonce vendue pour le moment.</div>`;
+    return;
+  }
+  box.innerHTML = `<table class="admin-table">
+    <thead><tr><th></th><th>Annonce</th><th>Type</th><th>Prix de vente</th><th>Vendeur</th><th>Vendue</th></tr></thead>
+    <tbody>${all.map(ad => `<tr>
+      <td><div style="width:54px;height:40px;background:#ddd center/cover no-repeat;border-radius:4px;background-image:url('${ad.img}')"></div></td>
+      <td><strong>${ad.titre}</strong></td>
+      <td>${ad.type==="voiture"?"🏎️ Voiture":"🔧 Pièce"}</td>
+      <td style="font-weight:700;color:var(--green);">${(ad.prix||0).toLocaleString('fr-FR')} €</td>
+      <td>${ad.owner_email || "—"}</td>
+      <td>${formatAdDate(ad.sold_at || ad.created_at)}</td>
+    </tr>`).join("")}</tbody>
+  </table>`;
+}
+
+// ===================== SIGNALEMENTS =====================
+// Met à jour le statut d'un signalement (vrai signalement ou démo)
+function setReportStatus(id, status) {
+  if (updateReport(id, { status: status })) return true;
+  const d = demoReportsState.find(x => x.id === id);
+  if (d) { d.status = status; return true; }
+  return false;
+}
+
+function renderReports() {
+  const all = [...loadReports(), ...demoReportsState];
+  const box = document.getElementById("reports-list");
+  const badge = document.getElementById("rep-count-badge");
+  const pending = all.filter(r => r.status === "pending").length;
+  if (badge) badge.innerHTML = pending
+    ? `<span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${pending}</span>`
+    : "";
+  if (!all.length) {
+    box.innerHTML = `<div class="alert alert-success">✅ Aucun signalement pour le moment.</div>`;
+    return;
+  }
+  box.innerHTML = all.map(r => {
+    if (r.status !== "pending") {
+      const txt = r.status === "handled" ? "Annonce retirée" : "Classé sans suite";
+      return `<div class="insp-card" style="border-left-color:var(--border);opacity:.65;">
+        <div class="iveh">🚩 ${r.ad_titre}</div>
+        <div class="imeta">Motif : ${r.motif} · ${txt}</div>
+      </div>`;
+    }
+    return `<div class="insp-card" style="border-left-color:var(--red);">
+      <div class="ihead">
+        <div>
+          <div class="iveh">🚩 ${r.ad_titre}</div>
+          <div class="imeta">🗓️ Signalé ${formatAdDate(r.reported_at)}</div>
+        </div>
+        <span class="u-tag wait">⏳ À vérifier</span>
+      </div>
+      <div class="rej-reason">📋 <strong>Motif du signalement :</strong> ${r.motif}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="annonce.html?id=${r.ad_id}" target="_blank" class="btn btn-ghost btn-sm">👁 Voir l'annonce</a>
+        <button class="btn btn-outline btn-sm" onclick="removeReportedAd('${r.id}',${r.ad_id})">🚫 Retirer l'annonce</button>
+        <button class="btn btn-ghost btn-sm" onclick="dismissReport('${r.id}')">✓ Classer sans suite</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// Classe un signalement sans suite (annonce vérifiée, rien à faire)
+function dismissReport(id) {
+  setReportStatus(id, "dismissed");
+  renderReports();
+}
+
+// Retire l'annonce signalée (si c'est une annonce utilisateur) et clôt le signalement
+function removeReportedAd(reportId, adId) {
+  if (!confirm("Retirer l'annonce signalée du listing public ?")) return;
+  if (loadUserAds().some(a => String(a.id) === String(adId))) {
+    setUserAdStatus(adId, "rejected", "Annonce retirée suite à un signalement vérifié par la modération.");
+    syncMemAd(adId);
+    renderPublished();
+    renderRejected();
+    renderStats();
+  } else {
+    alert("Cette annonce est une annonce de démonstration — retrait simulé.");
+  }
+  setReportStatus(reportId, "handled");
+  alert("Annonce retirée. Le signalement est traité.");
+  renderReports();
+}
+
+// ===================== MESSAGES DE CONTACT =====================
+// Annonces liées à l'e-mail de l'expéditeur + actions admin directes
+function contactAccountAdsHtml(email) {
+  const e = (email || "").toLowerCase().trim();
+  if (!e) return "";
+  const ads = loadUserAds().filter(a => (a.owner_email || "").toLowerCase().trim() === e);
+  const statusInfo = {
+    pending:  { txt:"En attente de validation", color:"#e08a00" },
+    approved: { txt:"Publiée",  color:"var(--green)" },
+    rejected: { txt:"Refusée",  color:"var(--red)" },
+    sold:     { txt:"Vendue",   color:"var(--bleu)" }
+  };
+  const rows = ads.map(ad => {
+    const st = getAdStatus(ad);
+    const si = statusInfo[st] || statusInfo.pending;
+    let actions = "";
+    if (st === "pending") {
+      actions = `<button class="btn btn-primary btn-sm" onclick="approveAd(${ad.id});renderContactMessages();">✓ Valider</button>
+        <button class="btn btn-outline btn-sm" onclick="rejectAd(${ad.id});renderContactMessages();">✗ Refuser</button>`;
+    } else if (st === "approved") {
+      actions = `<button class="btn btn-outline btn-sm" onclick="unpublishAd(${ad.id});renderContactMessages();">🚫 Retirer</button>`;
+    } else if (st === "rejected") {
+      actions = `<button class="btn btn-primary btn-sm" onclick="revalidateAd(${ad.id});renderContactMessages();">↩ Revalider</button>`;
+    }
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg-alt);border:1px solid var(--border);border-radius:8px;padding:8px 11px;margin-bottom:6px;">
+      <div style="font-size:13px;">
+        <strong>${emlEscHtml(ad.titre || "Annonce")}</strong>
+        <span style="color:${si.color};font-weight:700;font-size:12px;"> · ${si.txt}</span>
+        <span class="text-muted" style="font-size:12px;"> · ${(ad.prix||0).toLocaleString('fr-FR')} €</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${actions}
+        <a href="annonce.html?id=${ad.id}" target="_blank" class="btn btn-ghost btn-sm">👁 Aperçu</a>
+      </div>
+    </div>`;
+  }).join("");
+  return `<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:10px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:7px;">📋 Annonces de ce compte (${emlEscHtml(email)})</div>
+    ${ads.length ? rows : '<span class="text-muted" style="font-size:13px;">Aucune annonce associée à cette adresse e-mail.</span>'}
+  </div>`;
+}
+
+// v15 : reconstitue le fil complet de la conversation (côté admin) pour un message de contact
+function contactThreadHtml(m) {
+  if (typeof loadThreads !== "function") return "";
+  const threadAdId = "contact-" + m.id;
+  const t = loadThreads().find(x => String(x.ad_id) === String(threadAdId));
+  if (!t || !t.messages || !t.messages.length) {
+    // Aucun thread encore : on affiche au moins le message initial seul (sans bloc fil)
+    return "";
+  }
+  const adminEmail = (getSession() && getSession().email) || "support@voitureprepa.fr";
+  const rows = t.messages.map(msg => {
+    const fromAdmin = _emailEq(msg.from_email, adminEmail) || _emailEq(msg.from_email, t.seller_email);
+    const bg = fromAdmin ? "#f3faf5" : "#fafafa";
+    const border = fromAdmin ? "var(--green)" : "var(--border)";
+    const who = emlEscHtml(msg.from_name || (fromAdmin ? "Support" : (m.nom || "Expéditeur")));
+    const when = msg.at ? emFrDate(new Date(msg.at)) : "";
+    return `<div style="border-left:3px solid ${border};background:${bg};padding:9px 12px;font-size:14px;white-space:pre-line;margin:6px 0;border-radius:4px;">
+      <strong>${who}</strong> <span class="text-muted" style="font-size:12px;">· ${when}</span><br>
+      ${emlEscHtml(msg.text || "")}
+    </div>`;
+  }).join("");
+  return `<div style="margin:10px 0;">
+    <div class="text-muted" style="font-size:12px;font-weight:600;margin-bottom:4px;">📨 Historique de la conversation (${t.messages.length} message${t.messages.length>1?"s":""})</div>
+    ${rows}
+  </div>`;
+}
+
+function renderContactMessages() {
+  const list = loadContactMessages();
+  const box = document.getElementById("contact-messages-list");
+  const badge = document.getElementById("contact-count-badge");
+  const nouveaux = list.filter(m => m.status !== "repondu").length;
+  if (badge) badge.innerHTML = nouveaux
+    ? `<span style="background:var(--orange);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${nouveaux}</span>`
+    : "";
+  if (!box) return;
+  if (!list.length) {
+    box.innerHTML = `<div class="alert alert-info">Aucun message reçu pour le moment.</div>`;
+    return;
+  }
+  box.innerHTML = list.map(m => {
+    const repondu = m.status === "repondu";
+    const dispo = m.created_at ? emFrDate(new Date(m.created_at)) : "—";
+    return `<div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;">
+        <div>
+          <strong>${emlEscHtml(m.sujet || "Message")}</strong><br>
+          <span class="text-muted" style="font-size:13px;">
+            👤 ${emlEscHtml(m.nom || "—")} · ✉️ <a href="mailto:${emlEscAttr(m.email || "")}">${emlEscHtml(m.email || "—")}</a> · ${dispo}
+          </span>
+        </div>
+        <span class="pay-status ${repondu ? 'ok' : 'pending'}">${repondu ? '✅ Répondu' : '🆕 Nouveau'}</span>
+      </div>
+      <div style="background:var(--bg-alt);border-radius:8px;padding:12px;font-size:14px;white-space:pre-line;margin:10px 0;">${emlEscHtml(m.message || "")}</div>
+      ${contactAccountAdsHtml(m.email)}
+      ${contactThreadHtml(m)}
+      <label class="eml-label">${repondu ? "Poursuivre la conversation avec " : "Votre réponse à "}${emlEscHtml(m.nom || "l'expéditeur")}</label>
+      <textarea id="reply-${m.id}" class="eml-textarea" rows="4" placeholder="${repondu ? "Rédigez votre nouveau message…" : "Rédigez votre réponse…"}"></textarea>
+      <div style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" onclick="replyContactMessage('${m.id}')">✉️ Envoyer ${repondu ? "le message" : "la réponse"}</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// L'administrateur répond à un message de contact
+function replyContactMessage(id) {
+  const ta = document.getElementById("reply-" + id);
+  const reply = ta ? ta.value.trim() : "";
+  if (!reply) { alert("Veuillez saisir une réponse avant de l'envoyer."); return; }
+  const m = loadContactMessages().find(x => x.id === id);
+  if (!m) return;
+  updateContactMessage(id, { reply: reply, status: "repondu", replied_at: new Date().toISOString() });
+
+  // Ouvre/crée la conversation correspondante dans la Messagerie
+  const admin = getSession();
+  const adminEmail = (admin && admin.email) || "support@voitureprepa.fr";
+  const t = getOrCreateThread({
+    ad_id: "contact-" + m.id,
+    ad_titre: "Contact : " + (m.sujet || "Message"),
+    buyer_email: m.email, buyer_name: m.nom,
+    seller_email: adminEmail, seller_name: "Support VoiturePrepa"
+  });
+  // Si la conversation vient d'être créée, on y dépose d'abord le message initial
+  if (!t.messages.length) addThreadMessage(t.id, m.email, m.nom, m.message);
+  // Puis la réponse de l'administrateur
+  addThreadMessage(t.id, adminEmail, "Support VoiturePrepa", reply);
+
+  // v15 : message d'info concis, l'historique reste accessible ici
+  alert("✅ Message envoyé à " + m.email + ".");
+  renderContactMessages();
+}
+
+// ===================== TRANSACTIONS =====================
+// Libellé de l'état d'une transaction
+function txnStateLabel(status) {
+  if (status === "paid")     return `<span class="txn-state paid">💳 Payé — en attente d'envoi</span>`;
+  if (status === "shipped")  return `<span class="txn-state shipped">📦 Envoyé — en attente de réception</span>`;
+  if (status === "received") return `<span class="txn-state done">✅ Réceptionné — finalisé</span>`;
+  return `<span class="txn-state">${status || "—"}</span>`;
+}
+
+function renderTransactions() {
+  const all = [...loadTransactions(), ...demoTxnState];
+  const box = document.getElementById("transactions-list");
+  const badge = document.getElementById("txn-count-badge");
+  const enCours = all.filter(t => t.status !== "received").length;
+  if (badge) badge.innerHTML = enCours
+    ? `<span style="background:var(--bleu);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${enCours}</span>`
+    : "";
+  if (!all.length) {
+    box.innerHTML = `<div class="alert alert-info">Aucune transaction pour le moment.</div>`;
+    return;
+  }
+  box.innerHTML = `<table class="admin-table">
+    <thead><tr><th></th><th>Annonce</th><th>Type</th><th>Prix</th><th>Revenu site</th><th>Vendeur</th><th>Acheteur</th><th>État de l'annonce</th></tr></thead>
+    <tbody>${all.map(t => {
+      const rate = (t.commission_rate != null) ? t.commission_rate : commissionRate(t.type);
+      const comm = (t.commission != null) ? t.commission : commissionAmount(t.prix, t.type);
+      const prot = (t.protection_fee != null) ? t.protection_fee : buyerProtectionFee(t.prix);
+      return `<tr>
+      <td><div style="width:54px;height:40px;background:#ddd center/cover no-repeat;border-radius:4px;background-image:url('${t.ad_img || ""}')"></div></td>
+      <td><strong>${t.ad_titre}</strong></td>
+      <td>${t.type === "voiture" ? "🏎️ Voiture" : "🔧 Pièce"}</td>
+      <td>${(t.prix || 0).toLocaleString('fr-FR')} €</td>
+      <td><strong style="color:var(--green);">${(comm + prot).toLocaleString('fr-FR')} €</strong><br><span class="text-muted" style="font-size:11px;">commission ${comm.toLocaleString('fr-FR')} € (${rate} %) · protection ${prot.toLocaleString('fr-FR')} € (2 %)</span></td>
+      <td>${t.seller_email || t.seller_name || "—"}</td>
+      <td>${t.buyer_email || t.buyer_name || "—"}</td>
+      <td>${txnStateLabel(t.status)}</td>
+    </tr>`;
+    }).join("")}</tbody>
+  </table>`;
+}
+
+// Liste des annonces validées / publiées
+// ----- Ajustement admin de la durée d'affichage d'une annonce -----
+// Disponible uniquement sur les annonces dont la durée n'est pas définie par un pack
+// pro payant (donc : Particulier et Pro Gratuit). Pour Pro Premium / Performance,
+// la durée découle du pack souscrit et ne doit pas être surchargée par l'admin.
+function canAdminAdjustDuration(ad) {
+  return !ad.pro_pack || ad.pro_pack === "gratuit";
+}
+
+function adminAdjustDuration(id) {
+  const ad = loadUserAds().find(a => String(a.id) === String(id));
+  if (!ad) { alert("Annonce introuvable."); return; }
+  if (!canAdminAdjustDuration(ad)) {
+    alert("Cette annonce est rattachée à un pack pro qui définit sa durée. Pas d'ajustement manuel.");
+    return;
+  }
+  const current = ad.duration_months || 3;
+  const expCurrent = formatExpiry(ad) || "—";
+  const input = prompt(
+    "Durée totale d'affichage en mois (1 à 24) :\n\n" +
+    "Durée actuelle : " + current + " mois\n" +
+    "Mise en ligne : " + (ad.created_at ? new Date(ad.created_at).toLocaleDateString('fr-FR') : '—') + "\n" +
+    "Expire actuellement : " + expCurrent,
+    String(current)
+  );
+  if (input === null) return;
+  const v = parseInt(input, 10);
+  if (isNaN(v) || v < 1 || v > 24) {
+    alert("Durée invalide. Saisissez un entier entre 1 et 24 mois.");
+    return;
+  }
+  if (v === current) { alert("La durée n'a pas changé."); return; }
+  const ok = updateUserAd(id, { duration_months: v, duration_admin_override: true });
+  if (!ok) { alert("⚠️ L'enregistrement a échoué (stockage saturé)."); return; }
+  syncMemAd(id);
+  const refreshed = loadUserAds().find(a => String(a.id) === String(id));
+  alert("✅ Durée mise à jour : " + v + " mois.\nNouvelle expiration : " + (formatExpiry(refreshed) || "—") + ".");
+  renderPublished();
+  renderStats();
+}
+
+function renderPublished() {
+  // v15 : loadUserAds (cache Supabase) + MOCK_ADS (demos)
+  const allPublished = [...loadUserAds(), ...MOCK_ADS].filter(a => getAdStatus(a) === "approved");
+  const tbody = document.getElementById("published-tbody");
+  const badge = document.getElementById("pub-count-badge");
+  if (badge) badge.innerHTML = `<span style="background:var(--green);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${allPublished.length}</span>`;
+
+  // Filtres
+  let published = allPublished.slice();
+  const fType = (document.getElementById("pub-filter-type")||{}).value || "";
+  if (fType) published = published.filter(a => a.type === fType);
+  const fEtat = (document.getElementById("pub-filter-etat")||{}).value || "";
+  if (fEtat === "active")  published = published.filter(a => !isAdExpired(a));
+  if (fEtat === "expired") published = published.filter(a => isAdExpired(a));
+
+  // Tri
+  const sort = (document.getElementById("pub-sort")||{}).value || "recent";
+  if (sort === "recent")        published.sort((a,b)=> new Date(b.created_at||0) - new Date(a.created_at||0));
+  else if (sort === "ancien")   published.sort((a,b)=> new Date(a.created_at||0) - new Date(b.created_at||0));
+  else if (sort === "prix-desc")published.sort((a,b)=> b.prix - a.prix);
+  else if (sort === "prix-asc") published.sort((a,b)=> a.prix - b.prix);
+  else if (sort === "expire")   published.sort((a,b)=> (getAdExpiry(a)||0) - (getAdExpiry(b)||0));
+  else if (sort === "type")     published.sort((a,b)=> (a.type||"").localeCompare(b.type||""));
+
+  if (!published.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-muted" style="text-align:center;padding:20px;">Aucune annonce ne correspond à ces critères.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = published.map(ad => {
+    const expired = isAdExpired(ad);
+    const isUser = loadUserAds().some(a => String(a.id) === String(ad.id));
+    return `<tr ${expired?'style="opacity:.55;"':''}>
+      <td><div style="width:54px;height:40px;background:#ddd center/cover no-repeat;border-radius:4px;background-image:url('${ad.img}')"></div></td>
+      <td><strong>${escHtml(ad.titre)}</strong>${isUser?' <span class="mod-badge" style="background:#e8f0fa;color:var(--bleu);">déposée par un membre</span>':''}${
+        (ad.options||[]).length
+          ? `<div style="margin-top:4px;">${(ad.options||[]).map(o=>`<span class="mod-badge">${o}</span>`).join("")}</div>`
+          : ''}</td>
+      <td>${ad.type==="voiture"?"🏎️ Voiture":"🔧 Pièce"}</td>
+      <td>${ad.prix.toLocaleString('fr-FR')} €</td>
+      <td>${formatAdDate(ad.created_at)}</td>
+      <td>${expired?'<span style="color:var(--red);font-weight:600;">Expirée</span>':formatExpiry(ad)}</td>
+      <td>
+        <a href="annonce.html?id=${ad.id}" target="_blank" class="btn btn-ghost btn-sm">👁 Voir</a>
+        ${isUser && canAdminAdjustDuration(ad) ? `<button class="btn btn-outline btn-sm" onclick="adminAdjustDuration(${ad.id})" title="Ajuster la durée d'affichage">📅 Durée</button>` : ''}
+        ${isUser?`<button class="btn btn-outline btn-sm" onclick="unpublishAd(${ad.id})">🚫 Retirer</button>`:''}
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+// Retire une annonce publiée (la repasse en "refusée")
+function unpublishAd(id) {
+  const reason = prompt(
+    "Motif du retrait de l'annonce (il sera visible par le vendeur) :",
+    "Annonce non conforme aux conditions d'utilisation."
+  );
+  if (reason === null) return; // annulé
+  if (!reason.trim()) { alert("Veuillez indiquer un motif de retrait."); return; }
+  setUserAdStatus(id, "rejected", reason.trim());
+  syncMemAd(id);
+  alert("Annonce retirée du listing public.\nLe vendeur verra le motif sur son annonce.");
+  renderPublished();
+  renderModQueue();
+  renderRejected();
+  renderStats();
+}
+
+function adminTab(t) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab===t));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("atab-"+t).classList.add("active");
+}
+
+// Toutes les annonces en attente : démo + vraies annonces utilisateur "pending"
+function getPendingAds() {
+  const userPending = loadUserAds().filter(a => getAdStatus(a) === "pending");
+  return [...userPending, ...demoPendingState];
+}
+
+function renderStats() {
+  const pending      = getPendingAds().length;
+  // Inspections en attente : nouvelles demandes + créneaux refusés à reproposer
+  const inspections  = [...loadInspections(), ...demoInspState]
+    .filter(r => r.status === "pending" || r.status === "declined"
+      || (r.report && r.report.data && !r.badge_added)).length;
+  // Signalements en attente de vérification
+  const signalements = [...loadReports(), ...demoReportsState]
+    .filter(r => r.status === "pending").length;
+  // Transactions non finalisées (en cours)
+  const transactions = [...loadTransactions(), ...demoTxnState]
+    .filter(t => t.status !== "received").length;
+  const users        = getAllAccounts().length;
+  document.getElementById("admin-stats").innerHTML = `
+    <div class="astat warn" style="cursor:pointer;" onclick="adminTab('moderation')"><div class="n">${pending}</div><div class="l">À modérer</div></div>
+    <div class="astat blue" style="cursor:pointer;" onclick="adminTab('inspections')"><div class="n">${inspections}</div><div class="l">Inspections à traiter</div></div>
+    <div class="astat" style="cursor:pointer;" onclick="adminTab('signalements')"><div class="n">${signalements}</div><div class="l">Signalements à vérifier</div></div>
+    <div class="astat ok" style="cursor:pointer;" onclick="adminTab('transactions')"><div class="n">${transactions}</div><div class="l">Transactions en cours</div></div>
+    <div class="astat blue" style="cursor:pointer;" onclick="adminTab('utilisateurs')"><div class="n">${users}</div><div class="l">Utilisateurs inscrits</div></div>
+  `;
+  const badge = document.getElementById("mod-count-badge");
+  if (badge) badge.innerHTML = pending ? `<span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${pending}</span>` : "";
+}
+
+function renderModQueue() {
+  const pending = getPendingAds();
+  const q = document.getElementById("mod-queue");
+  if (!pending.length) {
+    q.innerHTML = `<div class="alert alert-success">✅ Aucune annonce en attente. Tout est à jour !</div>`;
+    return;
+  }
+  q.innerHTML = pending.map(ad => {
+    const isVoiture = ad.type === "voiture";
+    // On n'affiche QUE les souscriptions réellement faites (pas les badges internes)
+    const opts = (ad.options && ad.options.length)
+      ? ad.options.map(o=>`<span class="mod-badge">${o}</span>`).join("")
+      : '<span class="text-muted" style="font-size:12px;">Aucune option souscrite</span>';
+    // Statut du paiement des options de visibilité (visible par l'administrateur)
+    let payHtml = "";
+    if (ad.payment && ad.payment.required) {
+      const p = ad.payment;
+      if (p.status === "accepté") {
+        payHtml = `<div style="margin-top:6px;background:#e9f9ef;border:1px solid #b6e6c6;color:#127a36;border-radius:6px;padding:6px 10px;font-size:12.5px;font-weight:600;">✅ Paiement des options accepté — ${(p.amount||0).toLocaleString('fr-FR')} €</div>`;
+      } else {
+        payHtml = `<div style="margin-top:6px;background:#fdecec;border:1px solid #f3bcbc;color:#c0211f;border-radius:6px;padding:6px 10px;font-size:12.5px;">⛔ <strong>Paiement des options non abouti</strong> — ${(p.amount||0).toLocaleString('fr-FR')} €<br>Motif : ${p.reason || "non précisé"}</div>`;
+      }
+    }
+    // Annonce déjà existante, modifiée par le vendeur → re-vérification nécessaire
+    let modifHtml = "";
+    if (ad.was_modified) {
+      const prev = { approved: "version déjà publiée", rejected: "version précédemment refusée",
+                     expired: "annonce expirée" }[ad.previous_status] || "annonce déjà existante";
+      modifHtml = `<div style="margin:4px 0 8px;background:#eef4fb;border:1px solid #b9d4ef;color:#1c4f86;border-radius:6px;padding:7px 11px;font-size:12.5px;font-weight:600;">✏️ Annonce modifiée par le vendeur — ${prev}, à revérifier avant nouvelle publication${ad.modified_at ? " · modifiée " + formatAdDate(ad.modified_at) : ""}</div>`;
+    }
+    // Demande de renouvellement gratuit soumise par le vendeur
+    let renewHtml = "";
+    if (ad.is_renewal) {
+      renewHtml = `<div style="margin:4px 0 8px;background:#e8f7ee;border:1px solid #b6e3c8;color:#127a36;border-radius:6px;padding:7px 11px;font-size:12.5px;font-weight:600;">🔄 Demande de renouvellement gratuit — à revalider pour remettre l'annonce en ligne ${loadSiteSettings().particulier_duree || 3} mois.</div>`;
+    }
+    let docsHtml = "";
+    if (ad.documents) {
+      const d = ad.documents;
+      docsHtml = `<div class="mod-docs">🔒 <strong>Documents fournis (réservé administrateur)</strong>
+        <div style="margin-top:5px;">
+          ${docLink("Contrôle technique", d.controle_technique)}
+          ${docLink("Pièce d'identité", d.piece_identite)}
+          ${docLink("Carte grise", d.carte_grise)}
+        </div>
+      </div>`;
+    }
+    let changesHtml = "";
+    if (ad.modif_changes && ad.modif_changes.length) {
+      const cut = v => { v = String(v == null ? "" : v); return v.length > 140 ? v.slice(0, 140) + "…" : v; };
+      changesHtml = `<div style="margin:4px 0 8px;background:#fafafa;border:1px solid var(--border);border-radius:6px;padding:8px 10px;">
+        <strong style="font-size:12.5px;">📝 Détail des modifications — avant → après</strong>
+        <table style="width:100%;border-collapse:collapse;margin-top:5px;font-size:12px;">
+          ${ad.modif_changes.map(c => `<tr>
+            <td style="padding:3px 7px;font-weight:600;vertical-align:top;white-space:nowrap;border-bottom:1px solid #eee;">${emlEscHtml(c.champ)}</td>
+            <td style="padding:3px 7px;vertical-align:top;color:#a02018;border-bottom:1px solid #eee;">${emlEscHtml(cut(c.avant))}</td>
+            <td style="padding:3px 7px;vertical-align:top;color:#999;border-bottom:1px solid #eee;">→</td>
+            <td style="padding:3px 7px;vertical-align:top;color:#127a36;font-weight:600;border-bottom:1px solid #eee;">${emlEscHtml(cut(c.apres))}</td>
+          </tr>`).join("")}
+        </table>
+      </div>`;
+    }
+    let venteHtml = "";
+    if (ad.vente_en_ligne) {
+      const com = isVoiture ? "3 %" : "10 %";
+      venteHtml = `<div style="margin:4px 0 8px;background:#e9f3ff;border:1px solid #b9d4ef;color:#1c4f86;border-radius:6px;padding:7px 11px;font-size:12.5px;font-weight:600;">🔒 Vente en ligne sécurisée activée par le vendeur — paiement par dépôt fiduciaire (commission ${com})${isVoiture ? " · documents fournis ci-dessous" : ""}.</div>`;
+    }
+    return `
+      <div class="mod-ad" id="mod-${ad.id}">
+        <div>
+          <div class="mphoto" style="background-image:url('${ad.img}')"></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;">
+            ${isVoiture ? "🏎️ Voiture" : "🔧 Pièce"} · ${ad.pro ? "PRO" : "Particulier"}
+          </div>
+        </div>
+        <div>
+          <h4>${escHtml(ad.titre)}</h4>
+          ${modifHtml}
+          ${renewHtml}
+          ${changesHtml}
+          ${venteHtml}
+          <div class="mprice">${ad.prix.toLocaleString('fr-FR')} €</div>
+          <div class="mmeta">⏱️ Soumise ${formatAdDate(ad.submitted_at || ad.created_at)}</div>
+          <div class="mmeta">📍 ${ad.departement||"—"}${isVoiture?` · ${ad.annee||"?"} · ${(ad.km||0).toLocaleString('fr-FR')} km · ${ad.carburant||""} · ${ad.stage||""}`:` · ${ad.cat||""} / ${ad.sous||""}`}</div>
+          <div class="mdesc">${escHtml(ad.description) || "<em>Aucune description</em>"}</div>
+          <div style="margin-top:6px;">${opts}</div>
+          ${payHtml}
+          ${docsHtml}
+        </div>
+        <div class="mod-actions">
+          <button class="btn btn-primary" onclick="approveAd(${ad.id})">✓ Valider et publier</button>
+          <button class="btn btn-outline" onclick="rejectAd(${ad.id})">✗ Refuser</button>
+          <a href="annonce.html?id=${ad.id}" target="_blank" class="btn btn-ghost btn-sm">👁 Aperçu</a>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// Synchronise la copie en mémoire (MOCK_ADS) avec l'état réel du localStorage
+function syncMemAd(id) {
+  const updated = loadUserAds().find(a => String(a.id) === String(id));
+  const memAd = MOCK_ADS.find(a => String(a.id) === String(id));
+  if (memAd && updated) Object.assign(memAd, updated);
+}
+
+function approveAd(id) {
+  // Vraie annonce utilisateur ?
+  if (loadUserAds().some(a => String(a.id) === String(id))) {
+    setUserAdStatus(id, "approved");
+    syncMemAd(id);
+    alert("✅ Annonce validée et publiée.\n\nElle apparaît maintenant dans le listing public et dans l'onglet « Annonces publiées ».");
+  } else {
+    // Annonce démo : on la déplace de la file vers les annonces publiées
+    const demo = demoPendingState.find(a => a.id === id);
+    demoPendingState = demoPendingState.filter(a => a.id !== id);
+    if (demo) {
+      demo.status = "approved";
+      demo.created_at = new Date().toISOString();
+      MOCK_ADS.unshift(demo);
+    }
+    alert("✅ Annonce démo validée.\n\nElle apparaît dans l'onglet « Annonces publiées ».");
+  }
+  renderModQueue();
+  renderPublished();
+  renderStats();
+}
+
+function rejectAd(id) {
+  const reason = prompt("Motif du refus (visible par l'annonceur) :", "Photos non conformes / informations incomplètes");
+  if (reason === null) return;
+  if (loadUserAds().some(a => String(a.id) === String(id))) {
+    setUserAdStatus(id, "rejected", reason);
+    syncMemAd(id);
+    alert("Annonce refusée. L'annonceur en sera informé avec le motif.");
+  } else {
+    demoPendingState = demoPendingState.filter(a => a.id !== id);
+    alert("Annonce démo refusée (simulation).");
+  }
+  renderModQueue();
+  renderPublished();
+  renderRejected();
+  renderStats();
+}
+
+// ===================== ANNONCES REFUSÉES =====================
+function renderRejected() {
+  const userRejected = loadUserAds().filter(a => getAdStatus(a) === "rejected");
+  const all = [...userRejected, ...demoRejectedState];
+  const box = document.getElementById("rejected-list");
+  const badge = document.getElementById("ref-count-badge");
+  if (badge) badge.innerHTML = all.length
+    ? `<span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${all.length}</span>`
+    : "";
+  if (!all.length) {
+    box.innerHTML = `<div class="alert alert-success">✅ Aucune annonce refusée pour le moment.</div>`;
+    return;
+  }
+  box.innerHTML = all.map(ad => {
+    const isVoiture = ad.type === "voiture";
+    return `
+      <div class="rej-ad">
+        <div>
+          <div class="rphoto" style="background-image:url('${ad.img}')"></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;">
+            ${isVoiture ? "🏎️ Voiture" : "🔧 Pièce"} · ${ad.pro ? "PRO" : "Particulier"}
+          </div>
+        </div>
+        <div>
+          <h4>${escHtml(ad.titre)}</h4>
+          <div style="color:var(--orange);font-weight:800;font-size:17px;">${(ad.prix||0).toLocaleString('fr-FR')} €</div>
+          <div style="font-size:13px;color:var(--text-muted);margin:4px 0;">
+            👤 ${ad.owner_email || "compte non identifié"} · 📍 ${ad.departement||"—"}
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);">⏱️ Soumise ${formatAdDate(ad.submitted_at || ad.created_at)}</div>
+          <div class="rej-reason">🚫 <strong>Motif du refus :</strong> ${escHtml(ad.reject_reason || "Non précisé")}</div>
+        </div>
+        <div class="mod-actions">
+          <button class="btn btn-primary" onclick="revalidateAd(${ad.id})">↩ Revalider et publier</button>
+          <a href="annonce.html?id=${ad.id}" target="_blank" class="btn btn-ghost btn-sm">👁 Aperçu</a>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// Revalide une annonce refusée et la publie
+function revalidateAd(id) {
+  if (!confirm("Revalider cette annonce refusée et la publier dans le listing public ?")) return;
+  if (loadUserAds().some(a => String(a.id) === String(id))) {
+    setUserAdStatus(id, "approved", ""); // efface le motif de refus
+    syncMemAd(id);
+  } else {
+    const demo = demoRejectedState.find(a => a.id === id);
+    demoRejectedState = demoRejectedState.filter(a => a.id !== id);
+    if (demo) {
+      demo.status = "approved";
+      demo.reject_reason = "";
+      demo.created_at = new Date().toISOString();
+      MOCK_ADS.unshift(demo);
+    }
+  }
+  alert("✅ Annonce revalidée et publiée.\n\nElle apparaît de nouveau dans le listing public.");
+  renderRejected();
+  renderPublished();
+  renderStats();
+}
+
+// ===================== UTILISATEURS =====================
+// ----- Profils Supabase (pour bannissement et statut serveur) -----
+let _allSupabaseProfiles = [];
+async function refreshSupabaseProfiles() {
+  if (!window.VP_SB) return;
+  try { _allSupabaseProfiles = await VP_SB.listAllProfiles(); }
+  catch (e) { console.warn("refreshSupabaseProfiles", e); }
+}
+function findSupabaseProfile(email) {
+  email = (email || "").toLowerCase();
+  return _allSupabaseProfiles.find(p => (p.email || "").toLowerCase() === email);
+}
+async function banUserAccount(email) {
+  const sp = findSupabaseProfile(email);
+  if (!sp) { alert("Compte introuvable côté serveur (Supabase)."); return; }
+  if (sp.role === "admin") { alert("Impossible de bannir un autre administrateur."); return; }
+  const reason = prompt(
+    "Motif du bannissement (visible par l'utilisateur lors de sa prochaine tentative de connexion) :",
+    "Comportement non conforme aux CGU de VoiturePrepa.fr"
+  );
+  if (reason === null) return;
+  if (!confirm("🚫 Bannir définitivement le compte " + email + " ?\n\nL'utilisateur ne pourra plus se connecter, déposer d'annonce ou interagir sur la plateforme.")) return;
+  try {
+    await VP_SB.banUser(sp.id, reason.trim() || null);
+    alert("✅ Compte banni : " + email);
+    await refreshSupabaseProfiles();
+    renderUsers();
+  } catch (e) {
+    console.error(e);
+    alert("Échec du bannissement : " + (e.message || e));
+  }
+}
+async function unbanUserAccount(email) {
+  const sp = findSupabaseProfile(email);
+  if (!sp) { alert("Compte introuvable côté serveur."); return; }
+  if (!confirm("Lever la suspension du compte " + email + " ?")) return;
+  try {
+    await VP_SB.unbanUser(sp.id);
+    alert("✅ Compte débanni : " + email);
+    await refreshSupabaseProfiles();
+    renderUsers();
+  } catch (e) {
+    console.error(e);
+    alert("Échec du débannissement : " + (e.message || e));
+  }
+}
+
+function renderUsers() {
+  const accounts = getAllAccounts();
+  const pendingGarages = accounts.filter(a => a.type === "garage" && !a.confirmed).length;
+  const badge = document.getElementById("users-count-badge");
+  if (badge) badge.innerHTML =
+    `<span style="background:var(--bleu);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${accounts.length}</span>`
+    + (pendingGarages ? ` <span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;" title="Comptes garage à activer">${pendingGarages}</span>` : "");
+  const garageAlert = document.getElementById("garage-alert");
+  if (garageAlert) garageAlert.innerHTML = pendingGarages
+    ? `<div class="alert alert-warning" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span>⚠ <strong>${pendingGarages} compte${pendingGarages>1?"s":""} garage en attente de validation.</strong> Activez-le${pendingGarages>1?"s":""} pour autoriser la connexion à l'espace garage.</span>
+        <button class="btn btn-primary btn-sm" onclick="usersSubTab('garages')">Voir les comptes garage</button>
+      </div>`
+    : "";
+
+  const allAds = [...loadUserAds(), ...MOCK_ADS, ...demoPendingState, ...demoRejectedState];
+  const row = (l,v) => `<div style="display:flex;gap:12px;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px;">`
+    + `<span style="color:var(--text-muted);flex:0 0 155px;">${l}</span>`
+    + `<span style="font-weight:600;word-break:break-word;">${v}</span></div>`;
+
+  // Construit la carte d'un compte
+  function cardFor(acc) {
+    const email = (acc.email||"").toLowerCase();
+    const isPro = acc.type === "pro";
+    const isGarage = acc.type === "garage";
+    const packLabel = { gratuit:"Gratuit", premium:"Premium", performance:"Performance" }[acc.pack] || acc.pack;
+    const name = isGarage
+      ? (acc.nom || acc.garage_label || acc.prenom || "Garage")
+      : (isPro
+          ? (acc.raison || acc.prenom || "Professionnel")
+          : ([acc.prenom, acc.nom].filter(Boolean).join(" ") || "Particulier"));
+    let info = "", tags = "", docsHtml = "", actions = "";
+
+    if (isGarage) {
+      info += row("Garage partenaire", acc.garage_label || acc.nom || "—");
+      info += row("N° SIRET", acc.siret
+        ? acc.siret
+        : '<span style="color:var(--red);font-weight:700;">⚠ non renseigné</span>');
+      info += row("E-mail", acc.email || "—");
+      info += row("Téléphone", acc.telephone
+        ? acc.telephone
+        : '<span style="color:var(--red);font-weight:700;">⚠ non renseigné</span>');
+      info += row("Type de compte", "Garage partenaire");
+      info += row("Date d'inscription", formatAdDate(acc.created_at) || "—");
+      info += row("Statut du compte", acc.confirmed
+        ? '<span style="color:var(--green);">✓ Validé</span>'
+        : '<span style="color:#a02018;font-weight:700;">⏳ En attente de validation</span>');
+      tags = `<span class="u-tag" style="background:#e8eefc;color:var(--bleu);">🔧 Garage</span>`
+           + `<span class="u-tag ${acc.confirmed?'ok':'wait'}">${acc.confirmed?'✓ Compte validé':'⏳ À valider'}</span>`;
+      if (!acc.confirmed) {
+        actions = `<div style="margin-top:10px;background:#fff8e1;border:1px solid #f0d68a;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:13px;margin-bottom:8px;">Ce garage a demandé un compte partenaire. Validez-le pour lui permettre de se connecter à son espace.</div>
+          <button class="btn btn-primary btn-sm" onclick="validateGarageAccount('${acc.email||''}')">✓ Valider ce compte garage</button>
+        </div>`;
+      }
+    } else {
+      const seen = {};
+      const myAds = email
+        ? allAds.filter(a => {
+            if ((a.owner_email||"").toLowerCase() !== email) return false;
+            if (seen[a.id]) return false;
+            seen[a.id] = 1; return true;
+          })
+        : [];
+      const adsWithDocs = myAds.filter(a => a.documents);
+      if (!email) {
+        docsHtml = `<div class="u-docs doc-missing">Aucune adresse email — impossible de rattacher des pièces jointes.</div>`;
+      } else if (!adsWithDocs.length) {
+        docsHtml = `<div class="u-docs doc-missing">📎 Aucune pièce jointe transmise par ce compte.</div>`;
+      } else {
+        docsHtml = `<div class="u-docs">🔒 <strong>Pièces jointes — réservé administrateur</strong>
+          ${adsWithDocs.map(a => `<div class="u-doc-ad">
+            <div style="font-weight:600;margin-bottom:3px;">📋 ${a.titre}</div>
+            ${docLink("Contrôle technique", a.documents.controle_technique)}
+            ${docLink("Pièce d'identité", a.documents.piece_identite)}
+            ${docLink("Carte grise", a.documents.carte_grise)}
+          </div>`).join("")}
+        </div>`;
+      }
+      if (isPro) info += row("Raison sociale", acc.raison || acc.prenom || "—");
+      else { info += row("Prénom", acc.prenom || "—"); info += row("Nom", acc.nom || "—"); }
+      info += row("E-mail", acc.email || "—");
+      info += row("Téléphone", acc.telephone
+        ? acc.telephone
+        : '<span style="color:var(--red);font-weight:700;">⚠ non renseigné</span>');
+      info += row("Type de compte", isPro ? "Professionnel" : "Particulier");
+      if (isPro) info += row("Formule d'abonnement", "Pack " + packLabel);
+      info += row("Date d'inscription", formatAdDate(acc.created_at) || "—");
+      info += row("Statut du compte", acc.confirmed ? "✓ Activé" : "⏳ Email non confirmé");
+      info += row("Annonces déposées", myAds.length);
+      tags = `<span class="u-tag ${isPro?'pro':'part'}">${isPro?'PRO — Pack '+packLabel:'Particulier'}</span>`
+           + `<span class="u-tag ${acc.confirmed?'ok':'wait'}">${acc.confirmed?'✓ Compte activé':'⏳ Email non confirmé'}</span>`;
+    }
+
+    // Statut banni serveur (depuis Supabase) — visible et bouton ban/unban
+    const sp = findSupabaseProfile(acc.email);
+    const isBanned = !!(sp && sp.banned);
+    const isSelfAdmin = !!(sp && sp.role === "admin");
+    if (isBanned) {
+      tags += `<span class="u-tag" style="background:#fdecea;color:#a02018;">🚫 Banni</span>`;
+    }
+    let banBox = "";
+    if (sp && !isSelfAdmin) {
+      banBox = isBanned
+        ? `<div style="margin-top:10px;background:#fdecea;border:1px solid #f5c2bd;border-radius:8px;padding:10px 12px;">
+             <div style="font-size:13px;color:#a02018;margin-bottom:6px;">🚫 <strong>Compte suspendu</strong>${sp.banned_reason ? ' — ' + emlEscHtml(sp.banned_reason) : ''}</div>
+             <button class="btn btn-outline btn-sm" onclick="unbanUserAccount('${(acc.email||'').replace(/'/g,"\\'")}')">↺ Lever la suspension</button>
+           </div>`
+        : `<div style="margin-top:8px;">
+             <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="banUserAccount('${(acc.email||'').replace(/'/g,"\\'")}')">🚫 Bannir ce compte</button>
+           </div>`;
+    }
+
+    const cardStyle = isBanned
+      ? ' style="border-color:#a02018;border-left:4px solid #a02018;opacity:.85;"'
+      : ((isGarage && !acc.confirmed) ? ' style="border-color:#e08a00;border-left:4px solid #e08a00;"' : '');
+    return `
+      <div class="user-card"${cardStyle}>
+        <div class="uhead"><div><div class="uname">${name} ${tags}</div></div></div>
+        <div class="uinfo" style="margin-top:8px;">${info}</div>
+        ${actions}
+        ${banBox}
+        ${docsHtml}
+      </div>`;
+  }
+
+  // Séparation Membres / Garages
+  const garages = accounts.filter(a => a.type === "garage")
+    .sort((a,b) => (a.confirmed?1:0) - (b.confirmed?1:0));
+  const membres = accounts.filter(a => a.type !== "garage");
+
+  const mBox = document.getElementById("users-list-membres");
+  const gBox = document.getElementById("garage-accounts-container") || document.getElementById("users-list-garages");
+  if (mBox) mBox.innerHTML = membres.length
+    ? membres.map(cardFor).join("")
+    : `<div class="alert alert-info">Aucun membre inscrit pour le moment.</div>`;
+  if (gBox) gBox.innerHTML = garages.length
+    ? garages.map(cardFor).join("")
+    : `<div class="alert alert-info">Aucun compte garage pour le moment.</div>`;
+
+  const mc = document.getElementById("utab-membres-count");
+  if (mc) mc.textContent = membres.length ? "(" + membres.length + ")" : "";
+  const gc = document.getElementById("utab-garages-count");
+  const pendingG = garages.filter(g => !g.confirmed).length;
+  if (gc) gc.innerHTML = (garages.length ? "(" + garages.length + ")" : "")
+    + (pendingG ? ` <span style="background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;">${pendingG}</span>` : "");
+}
+
+// Bascule entre les sous-onglets Membres / Garages
+function usersSubTab(t) {
+  document.querySelectorAll("#users-subtabs .tab").forEach(b =>
+    b.classList.toggle("active", b.dataset.utab === t));
+  const m = document.getElementById("users-list-membres");
+  const g = document.getElementById("users-list-garages");
+  if (m) m.style.display = (t === "membres") ? "" : "none";
+  if (g) g.style.display = (t === "garages") ? "" : "none";
+}
+
+// Valide un compte garage : il pourra alors se connecter à son espace
+async function validateGarageAccount(email) {
+  // v15 : cherche d'abord dans les profils Supabase, sinon dans localStorage (legacy)
+  let acc = null;
+  if (typeof _allSupabaseProfiles !== "undefined") {
+    acc = _allSupabaseProfiles.find(p =>
+      (p.email||"").toLowerCase() === (email||"").toLowerCase() && p.type === "garage");
+  }
+  let isSupabase = !!acc;
+  if (!acc) {
+    const accounts = loadAccounts();
+    acc = accounts.find(a => (a.email||"").toLowerCase() === (email||"").toLowerCase() && a.type === "garage");
+  }
+  if (!acc) { alert("Compte garage introuvable."); return; }
+  if (!confirm("Valider le compte garage « " + (acc.raison_sociale || acc.garage_label || acc.nom || acc.email) + " » ? Le garage pourra alors se connecter à son espace.")) return;
+
+  // Push à Supabase si profil Supabase
+  if (isSupabase && window.VP_SB && VP_SB.client) {
+    try {
+      const { error } = await VP_SB.client.rpc("set_profile_confirmed", { target: acc.id, val: true });
+      if (error) {
+        alert("❌ Erreur lors de la validation Supabase : " + error.message);
+        return;
+      }
+      // Rafraîchit la liste locale
+      if (typeof refreshSupabaseProfiles === "function") await refreshSupabaseProfiles();
+    } catch(e) {
+      alert("❌ Erreur technique : " + (e.message || e));
+      return;
+    }
+  } else {
+    // Cas legacy localStorage
+    const accounts = loadAccounts();
+    const localAcc = accounts.find(a => (a.email||"").toLowerCase() === (email||"").toLowerCase() && a.type === "garage");
+    if (localAcc) { localAcc.confirmed = true; saveAccounts(accounts); }
+  }
+  alert("✅ Compte garage validé. Le garage peut désormais se connecter à son espace.");
+  renderUsers();
+}
+
+function renderStatsTab() {
+  // v15 : loadUserAds (cache Supabase) + MOCK_ADS (demos)
+  const ads = [...loadUserAds(), ...MOCK_ADS];
+  const voitures = ads.filter(a=>a.type==="voiture").length;
+  const pieces = ads.filter(a=>a.type==="piece").length;
+  const totalVues = ads.reduce((s,a)=>s+getAdVues(a),0);
+  const totalFavs = ads.reduce((s,a)=>s+getAdFavoris(a),0);
+  document.getElementById("stats-content").innerHTML = `
+    <div class="admin-stats" style="margin-top:8px;">
+      <div class="astat"><div class="n">${voitures}</div><div class="l">Annonces voitures</div></div>
+      <div class="astat"><div class="n">${pieces}</div><div class="l">Annonces pièces</div></div>
+      <div class="astat blue"><div class="n">${totalVues.toLocaleString('fr-FR')}</div><div class="l">Vues cumulées</div></div>
+      <div class="astat blue"><div class="n">${totalFavs}</div><div class="l">Mises en favori</div></div>
+      <div class="astat ok"><div class="n">2 470 €</div><div class="l">Revenus options (mois)</div></div>
+    </div>
+    <table class="admin-table mt-3">
+      <thead><tr><th>Indicateur</th><th>Valeur</th></tr></thead>
+      <tbody>
+        <tr><td>Garages spécialisés référencés</td><td>${getGarages().length}</td></tr>
+        <tr><td>Annonces avec inspection</td><td>${ads.filter(a=>(a.badges||[]).some(b=>["or","argent","bronze"].includes(b))).length}</td></tr>
+        <tr><td>Annonces boostées (Urgence/Remontada)</td><td>${ads.filter(a=>(a.badges||[]).some(b=>["urgent","premium"].includes(b))).length}</td></tr>
+        <tr><td>Taux de validation des annonces</td><td>92 %</td></tr>
+        <tr><td>Délai moyen de modération</td><td>4 h</td></tr>
+      </tbody>
+    </table>
+    <p class="text-muted mt-2" style="font-size:13px;">
+      💡 En production, ces statistiques seraient alimentées en temps réel et complétées par
+      Google Analytics et Hotjar (suivi du comportement utilisateur).
+    </p>
+  `;
+}
+
+// Avis : tous les avis acheteurs sur les vendeurs, tous comptes confondus
+function renderAdminReviews() {
+  const reviews = loadReviews();
+  const box = document.getElementById("admin-reviews-list");
+  if (!box) return;
+  if (!reviews.length) {
+    box.innerHTML = `<div class="alert alert-info">Aucun avis déposé pour le moment.</div>`;
+    return;
+  }
+  const avg = Math.round((reviews.reduce((s,r)=>s+(Number(r.note)||0),0) / reviews.length) * 10) / 10;
+  const fr = iso => { const d = new Date(iso); return isNaN(d.getTime()) ? "—" : d.toLocaleDateString('fr-FR'); };
+  const esc = s => String(s == null ? "" : s).replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  box.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:9px;padding:12px 16px;">
+        <div style="font-size:21px;font-weight:800;color:var(--orange);">${reviews.length}</div>
+        <div style="font-size:12px;color:#666;">Avis déposés</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:9px;padding:12px 16px;">
+        <div style="font-size:21px;font-weight:800;color:var(--gold);">${avg}/5 <span style="font-size:14px;">${starsHtml(avg)}</span></div>
+        <div style="font-size:12px;color:#666;">Note moyenne (tous comptes)</div>
+      </div>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>Date</th><th>Note</th><th>Auteur (acheteur)</th><th>Vendeur évalué</th><th>Annonce</th><th>Commentaire</th></tr></thead>
+      <tbody>${reviews.map(r => `<tr>
+        <td>${fr(r.created_at)}</td>
+        <td style="white-space:nowrap;"><span style="color:var(--gold);">${starsHtml(r.note)}</span><br><span class="text-muted" style="font-size:11px;">${(Number(r.note)||0)}/5</span></td>
+        <td>${esc(r.buyer_name) || "—"}<br><span class="text-muted" style="font-size:11px;">${esc(r.buyer_email)}</span></td>
+        <td>${esc(r.seller_email) || "—"}</td>
+        <td>${esc(r.ad_titre) || "—"}</td>
+        <td style="max-width:280px;">${r.commentaire ? esc(r.commentaire) : '<span class="text-muted">Sans commentaire</span>'}</td>
+      </tr>`).join("")}</tbody>
+    </table>`;
+}
+
+// Suivi comptable : toutes les recettes de la plateforme (filtrables + export Excel)
+let _accExport = null;
+function renderAccounting() {
+  const ledger = loadRevenue();
+  const txns = loadTransactions();
+
+  // Cartes recapitulatives — calculees sur la totalite des recettes
+  const sumCat = c => ledger.filter(r => r.category === c).reduce((s,r)=>s+(Number(r.amount)||0),0);
+  const tAbo  = sumCat("abonnement");
+  const tPack = sumCat("pack");
+  const tInsp = sumCat("inspection");
+  const tComm = txns.reduce((s,t)=>s+(Number((t.commission!=null)?t.commission:commissionAmount(t.prix,t.type))||0),0);
+  const tProt = txns.reduce((s,t)=>s+(Number((t.protection_fee!=null)?t.protection_fee:buyerProtectionFee(t.prix))||0),0);
+  const grand = tAbo + tPack + tInsp + tComm + tProt;
+  const card = (label, val, strong) => `
+    <div style="background:${strong?'#127a36':'#fff'};border:1px solid ${strong?'#127a36':'var(--border)'};border-radius:9px;padding:13px 15px;">
+      <div style="font-size:21px;font-weight:800;color:${strong?'#fff':'var(--orange)'};">${(val||0).toLocaleString('fr-FR')} €</div>
+      <div style="font-size:12px;color:${strong?'#dff5e6':'#666'};margin-top:2px;">${label}</div>
+    </div>`;
+  const sumBox = document.getElementById("accounting-summary");
+  if (sumBox) sumBox.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:11px;margin-bottom:8px;">
+    ${card("Abonnements pro", tAbo)}
+    ${card("Packs boost", tPack)}
+    ${card("Inspections", tInsp)}
+    ${card("Commissions de vente", tComm)}
+    ${card("Protection acheteur", tProt)}
+    ${card("TOTAL des recettes", grand, true)}
+  </div>`;
+
+  // Liste unifiee de toutes les recettes (ledger + commissions/protection des ventes)
+  const catLabel = { abonnement:"Abonnement pro", pack:"Pack boost", inspection:"Inspection",
+    commission:"Commission de vente", protection:"Protection acheteur" };
+  let recettes = [];
+  ledger.forEach(r => recettes.push({
+    date: r.date, category: r.category, label: r.label || "—",
+    payer: r.payer || "—", amount: Number(r.amount) || 0
+  }));
+  txns.forEach(t => {
+    const comm = (t.commission != null) ? t.commission : commissionAmount(t.prix, t.type);
+    const prot = (t.protection_fee != null) ? t.protection_fee : buyerProtectionFee(t.prix);
+    const vente = (t.type === "voiture" ? "🏎️ " : "🔧 ") + (t.ad_titre || "Vente plateforme");
+    if (Number(comm) > 0) recettes.push({ date:t.created_at, category:"commission",
+      label:vente, payer:(t.seller_email || t.seller_name || "vendeur"), amount:Number(comm)||0 });
+    if (Number(prot) > 0) recettes.push({ date:t.created_at, category:"protection",
+      label:vente, payer:(t.buyer_email || t.buyer_name || "acheteur"), amount:Number(prot)||0 });
+  });
+
+  // Filtres
+  const fCat  = (document.getElementById("acc-cat")  || {}).value || "";
+  const fFrom = (document.getElementById("acc-from") || {}).value || "";
+  const fTo   = (document.getElementById("acc-to")   || {}).value || "";
+  const fSort = (document.getElementById("acc-sort") || {}).value || "date-desc";
+  const dayKey = iso => { const d = new Date(iso); return isNaN(d.getTime()) ? null : d.toISOString().slice(0,10); };
+  if (fCat)  recettes = recettes.filter(r => r.category === fCat);
+  if (fFrom) recettes = recettes.filter(r => { const k = dayKey(r.date); return k && k >= fFrom; });
+  if (fTo)   recettes = recettes.filter(r => { const k = dayKey(r.date); return k && k <= fTo; });
+  recettes.sort((a,b) => {
+    if (fSort === "montant-desc") return b.amount - a.amount;
+    if (fSort === "montant-asc")  return a.amount - b.amount;
+    const da = new Date(a.date).getTime() || 0, db = new Date(b.date).getTime() || 0;
+    return (fSort === "date-asc") ? da - db : db - da;
+  });
+
+  const fr = iso => { const d = new Date(iso); return isNaN(d.getTime()) ? "—" : d.toLocaleDateString('fr-FR'); };
+  const filteredTotal = recettes.reduce((s,r)=>s+r.amount,0);
+
+  // Donnees preparees pour l'export Excel
+  _accExport = {
+    headers: ["Date","Catégorie","Libellé","Payeur","Montant (€)"],
+    rows: recettes.map(r => [fr(r.date), catLabel[r.category]||r.category, r.label, r.payer, Math.round(r.amount)])
+  };
+
+  const box = document.getElementById("ledger-table");
+  if (box) box.innerHTML = recettes.length
+    ? `<p class="text-muted" style="font-size:13px;margin-bottom:6px;">
+         ${recettes.length} recette${recettes.length>1?"s":""} affichée${recettes.length>1?"s":""} · total filtré :
+         <strong style="color:var(--green);">${filteredTotal.toLocaleString('fr-FR')} €</strong>
+       </p>
+       <table class="admin-table">
+        <thead><tr><th>Date</th><th>Catégorie</th><th>Libellé</th><th>Payeur</th><th style="text-align:right;">Montant</th></tr></thead>
+        <tbody>${recettes.map(r => `<tr>
+          <td>${fr(r.date)}</td>
+          <td>${catLabel[r.category] || r.category}</td>
+          <td>${emlEscHtml(r.label)}</td>
+          <td>${emlEscHtml(r.payer)}</td>
+          <td style="text-align:right;"><strong style="color:var(--green);">${r.amount.toLocaleString('fr-FR')} €</strong></td>
+        </tr>`).join("")}</tbody>
+        <tfoot><tr style="font-weight:800;background:var(--bg-alt);">
+          <td colspan="4">TOTAL</td>
+          <td style="text-align:right;color:var(--green);">${filteredTotal.toLocaleString('fr-FR')} €</td>
+        </tr></tfoot>
+       </table>`
+    : `<div class="alert alert-info">Aucune recette ne correspond aux filtres sélectionnés.</div>`;
+}
+
+function renderPayments() {
+  // Commissions issues des vraies transactions de vente
+  const txnRows = loadTransactions().map(t => {
+    const rate = (t.commission_rate != null) ? t.commission_rate : commissionRate(t.type);
+    const comm = (t.commission != null) ? t.commission : commissionAmount(t.prix, t.type);
+    const prot = (t.protection_fee != null) ? t.protection_fee : buyerProtectionFee(t.prix);
+    const revenu = comm + prot;
+    const finalized = t.status === "received";
+    return {
+      date: t.created_at ? new Date(t.created_at).toLocaleDateString('fr-FR') : "—",
+      label: (t.type === "voiture" ? "🏎️ " : "🔧 ") + (t.ad_titre || "Vente plateforme"),
+      montant: (t.prix || 0).toLocaleString('fr-FR') + " €",
+      commission: revenu.toLocaleString('fr-FR') + " €",
+      commDetail: "commission " + comm.toLocaleString('fr-FR') + " € (" + rate + " %) · protection " + prot.toLocaleString('fr-FR') + " € (2 %)",
+      commValue: revenu,
+      finalized: finalized,
+      statut: finalized ? "ok" : "pending"
+    };
+  });
+  const rows = [...txnRows, ...DEMO_PAYMENTS];
+
+  // Récapitulatif : revenu plateforme encaissé (ventes finalisées) vs en attente
+  const encaissee = rows.filter(r => r.finalized).reduce((s,r)=>s+(r.commValue||0),0);
+  const enAttente = rows.filter(r => !r.finalized).reduce((s,r)=>s+(r.commValue||0),0);
+  const sumBox = document.getElementById("commission-summary");
+  if (sumBox) sumBox.innerHTML = `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+    <div style="flex:1;min-width:210px;background:#eaf7ee;border:1px solid #bfe3c9;border-radius:8px;padding:12px 16px;">
+      <div style="font-size:22px;font-weight:700;color:var(--green);">${encaissee.toLocaleString('fr-FR')} €</div>
+      <div style="font-size:13px;color:#555;">Revenu plateforme encaissé · ventes finalisées</div>
+    </div>
+    <div style="flex:1;min-width:210px;background:#fff6e6;border:1px solid #f0d9a8;border-radius:8px;padding:12px 16px;">
+      <div style="font-size:22px;font-weight:700;color:#b9821a;">${enAttente.toLocaleString('fr-FR')} €</div>
+      <div style="font-size:13px;color:#555;">Revenu plateforme en attente · ventes en cours</div>
+    </div>
+  </div>`;
+
+  document.getElementById("payments-tbody").innerHTML = rows.length
+    ? rows.map(p => `
+    <tr>
+      <td>${p.date}</td>
+      <td>${p.label}</td>
+      <td>${p.montant}</td>
+      <td><strong style="color:var(--green);">${p.commission}</strong>${p.commDetail ? `<br><span class="text-muted" style="font-size:11px;">${p.commDetail}</span>` : ""}</td>
+      <td><span class="pay-status ${p.statut}">${p.statut==="ok"?"Encaissée":"En attente"}</span></td>
+    </tr>
+  `).join("")
+    : `<tr><td colspan="5" class="text-muted" style="padding:14px;">Aucune vente pour le moment.</td></tr>`;
+}
+
+// ===================== EMAILS AUTOMATIQUES =====================
+function emFrDate(d) {
+  const mois = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+  return d.getDate() + " " + mois[d.getMonth()] + " " + d.getFullYear();
+}
+// Une annonce sans aucune option payante souscrite
+function emHasNoPaidOption(ad) {
+  const opts = ad.options || [];
+  const badges = ad.badges || [];
+  return opts.length === 0 && !badges.some(b => ["urgent","premium"].includes(b));
+}
+
+// Prénom (ou raison sociale) du compte associé à une annonce
+function emOwnerPrenom(ad) {
+  const email = ((ad && ad.owner_email) || "").toLowerCase().trim();
+  if (!email) return "client";
+  const acc = getAllAccounts().find(a => (a.email || "").toLowerCase() === email);
+  if (acc) return (acc.type === "pro" ? (acc.raison || acc.prenom) : acc.prenom) || "client";
+  return "client";
+}
+// Remplace les variables [Prénom] et [Titre de l'annonce] par les vraies valeurs du compte / de l'annonce
+function emPersonalize(text, ad) {
+  return String(text == null ? "" : text)
+    .replace(/\[Prénom\]/g, emOwnerPrenom(ad))
+    .replace(/\[Titre de l'annonce\]/g, (ad && ad.titre) || "votre annonce");
+}
+// Liste des pages du site pour le lien du bouton d'email
+function ctaUrlOptions(selected) {
+  const pages = [
+    ["tarifs.html", "Boost annonce / Offres"],
+    ["inspection.html", "Inspection véhicule"],
+    ["annonces.html", "Toutes les annonces"],
+    ["deposer.html", "Déposer une annonce"],
+    ["profil.html", "Mon compte"],
+    ["garages.html", "Garages spécialisés"],
+    ["index.html", "Accueil"]
+  ];
+  return pages.map(p => `<option value="${p[0]}"${p[0] === selected ? " selected" : ""}>${p[1]}</option>`).join("");
+}
+
+// Carte d'aperçu d'un email réellement envoyé (variables remplacées + lien direct vers l'offre)
+function emailCardHtml(tpl, ad) {
+  const cta = (tpl.cta_label && tpl.cta_url)
+    ? `<div style="white-space:normal;margin-top:14px;"><a href="${emlEscAttr(tpl.cta_url)}" class="email-cta">${emlEscHtml(tpl.cta_label)} →</a></div>`
+    : "";
+  return `<div class="email-card" style="margin-top:8px;">
+    <div class="email-head">
+      <div>De : VoiturePrepa.fr &lt;contact@voitureprepa.fr&gt;</div>
+      <div class="subject">${emlEscHtml(emPersonalize(tpl.objet, ad))}</div>
+      <div class="text-muted">À : ${emlEscHtml((ad && ad.owner_email) || "vendeur")}</div>
+    </div>
+    <div class="email-body" style="white-space:pre-line;">${emlEscHtml(emPersonalize(tpl.corps, ad))}${cta}</div>
+  </div>`;
+}
+// Ligne du calendrier d'envoi — dépliable pour voir l'email réel personnalisé
+function emSchedRow(tpl, ad, date, sent, emid) {
+  return `<div class="email-sched-item">
+    <div class="email-sched-row" style="cursor:pointer;" onclick="toggleEmailDetail('${emid}')">
+      <div>📧 <strong>${escHtml(tpl.titre)}</strong> — « ${escHtml(ad.titre)} » · 👤 ${emOwnerPrenom(ad)}</div>
+      <div><span class="email-sched-tag ${sent?'sent':'planned'}">${sent?'Envoyé le':'Prévu le'} ${emFrDate(date)}</span> <span style="color:var(--text-muted);">▾</span></div>
+    </div>
+    <div class="email-sched-detail" id="emd-${emid}" style="display:none;">
+      ${emailCardHtml(tpl, ad)}
+    </div>
+  </div>`;
+}
+function toggleEmailDetail(id) {
+  const el = document.getElementById("emd-" + id);
+  if (el) el.style.display = (!el.style.display || el.style.display === "none") ? "block" : "none";
+}
+
+function renderEmailsTab() {
+  const tpls = loadEmailTemplates();
+  // v15 : loadUserAds (cache Supabase) + MOCK_ADS (demos)
+  const ads = [...loadUserAds(), ...MOCK_ADS].filter(a => getAdStatus(a) === "approved");
+  const now = new Date();
+  let rows = "";
+  ads.forEach(ad => {
+    const created = new Date(ad.created_at);
+    // Email 1 : suggestion d'options — 14 jours après le dépôt, si aucune option
+    if (emHasNoPaidOption(ad)) {
+      const d1 = new Date(created); d1.setDate(d1.getDate() + (loadSiteSettings().email_suggestion_jours || 14));
+      rows += emSchedRow(tpls[0], ad, d1, now >= d1, ad.id + "-0");
+    }
+    // Email 2 : rappel de renouvellement — 14 jours avant l'expiration (particuliers uniquement)
+    const exp = getAdExpiry(ad);
+    if (exp && !ad.pro) {
+      const d2 = new Date(exp); d2.setDate(d2.getDate() - (loadSiteSettings().email_renouvellement_jours || 14));
+      rows += emSchedRow(tpls[1], ad, d2, now >= d2, ad.id + "-1");
+    }
+  });
+  document.getElementById("email-schedule").innerHTML =
+    rows || `<div class="alert alert-info">Aucun email automatique programmé pour le moment.</div>`;
+
+  // Modèles d'emails modifiables par l'administrateur (variables [Prénom] et [Titre de l'annonce])
+  document.getElementById("email-previews").innerHTML = tpls.map((t, i) => `
+    <div class="email-edit">
+      <div class="email-edit-head">📧 ${escHtml(t.titre)}<span>${t.quand}</span></div>
+      <label class="eml-label">Objet de l'email</label>
+      <input id="eml-objet-${i}" class="eml-input" value="${emlEscAttr(t.objet)}">
+      <label class="eml-label">Message — variables disponibles : [Prénom], [Titre de l'annonce]</label>
+      <textarea id="eml-corps-${i}" class="eml-textarea" rows="9">${emlEscHtml(t.corps)}</textarea>
+      <label class="eml-label">Bouton — lien direct vers l'offre</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input id="eml-cta-label-${i}" class="eml-input" style="flex:1;min-width:170px;" value="${emlEscAttr(t.cta_label || "")}" placeholder="Texte du bouton">
+        <select id="eml-cta-url-${i}" class="eml-input" style="flex:1;min-width:170px;">${ctaUrlOptions(t.cta_url)}</select>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="saveEmailTpl(${i})">💾 Enregistrer ce modèle</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetEmailTpl(${i})">Réinitialiser</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// Échappement HTML pour un affichage sûr
+function emlEscHtml(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function emlEscAttr(s) {
+  return emlEscHtml(s).replace(/"/g, "&quot;");
+}
+
+// Enregistre un modèle d'email modifié par l'administrateur
+function saveEmailTpl(i) {
+  const tpls = loadEmailTemplates();
+  if (!tpls[i]) return;
+  const objet = (document.getElementById("eml-objet-" + i) || {}).value || "";
+  const corps = (document.getElementById("eml-corps-" + i) || {}).value || "";
+  const ctaLabel = (document.getElementById("eml-cta-label-" + i) || {}).value || "";
+  const ctaUrl = (document.getElementById("eml-cta-url-" + i) || {}).value || "";
+  if (!objet.trim() || !corps.trim()) {
+    alert("L'objet et le message ne peuvent pas être vides.");
+    return;
+  }
+  tpls[i].objet = objet.trim();
+  tpls[i].corps = corps;
+  tpls[i].cta_label = ctaLabel.trim();
+  tpls[i].cta_url = ctaUrl;
+  saveEmailTemplates(tpls);
+  alert("✅ Modèle d'email « " + tpls[i].titre + " » enregistré.");
+  renderEmailsTab();
+}
+
+// Réinitialise un modèle d'email au texte par défaut
+function resetEmailTpl(i) {
+  if (!confirm("Réinitialiser ce modèle d'email au texte par défaut ?")) return;
+  const tpls = loadEmailTemplates();
+  if (!tpls[i] || !EMAIL_TEMPLATES_DEFAULT[i]) return;
+  tpls[i].objet = EMAIL_TEMPLATES_DEFAULT[i].objet;
+  tpls[i].corps = EMAIL_TEMPLATES_DEFAULT[i].corps;
+  tpls[i].cta_label = EMAIL_TEMPLATES_DEFAULT[i].cta_label;
+  tpls[i].cta_url = EMAIL_TEMPLATES_DEFAULT[i].cta_url;
+  saveEmailTemplates(tpls);
+  renderEmailsTab();
+}
+
+// ============================================================
+//  EXPORT EXCEL (.xlsx) — generateur autonome, sans dependance
+// ============================================================
+function _xlsxCrc32(bytes) {
+  if (!_xlsxCrc32.table) {
+    const tbl = [];
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      tbl[n] = c >>> 0;
+    }
+    _xlsxCrc32.table = tbl;
+  }
+  const tbl = _xlsxCrc32.table;
+  let crc = -1;
+  for (let i = 0; i < bytes.length; i++) crc = (crc >>> 8) ^ tbl[(crc ^ bytes[i]) & 0xFF];
+  return (crc ^ -1) >>> 0;
+}
+function _xlsxZip(files) {
+  const out = [], central = [];
+  const u16 = (a, v) => { a.push(v & 0xFF, (v >>> 8) & 0xFF); };
+  const u32 = (a, v) => { a.push(v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF); };
+  const nameBytes = str => { const a = []; for (let i = 0; i < str.length; i++) a.push(str.charCodeAt(i) & 0xFF); return a; };
+  const DATE = 22561, TIME = 0;
+  let offset = 0;
+  files.forEach(file => {
+    const nb = nameBytes(file.name);
+    const crc = _xlsxCrc32(file.data);
+    const size = file.data.length;
+    const local = [];
+    u32(local, 0x04034b50); u16(local, 20); u16(local, 0); u16(local, 0);
+    u16(local, TIME); u16(local, DATE);
+    u32(local, crc); u32(local, size); u32(local, size);
+    u16(local, nb.length); u16(local, 0);
+    for (let i = 0; i < local.length; i++) out.push(local[i]);
+    for (let i = 0; i < nb.length; i++) out.push(nb[i]);
+    for (let i = 0; i < size; i++) out.push(file.data[i]);
+    u32(central, 0x02014b50); u16(central, 20); u16(central, 20); u16(central, 0); u16(central, 0);
+    u16(central, TIME); u16(central, DATE);
+    u32(central, crc); u32(central, size); u32(central, size);
+    u16(central, nb.length); u16(central, 0); u16(central, 0);
+    u16(central, 0); u16(central, 0); u32(central, 0); u32(central, offset);
+    for (let i = 0; i < nb.length; i++) central.push(nb[i]);
+    offset += local.length + nb.length + size;
+  });
+  const cdOffset = offset;
+  for (let i = 0; i < central.length; i++) out.push(central[i]);
+  const eocd = [];
+  u32(eocd, 0x06054b50); u16(eocd, 0); u16(eocd, 0);
+  u16(eocd, files.length); u16(eocd, files.length);
+  u32(eocd, central.length); u32(eocd, cdOffset); u16(eocd, 0);
+  for (let i = 0; i < eocd.length; i++) out.push(eocd[i]);
+  return new Uint8Array(out);
+}
+function _xlsxEsc(v) {
+  return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function _xlsxCol(n) {
+  let s = ""; n++;
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+function _xlsxSheet(headers, rows) {
+  const all = [headers].concat(rows);
+  let body = "";
+  for (let ri = 0; ri < all.length; ri++) {
+    const row = all[ri] || [];
+    let cells = "";
+    for (let ci = 0; ci < row.length; ci++) {
+      const ref = _xlsxCol(ci) + (ri + 1);
+      const v = row[ci];
+      if (typeof v === "number" && isFinite(v)) {
+        cells += '<c r="' + ref + '"><v>' + v + '</v></c>';
+      } else {
+        cells += '<c r="' + ref + '" t="inlineStr"><is><t xml:space="preserve">' + _xlsxEsc(v) + '</t></is></c>';
+      }
+    }
+    body += '<row r="' + (ri + 1) + '">' + cells + '</row>';
+  }
+  const last = _xlsxCol(Math.max(1, headers.length) - 1) + Math.max(1, all.length);
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<dimension ref="A1:' + last + '"/><sheetData>' + body + '</sheetData></worksheet>';
+}
+function _xlsxBuild(sheetName, headers, rows) {
+  const enc = new TextEncoder();
+  const sn = (String(sheetName == null ? "Feuille1" : sheetName).slice(0, 31)) || "Feuille1";
+  const ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml" ContentType="application/xml"/>'
+    + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+    + '</Types>';
+  const rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    + '</Relationships>';
+  const wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+    + 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    + '<sheets><sheet name="' + _xlsxEsc(sn) + '" sheetId="1" r:id="rId1"/></sheets></workbook>';
+  const wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+    + '</Relationships>';
+  const enc2 = new TextEncoder();
+  const parts = [
+    { name: "[Content_Types].xml",        data: enc2.encode(ct) },
+    { name: "_rels/.rels",                data: enc2.encode(rels) },
+    { name: "xl/workbook.xml",            data: enc2.encode(wb) },
+    { name: "xl/_rels/workbook.xml.rels", data: enc2.encode(wbRels) },
+    { name: "xl/worksheets/sheet1.xml",   data: enc2.encode(_xlsxSheet(headers, rows)) }
+  ];
+  return _xlsxZip(parts);
+}
+function downloadXlsx(filename, sheetName, headers, rows) {
+  const zip = _xlsxBuild(sheetName, headers, rows);
+  const blob = new Blob([zip], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 150);
+}
+
+// ============================================================
+//  STATISTIQUES — activite mensuelle (filtrable + export Excel)
+// ============================================================
+function _moisFr(i) {
+  return ["janvier","février","mars","avril","mai","juin","juillet","août",
+    "septembre","octobre","novembre","décembre"][i] || "";
+}
+function _monthKey(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+function _monthLabel(key) {
+  const p = String(key).split("-");
+  return _moisFr(parseInt(p[1], 10) - 1) + " " + p[0];
+}
+let _statsExport = null;
+function renderStatsMonthly() {
+  const box = document.getElementById("stats-monthly");
+  if (!box) return;
+  const fType = (document.getElementById("st-type") || {}).value || "";
+  const fFrom = (document.getElementById("st-from") || {}).value || "";
+  const fTo   = (document.getElementById("st-to")   || {}).value || "";
+  const fSort = (document.getElementById("st-sort") || {}).value || "desc";
+
+  const months = {};
+  const ensure = k => months[k] || (months[k] = { ann:0, voit:0, piece:0, vues:0, favs:0, vendues:0, recettes:0 });
+
+  // v15 : loadUserAds (cache Supabase) + MOCK_ADS (demos)
+  [...loadUserAds(), ...MOCK_ADS].forEach(a => {
+    if (fType && a.type !== fType) return;
+    const k = _monthKey(a.created_at);
+    if (k) {
+      const m = ensure(k);
+      m.ann++;
+      if (a.type === "voiture") m.voit++;
+      else if (a.type === "piece") m.piece++;
+      m.vues += getAdVues(a) || 0;
+      m.favs += getAdFavoris(a) || 0;
+    }
+    if (getAdStatus(a) === "sold") {
+      const ks = _monthKey(a.sold_at || a.created_at);
+      if (ks) ensure(ks).vendues++;
+    }
+  });
+  loadRevenue().forEach(r => {
+    const k = _monthKey(r.date);
+    if (k) ensure(k).recettes += Number(r.amount) || 0;
+  });
+  loadTransactions().forEach(t => {
+    const k = _monthKey(t.created_at);
+    if (!k) return;
+    const comm = (t.commission != null) ? t.commission : commissionAmount(t.prix, t.type);
+    const prot = (t.protection_fee != null) ? t.protection_fee : buyerProtectionFee(t.prix);
+    ensure(k).recettes += (Number(comm) || 0) + (Number(prot) || 0);
+  });
+
+  let keys = Object.keys(months);
+  if (fFrom) keys = keys.filter(k => k >= fFrom);
+  if (fTo)   keys = keys.filter(k => k <= fTo);
+  keys.sort();
+  if (fSort === "desc") keys.reverse();
+
+  const headers = ["Mois","Annonces déposées","Voitures","Pièces","Vues cumulées","Favoris","Annonces vendues","Recettes (€)"];
+  const rows = keys.map(k => {
+    const m = months[k];
+    return [_monthLabel(k), m.ann, m.voit, m.piece, m.vues, m.favs, m.vendues, Math.round(m.recettes)];
+  });
+  _statsExport = { headers: headers, rows: rows };
+
+  if (!rows.length) {
+    box.innerHTML = '<div class="alert alert-info">Aucune activité enregistrée sur la période sélectionnée.</div>';
+    return;
+  }
+  const tot = [0,0,0,0,0,0,0];
+  rows.forEach(r => { for (let i = 1; i < r.length; i++) tot[i-1] += r[i]; });
+  box.innerHTML = '<table class="admin-table">'
+    + '<thead><tr>' + headers.map((h,i) => '<th' + (i ? ' style="text-align:right;"' : '') + '>' + h + '</th>').join("") + '</tr></thead>'
+    + '<tbody>' + rows.map(r => '<tr><td><strong>' + r[0] + '</strong></td>'
+        + r.slice(1).map(v => '<td style="text-align:right;">' + (v||0).toLocaleString('fr-FR') + '</td>').join("")
+        + '</tr>').join("") + '</tbody>'
+    + '<tfoot><tr style="font-weight:800;background:var(--bg-alt);"><td>TOTAL</td>'
+        + tot.map(v => '<td style="text-align:right;">' + v.toLocaleString('fr-FR') + '</td>').join("")
+        + '</tr></tfoot></table>';
+}
+function exportStatsMonthly() {
+  if (!_statsExport || !_statsExport.rows.length) {
+    alert("Aucune donnée à exporter pour la période sélectionnée.");
+    return;
+  }
+  const rows = _statsExport.rows.map(r => r.slice());
+  const tot = ["TOTAL",0,0,0,0,0,0,0];
+  rows.forEach(r => { for (let i = 1; i < r.length; i++) tot[i] += r[i]; });
+  rows.push(tot);
+  downloadXlsx("statistiques-activite-mensuelle_" + new Date().toISOString().slice(0,10) + ".xlsx",
+    "Activité mensuelle", _statsExport.headers, rows);
+}
+function exportAccounting() {
+  if (!_accExport || !_accExport.rows.length) {
+    alert("Aucune recette à exporter avec les filtres actuels.");
+    return;
+  }
+  const rows = _accExport.rows.map(r => r.slice());
+  let total = 0;
+  rows.forEach(r => { total += Number(r[4]) || 0; });
+  rows.push(["", "", "", "TOTAL", total]);
+  downloadXlsx("suivi-comptable-recettes_" + new Date().toISOString().slice(0,10) + ".xlsx",
+    "Recettes", _accExport.headers, rows);
+}
+</script>
+
+<!-- v16 : Modale création compte garage par l'admin -->
+<div class="modal-backdrop" id="create-garage-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;padding:28px 16px;overflow:auto;" onclick="if(event.target===this)closeCreateGarageModal()">
+  <div style="background:#fff;border-radius:10px;max-width:520px;width:100%;box-shadow:0 12px 44px rgba(0,0,0,.35);">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid #e6e6e6;">
+      <strong style="font-size:16px;">🔧 Créer un compte garage</strong>
+      <button onclick="closeCreateGarageModal()" aria-label="Fermer" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:#888;">✕</button>
+    </div>
+    <div style="padding:20px;">
+      <div class="form-group">
+        <label class="form-label">Garage partenaire <span style="color:var(--red);">*</span></label>
+        <select id="cg-garage" class="form-select" required>
+          <option value="">Sélectionner un garage…</option>
+        </select>
+        <div class="form-hint" style="font-size:12px;">Le garage doit déjà exister dans l'annuaire (onglet "Garages partenaires").</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email du contact garage <span style="color:var(--red);">*</span></label>
+        <input type="email" id="cg-email" class="form-input" placeholder="garage@example.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe initial <span style="color:var(--red);">*</span></label>
+        <input type="text" id="cg-password" class="form-input" placeholder="12 caractères mini" required>
+        <div class="form-hint" style="font-size:12px;">Communiquez ce mot de passe au garage. Il sera obligé de le changer à sa première connexion.</div>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="cgGeneratePassword()">🎲 Générer un mot de passe</button>
+      </div>
+      <div id="cg-error" style="display:none;color:var(--red);background:#fdecec;border:1px solid #f3bcbc;border-radius:6px;padding:8px 12px;font-size:13px;margin:8px 0;"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding:12px 20px;border-top:1px solid #e6e6e6;">
+      <button onclick="closeCreateGarageModal()" style="padding:8px 16px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer;font-size:14px;">Annuler</button>
+      <button id="cg-submit-btn" onclick="submitCreateGarage()" style="padding:8px 18px;background:var(--blue,#1E3A8A);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function openCreateGarageModal() {
+  document.getElementById("cg-email").value = "";
+  document.getElementById("cg-password").value = "";
+  document.getElementById("cg-error").style.display = "none";
+  // Peuple la liste des garages depuis Supabase
+  const sel = document.getElementById("cg-garage");
+  sel.innerHTML = '<option value="">Chargement…</option>';
+  try {
+    const list = (window.VP_SB && VP_SB.listGarages) ? await VP_SB.listGarages() : [];
+    sel.innerHTML = '<option value="">Sélectionner un garage…</option>' +
+      list.map(g => `<option value="${g.id}|${(g.nom + " — " + (g.ville||"")).replace(/"/g,"&quot;")}">${g.nom} — ${g.ville||""}</option>`).join("");
+  } catch(e) {
+    sel.innerHTML = '<option value="">⚠ Erreur chargement garages</option>';
+  }
+  document.getElementById("create-garage-modal").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+function closeCreateGarageModal() {
+  document.getElementById("create-garage-modal").style.display = "none";
+  document.body.style.overflow = "";
+}
+function cgGeneratePassword() {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789abcdefghkmnpqrstuvwxyz!@#$%";
+  let p = "";
+  for (let i=0;i<14;i++) p += chars.charAt(Math.floor(Math.random()*chars.length));
+  document.getElementById("cg-password").value = p;
+}
+async function submitCreateGarage() {
+  const errEl = document.getElementById("cg-error");
+  errEl.style.display = "none";
+  const sel = document.getElementById("cg-garage");
+  const email = (document.getElementById("cg-email").value || "").trim();
+  const password = (document.getElementById("cg-password").value || "").trim();
+  const v = sel.value;
+  if (!v) { errEl.textContent = "Veuillez choisir un garage."; errEl.style.display = "block"; return; }
+  if (!email || !email.includes("@")) { errEl.textContent = "Email invalide."; errEl.style.display = "block"; return; }
+  if (password.length < 8) { errEl.textContent = "Le mot de passe doit faire au moins 8 caractères."; errEl.style.display = "block"; return; }
+  const [garage_id, garage_label] = v.split("|");
+  const btn = document.getElementById("cg-submit-btn");
+  btn.disabled = true; btn.textContent = "Création…";
+  try {
+    const res = await VP_SB.createGarageAccount({
+      email, password,
+      garage_id: parseInt(garage_id, 10),
+      garage_label: garage_label
+    });
+    alert("✅ Compte garage créé !\n\n"
+      + "Email : " + email + "\n"
+      + "Mot de passe initial : " + password + "\n\n"
+      + "Communiquez ces identifiants au garage. Il sera obligé de changer son mot de passe à sa première connexion.");
+    closeCreateGarageModal();
+    if (typeof refreshSupabaseProfiles === "function") await refreshSupabaseProfiles();
+    if (typeof renderUsers === "function") renderUsers();
+  } catch(e) {
+    errEl.textContent = "❌ " + (e.message || e);
+    errEl.style.display = "block";
+  } finally {
+    btn.disabled = false; btn.textContent = "Créer le compte";
+  }
+}
+</script>
+</body>
+</html>
