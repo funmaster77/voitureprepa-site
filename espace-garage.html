@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espace garage — VoiturePrepa.fr</title>
+<meta name="description" content="Espace garage partenaire VoiturePrepa.fr : suivez vos demandes d'inspection, proposez vos disponibilités et transmettez vos rapports.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://voitureprepa.fr/espace-garage.html">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .gar-head {
+    background:linear-gradient(135deg,#1e2a9c 0%,#2a3bd0 100%); color:#fff;
+    border-radius:12px; padding:24px 28px; margin:14px 0 4px;
+  }
+  .gar-head h1 { font-size:23px; margin:0 0 4px; line-height:1.25; }
+  .gar-head p { margin:0; opacity:.95; font-size:14px; }
+  .gar-tpl {
+    background:#fff8e1; border:1px solid #f0d68a; border-radius:10px;
+    padding:14px 16px; margin:16px 0; display:flex; gap:12px;
+    align-items:center; flex-wrap:wrap;
+  }
+  .insp-g {
+    border:1px solid var(--border); border-left:4px solid var(--bleu);
+    border-radius:10px; padding:16px; margin-bottom:14px; background:#fff;
+  }
+  .insp-g.done { border-left-color:var(--green); }
+  .insp-g-head { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+  .insp-g .veh { font-weight:800; font-size:16px; }
+  .insp-g .meta { font-size:13px; color:var(--text-muted); margin-top:3px; }
+  .g-niveau { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:10px; }
+  .g-niveau.or { background:#fbe9c0; color:#8a6100; }
+  .g-niveau.argent { background:#e6e6ea; color:#555; }
+  .g-niveau.bronze { background:#f0ddc8; color:#8a5a2a; }
+  .report-box { background:var(--bg-alt); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-top:10px; }
+  .report-ok { background:#e8f7ee; border:1px solid #b6e3c8; border-radius:8px; padding:11px 13px; margin-top:10px; font-size:13px; }
+  .gcr-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px; }
+  .gcr-row input { padding:7px 9px; border:1px solid var(--border); border-radius:5px; font-size:13px; font-family:inherit; }
+  .imsg-area { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px;
+    font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; }
+  #garage-content .tab-panel { padding-top:14px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="garage-content"></div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "";
+let _garageTab = "encours";
+
+function initPage(){ renderGarageSpace(); }
+
+function fmtDate(iso){
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("fr-FR");
+}
+function fmtRdv(d){
+  if (!d) return "—";
+  const p = String(d).split("-");
+  return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d;
+}
+function escHtml(s){
+  return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function escAttr(s){ return escHtml(s).replace(/"/g,"&quot;"); }
+
+function garageStatusTag(st){
+  const m = {
+    pending:   ["#fff1d6","#8a5b00","🗓️ À planifier — proposez vos créneaux"],
+    proposed:  ["#fff1d6","#8a5b00","📅 Créneaux proposés au vendeur"],
+    confirmed: ["#e8f7ee","#127a36","✓ Rendez-vous confirmé"],
+    declined:  ["#fff8e1","#8a5b00","↩️ Nouveaux créneaux à proposer"],
+    refused:   ["#fdecea","#a02018","Demande annulée"]
+  }[st] || ["#eeeeee","#555555", st || "—"];
+  return `<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;background:${m[0]};color:${m[1]};white-space:nowrap;">${m[2]}</span>`;
+}
+
+// Bascule entre les onglets « en cours » et « réalisées »
+function garageTab(t){
+  _garageTab = t;
+  document.querySelectorAll("#garage-content .tab").forEach(b =>
+    b.classList.toggle("active", b.dataset.gtab === t));
+  document.querySelectorAll("#garage-content .tab-panel").forEach(p =>
+    p.classList.remove("active"));
+  const el = document.getElementById("gtab-" + t);
+  if (el) el.classList.add("active");
+}
+
+// Carte d'une demande d'inspection
+function cardHtml(r){
+  const niv = (r.niveau || "").toLowerCase();
+  const rdv = (r.status === "confirmed") ? (r.creneaux || [])[r.chosen] : null;
+  const done = !!(r.report && r.report.data);
+  return `
+  <div class="insp-g ${done ? "done" : ""}">
+    <div class="insp-g-head">
+      <div>
+        <div class="veh">🚗 ${escHtml(r.vehicule)}</div>
+        <div class="meta">
+          <span class="g-niveau ${niv}">${escHtml(r.niveau)}</span>
+          · ${escHtml(r.formule)}
+          · 👤 ${escHtml(r.owner_name || r.owner_email || "Vendeur")}
+        </div>
+        <div class="meta">🗓️ Demande du ${fmtDate(r.requested_at)}${r.source ? " · " + escHtml(r.source) : ""}</div>
+        ${rdv ? `<div class="meta">📅 Rendez-vous confirmé : ${fmtRdv(rdv.date)} à ${escHtml(rdv.heure || "—")}</div>` : ""}
+      </div>
+      ${garageStatusTag(r.status)}
+    </div>
+    ${creneauBlockHtml(r)}
+    ${reportBlockHtml(r)}
+    ${inspContactHtml(r)}
+  </div>`;
+}
+
+function renderGarageSpace(){
+  const box = document.getElementById("garage-content");
+  if (!box) return;
+  const s = getSession();
+
+  // Accès réservé aux comptes garage validés
+  if (!s || s.type !== "garage"){
+    box.innerHTML = `
+      <div class="auth-card" style="max-width:520px;text-align:center;">
+        <h1>Espace garage</h1>
+        <p class="sub">Cet espace est réservé aux garages partenaires de VoiturePrepa.fr.</p>
+        <a href="connexion.html" class="btn btn-primary btn-block btn-lg">Se connecter</a>
+        <p class="text-center mt-3" style="font-size:14px;">
+          Pas encore partenaire ? <a href="inscription.html">Créer un compte garage</a>
+        </p>
+      </div>`;
+    return;
+  }
+
+  const all = loadInspections().filter(r => (r.garage || "") === (s.garage_label || ""));
+  // Une inspection est « réalisée » dès que son rapport a été transmis
+  const realisees = all.filter(r => r.report && r.report.data);
+  const enCours = all.filter(r => !(r.report && r.report.data));
+  const aPlanifier = enCours.filter(r => r.status === "pending" || r.status === "declined").length;
+
+  let body;
+  if (!all.length){
+    body = `<div class="alert alert-info" style="margin-top:16px;">Aucune demande d'inspection ne vous est
+      assignée pour le moment. Les demandes des vendeurs ayant choisi votre garage apparaîtront ici.</div>`;
+  } else {
+    const ecHtml = enCours.length
+      ? enCours.map(cardHtml).join("")
+      : `<div class="alert alert-success">Aucune inspection en cours. 👍</div>`;
+    const reHtml = realisees.length
+      ? realisees.map(cardHtml).join("")
+      : `<p class="text-muted" style="font-size:13px;">Aucune inspection réalisée pour le moment.</p>`;
+    body = `
+      <div class="tabs" style="margin-top:16px;">
+        <button class="tab ${_garageTab==='encours'?'active':''}" data-gtab="encours" onclick="garageTab('encours')">🔧 Inspections en cours (${enCours.length})</button>
+        <button class="tab ${_garageTab==='realisees'?'active':''}" data-gtab="realisees" onclick="garageTab('realisees')">✅ Inspections réalisées (${realisees.length})</button>
+      </div>
+      <div id="gtab-encours" class="tab-panel ${_garageTab==='encours'?'active':''}">
+        ${aPlanifier ? `<p class="text-muted" style="font-size:13px;margin:0 0 10px;">${aPlanifier} demande(s) à planifier — proposez vos créneaux.</p>` : ""}
+        ${ecHtml}
+      </div>
+      <div id="gtab-realisees" class="tab-panel ${_garageTab==='realisees'?'active':''}">
+        ${reHtml}
+      </div>`;
+  }
+
+  box.innerHTML = `
+    <nav class="breadcrumb">
+      <a href="index.html">Accueil</a><span class="sep">›</span><span>Espace garage</span>
+    </nav>
+    <div class="gar-head">
+      <h1>🔧 Espace garage — ${escHtml(s.garage_label || s.prenom || "")}</h1>
+      <p>Validez vos disponibilités pour les inspections, puis transmettez vos rapports aux vendeurs.</p>
+    </div>
+    <div class="gar-tpl">
+      <span style="font-size:24px;">📋</span>
+      <div style="flex:1;min-width:230px;">
+        <strong>Modèles de rapport d'inspection</strong><br>
+        <span class="text-muted" style="font-size:13px;">Le formulaire officiel à remplir, selon le niveau de l'inspection.</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <a href="assets/Modele-inspection-Bronze.docx" download class="btn btn-outline btn-sm">⬇ Bronze</a>
+        <a href="assets/Modele-inspection-Argent.docx" download class="btn btn-outline btn-sm">⬇ Argent</a>
+        <a href="assets/Modele-inspection-Or.docx" download class="btn btn-outline btn-sm">⬇ Or</a>
+      </div>
+    </div>
+    <!-- v16 : changement de mot de passe pour le garage connecté -->
+    <div class="gar-tpl" style="margin-top:14px;">
+      <span style="font-size:24px;">🔐</span>
+      <div style="flex:1;min-width:230px;">
+        <strong>Sécurité du compte</strong><br>
+        <span class="text-muted" style="font-size:13px;">Modifiez votre mot de passe à tout moment.</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="openGaragePwdModal()">🔐 Modifier mon mot de passe</button>
+    </div>
+    ${body}`;
+}
+
+// ===== Créneaux de rendez-vous proposés par le garage =====
+function garageCreneauRowHtml(cr){
+  cr = cr || {};
+  return `<div class="gcr-row">
+    <input type="date" class="gcr-date" value="${escAttr(cr.date || "")}">
+    <input type="time" class="gcr-heure" value="${escAttr(cr.heure || "")}">
+    <button type="button" class="btn btn-ghost btn-sm" title="Retirer ce créneau"
+            onclick="this.closest('.gcr-row').remove()">✕</button>
+  </div>`;
+}
+
+function creneauBlockHtml(r){
+  if (r.status === "confirmed" || r.status === "refused") return "";
+  if (r.status === "proposed"){
+    const by = r.proposed_by === "admin" ? " (proposés par l'administration)" : "";
+    const lignes = (r.creneaux || []).map(c =>
+      `<li>📅 ${fmtRdv(c.date)} à ${escHtml(c.heure || "—")}</li>`).join("");
+    return `<div class="report-box" style="background:#fff8e1;border-color:#f0d68a;">
+      <div style="font-weight:600;font-size:13px;">⏳ Créneaux proposés${by} — en attente de la réponse du vendeur</div>
+      <ul style="margin:6px 0 8px 18px;font-size:13px;">${lignes}</ul>
+      <button class="btn btn-outline btn-sm" onclick="editGarageCreneaux('${r.id}')">✏️ Modifier les créneaux</button>
+    </div>`;
+  }
+  const declined = r.status === "declined"
+    ? `<div class="alert alert-warning" style="font-size:13px;margin:0 0 8px;">↩️ Le vendeur a refusé les créneaux précédents. Proposez-en de nouveaux.</div>`
+    : "";
+  const base = (r.creneaux && r.creneaux.length) ? r.creneaux : [{}];
+  const rows = base.map(c => garageCreneauRowHtml(c)).join("");
+  return `<div class="report-box">
+    ${declined}
+    <div style="font-weight:600;font-size:13px;margin-bottom:3px;">📅 Proposer des créneaux de rendez-vous</div>
+    <p class="text-muted" style="font-size:13px;margin:0 0 8px;">
+      Indiquez vos disponibilités. Le vendeur choisira le créneau qui lui convient ;
+      l'administration peut aussi les ajuster si besoin.
+    </p>
+    <div id="gcr-${r.id}">${rows}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+      <button class="btn btn-ghost btn-sm" onclick="addGarageCreneauRow('${r.id}')">＋ Ajouter un créneau</button>
+      <button class="btn btn-primary btn-sm" onclick="proposeGarageCreneaux('${r.id}')">📅 Proposer au vendeur</button>
+    </div>
+  </div>`;
+}
+
+function addGarageCreneauRow(inspId){
+  const box = document.getElementById("gcr-" + inspId);
+  if (box) box.insertAdjacentHTML("beforeend", garageCreneauRowHtml({}));
+}
+
+function proposeGarageCreneaux(inspId){
+  const box = document.getElementById("gcr-" + inspId);
+  if (!box) return;
+  const s = getSession();
+  const creneaux = [];
+  box.querySelectorAll(".gcr-row").forEach(row => {
+    const date = row.querySelector(".gcr-date").value;
+    const heure = row.querySelector(".gcr-heure").value;
+    if (date && heure) creneaux.push({ date:date, heure:heure, garage:(s && s.garage_label) || "", note:"" });
+  });
+  if (!creneaux.length){
+    alert("Veuillez renseigner au moins un créneau complet (date + heure).");
+    return;
+  }
+  updateInspection(inspId, { creneaux:creneaux, status:"proposed", proposed_by:"garage", chosen:null });
+  alert("✅ " + creneaux.length + " créneau(x) proposé(s).\n\nLe vendeur et l'administration en sont informés.");
+  renderGarageSpace();
+}
+
+function editGarageCreneaux(inspId){
+  updateInspection(inspId, { status:"pending" });
+  renderGarageSpace();
+}
+
+// Bloc rapport d'une demande : upload ou rapport déjà transmis
+function reportBlockHtml(r){
+  const tpl = `<a href="assets/Modele-inspection-${escAttr(r.niveau||"Bronze")}.docx" download class="btn btn-outline btn-sm">⬇ Modèle ${escHtml(r.niveau||"")} (.docx)</a>`;
+  if (r.report && r.report.data){
+    return `
+      <div class="report-ok">
+        ✅ <strong>Rapport transmis</strong>${r.report_at ? " le " + fmtDate(r.report_at) : ""}${r.report_by === "admin" ? " (par VoiturePrepa)" : ""} ·
+        <a href="${r.report.data}" download="${escAttr(r.report.name || "rapport-inspection")}">📄 ${escHtml(r.report.name || "Télécharger le rapport")}</a>
+        <br>${r.badge_added
+          ? `<span style="color:#127a36;font-weight:600;">🎖️ Badge ${escHtml(r.niveau)} ajouté à l'annonce du vendeur.</span>`
+          : `<span class="text-muted">En attente de la validation du badge par VoiturePrepa.</span>`}
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          ${tpl}
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">↻ Remplacer le rapport
+            <input type="file" id="rep-${r.id}" accept=".doc,.docx,.pdf,image/*" style="display:none;"
+                   onchange="uploadGarageReport('${r.id}','rep-${r.id}')">
+          </label>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="report-box">
+      <div style="font-weight:600;font-size:13px;margin-bottom:6px;">📋 Transmettre le rapport d'inspection</div>
+      <p class="text-muted" style="font-size:13px;margin:0 0 8px;">
+        Téléchargez le modèle, remplissez-le après l'inspection, puis téléversez le rapport complété.
+        Le vendeur et VoiturePrepa pourront le consulter.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        ${tpl}
+        <input type="file" id="rep-${r.id}" accept=".doc,.docx,.pdf,image/*">
+        <button class="btn btn-primary btn-sm" onclick="uploadGarageReport('${r.id}','rep-${r.id}')">Transmettre</button>
+      </div>
+    </div>`;
+}
+
+// Bloc « contacter l'administration » propre à chaque demande d'inspection
+function inspContactHtml(r){
+  const msgs = loadContactMessages().filter(m => m.insp_id === r.id);
+  const history = msgs.map(m => `
+    <div style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-top:6px;background:#fff;">
+      <div style="font-size:11px;color:var(--text-muted);">${fmtDate(m.created_at)} · ${m.status === "repondu" ? "✅ Réponse reçue" : "🕓 En attente de réponse"}</div>
+      <div style="font-size:13px;margin-top:3px;white-space:pre-line;">${escHtml(m.message)}</div>
+      ${m.reply ? `<div style="background:#f3faf5;border-left:3px solid var(--green);padding:6px 9px;margin-top:6px;font-size:13px;white-space:pre-line;">
+        <strong>Réponse de VoiturePrepa</strong><br>${escHtml(m.reply)}</div>` : ""}
+    </div>`).join("");
+  return `<div class="report-box" style="background:#eef2fb;border-color:#c9d6f0;">
+    <div style="font-weight:600;font-size:13px;margin-bottom:5px;">✉️ Contacter l'administration sur cette demande</div>
+    <textarea id="imsg-${r.id}" class="imsg-area" rows="2" placeholder="Une question sur cette inspection ? Écrivez à VoiturePrepa…"></textarea>
+    <div style="margin-top:6px;">
+      <button class="btn btn-primary btn-sm" onclick="sendInspMessage('${r.id}')">✉️ Envoyer à l'administration</button>
+    </div>
+    ${history}
+  </div>`;
+}
+
+// Envoie un message à l'administration, rattaché à une demande d'inspection
+function sendInspMessage(inspId){
+  const s = getSession();
+  if (!s || s.type !== "garage") return;
+  const ta = document.getElementById("imsg-" + inspId);
+  const txt = ta ? ta.value.trim() : "";
+  if (!txt){ alert("Veuillez saisir votre message avant de l'envoyer."); return; }
+  const insp = loadInspections().find(x => x.id === inspId);
+  const veh = insp ? insp.vehicule : "";
+  addContactMessage({
+    nom: s.garage_label || s.prenom || "Garage partenaire",
+    email: s.email || "",
+    sujet: "Inspection — " + (veh || "demande"),
+    message: txt,
+    insp_id: inspId
+  });
+  alert("✅ Message envoyé à l'administration. La réponse s'affichera sous cette demande.");
+  renderGarageSpace();
+}
+
+// Lit un fichier en Data URL
+function fileToData(file){
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve({ name:file.name, type:file.type, data:fr.result });
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
+
+// Téléverse le rapport d'inspection rempli par le garage
+async function uploadGarageReport(inspId, inputId){
+  const inp = document.getElementById(inputId);
+  if (!inp || !inp.files || !inp.files[0]){ alert("Veuillez choisir un fichier de rapport."); return; }
+  const file = inp.files[0];
+  if (file.size > 4 * 1024 * 1024){ alert("Fichier trop volumineux (4 Mo maximum)."); return; }
+  try {
+    const doc = await fileToData(file);
+    updateInspection(inspId, { report:doc, report_at:new Date().toISOString(), report_by:"garage" });
+    _garageTab = "realisees";
+    alert("✅ Rapport d'inspection transmis. L'inspection passe dans l'onglet « réalisées ».");
+    renderGarageSpace();
+  } catch(e){
+    alert("Échec de la lecture du fichier. Veuillez réessayer.");
+  }
+}
+</script>
+
+<!-- v16 : Modale de changement de mot de passe (garage connecté) -->
+<div class="modal-backdrop" id="garage-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)closeGaragePwdModal()">
+  <div style="background:#fff;border-radius:10px;max-width:480px;width:100%;box-shadow:0 12px 44px rgba(0,0,0,.35);">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid #e6e6e6;">
+      <strong style="font-size:16px;">🔐 Modifier mon mot de passe</strong>
+      <button onclick="closeGaragePwdModal()" aria-label="Fermer" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:#888;">✕</button>
+    </div>
+    <div style="padding:20px;">
+      <div class="form-group">
+        <label class="form-label">Nouveau mot de passe</label>
+        <input type="password" id="gp-pwd1" class="form-input" autocomplete="new-password" oninput="gpValidate()">
+      </div>
+      <div id="gp-rules" style="background:#f7f8fa;border:1px solid #e6e6e6;border-radius:6px;padding:10px 12px;margin:0 0 12px;font-size:12.5px;">
+        <div style="font-weight:600;color:#555;margin-bottom:4px;">🔒 Le mot de passe doit contenir :</div>
+        <div id="gp-rule-len" style="color:#999;">○ au moins 8 caractères</div>
+        <div id="gp-rule-upper" style="color:#999;">○ au moins 1 lettre majuscule</div>
+        <div id="gp-rule-digit" style="color:#999;">○ au moins 1 chiffre</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmation</label>
+        <input type="password" id="gp-pwd2" class="form-input" autocomplete="new-password" oninput="gpValidate()">
+        <div id="gp-rule-match" style="font-size:12px;color:#999;margin-top:4px;">○ les deux mots de passe doivent être identiques</div>
+      </div>
+      <div id="gp-error" style="display:none;color:var(--red);background:#fdecec;border:1px solid #f3bcbc;border-radius:6px;padding:8px 12px;font-size:13px;margin:8px 0;"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding:12px 20px;border-top:1px solid #e6e6e6;">
+      <button onclick="closeGaragePwdModal()" style="padding:8px 16px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer;font-size:14px;">Annuler</button>
+      <button id="gp-submit" onclick="submitGaragePwd()" style="padding:9px 18px;background:var(--blue,#1E3A8A);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openGaragePwdModal() {
+  document.getElementById("gp-pwd1").value = "";
+  document.getElementById("gp-pwd2").value = "";
+  document.getElementById("gp-error").style.display = "none";
+  gpValidate();
+  document.getElementById("garage-pwd-modal").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+function closeGaragePwdModal() {
+  document.getElementById("garage-pwd-modal").style.display = "none";
+  document.body.style.overflow = "";
+}
+function gpValidate() {
+  const p1 = document.getElementById("gp-pwd1").value;
+  const p2 = document.getElementById("gp-pwd2").value;
+  const setRule = (id, ok) => {
+    const el = document.getElementById(id); if (!el) return ok;
+    el.style.color = ok ? "#16a34a" : "#999";
+    el.textContent = el.textContent.replace(/^[○✓]\s/, ok ? "✓ " : "○ ");
+    return ok;
+  };
+  setRule("gp-rule-len",   p1.length >= 8);
+  setRule("gp-rule-upper", /[A-Z]/.test(p1));
+  setRule("gp-rule-digit", /[0-9]/.test(p1));
+  setRule("gp-rule-match", p1.length > 0 && p1 === p2);
+}
+async function submitGaragePwd() {
+  const p1 = document.getElementById("gp-pwd1").value;
+  const p2 = document.getElementById("gp-pwd2").value;
+  const err = document.getElementById("gp-error");
+  err.style.display = "none";
+  if (p1.length < 8) { err.textContent = "Le mot de passe doit faire au moins 8 caractères."; err.style.display = "block"; gpValidate(); return; }
+  if (!/[A-Z]/.test(p1)) { err.textContent = "Le mot de passe doit contenir au moins 1 majuscule."; err.style.display = "block"; gpValidate(); return; }
+  if (!/[0-9]/.test(p1)) { err.textContent = "Le mot de passe doit contenir au moins 1 chiffre."; err.style.display = "block"; gpValidate(); return; }
+  if (p1 !== p2) { err.textContent = "Les deux mots de passe ne correspondent pas."; err.style.display = "block"; gpValidate(); return; }
+  const btn = document.getElementById("gp-submit");
+  btn.disabled = true; btn.textContent = "Enregistrement…";
+  try {
+    if (!window.VP_SB || !VP_SB.updatePassword) throw new Error("Supabase non disponible");
+    const { error } = await VP_SB.updatePassword(p1);
+    if (error) throw error;
+    alert("✅ Mot de passe modifié avec succès.");
+    closeGaragePwdModal();
+  } catch(e) {
+    err.textContent = "❌ " + (e.message || e);
+    err.style.display = "block";
+  } finally {
+    btn.disabled = false; btn.textContent = "Enregistrer";
+  }
+}
+</script>
+</body>
