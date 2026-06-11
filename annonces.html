@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Annonces — VoiturePrepa.fr</title>
+<meta name="description" content="Parcourez les annonces de voitures préparées, sportives et pièces de performance. Filtres par marque, stage, budget et région sur VoiturePrepa.fr.">
+<link rel="canonical" href="https://voitureprepa.fr/annonces.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VoiturePrepa.fr">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Annonces — VoiturePrepa.fr">
+<meta property="og:description" content="Parcourez les annonces de voitures préparées, sportives et pièces de performance. Filtres par marque, stage, budget et région sur VoiturePrepa.fr.">
+<meta property="og:url" content="https://voitureprepa.fr/annonces.html">
+<meta property="og:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Annonces — VoiturePrepa.fr">
+<meta name="twitter:description" content="Parcourez les annonces de voitures préparées, sportives et pièces de performance. Filtres par marque, stage, budget et région sur VoiturePrepa.fr.">
+<meta name="twitter:image" content="https://voitureprepa.fr/assets/img/logo.png">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+  #listing-map { height:520px; border-radius:8px; overflow:hidden; z-index:1; margin-top:10px; }
+  .leaflet-popup-content { margin:10px 14px; font-size:13px; min-width:200px; }
+  .leaflet-popup-content strong { color:var(--bleu); }
+  .leaflet-popup-content a.popup-link { color:var(--orange); font-weight:600; }
+  /* Légende des badges */
+  .insp-legend {
+    background:#fff; border-radius:8px; box-shadow:var(--shadow);
+    padding:8px 12px; margin-bottom:14px;
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px 6px;
+    font-size:13.5px; color:var(--text-muted);
+  }
+  .insp-legend-title { font-weight:700; color:var(--text); }
+  .insp-legend-link { font-size:12.5px; color:var(--orange); white-space:nowrap; text-decoration:none; }
+  .insp-legend-link:hover { text-decoration:underline; }
+  /* Badges cliquables : filtres rapides au-dessus des resultats */
+  .badge-filter {
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:inherit; font-size:13px; color:var(--text-muted);
+    background:transparent; border:1.5px solid transparent;
+    border-radius:999px; padding:3px 10px 3px 4px; cursor:pointer;
+    transition:background .12s, border-color .12s;
+  }
+  .badge-filter:hover { background:var(--bg-alt); }
+  .badge-filter[aria-pressed="true"] {
+    background:var(--orange-light); border-color:var(--orange); color:var(--text);
+  }
+  .badge-filter .badge { font-size:11.5px; padding:3px 8px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <nav class="breadcrumb">
+    <a href="index.html">Accueil</a><span class="sep">›</span>
+    <span id="bc-type">Annonces</span>
+  </nav>
+
+  <div class="listing-layout">
+
+    <div class="quick-actions">
+      <button type="button" class="btn-quick primary" onclick="toggleFiltersPanel()" id="filters-toggle-btn-2">🔧 Filtres</button>
+      <button type="button" class="btn-quick" onclick="resetFilters();renderResults();">🔄 Réinitialiser</button>
+    </div>
+    <button class="filters-toggle" id="filters-toggle-btn" onclick="toggleFiltersPanel()" type="button">🔧 Afficher les filtres</button>
+    <aside class="filters">
+      <h3>Filtres</h3>
+
+      <div class="form-group">
+        <label class="form-label">Mots-clés</label>
+        <input type="text" id="f-q" class="form-input" placeholder="ex : rs3, akrapovic, stage 2...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Options</label>
+        <label class="checkbox-line"><input type="checkbox" id="f-vente-en-ligne"> 🛒 Achat en ligne disponible</label>
+      </div>
+
+      <div class="form-group" id="grp-stage">
+        <label class="form-label">Stage de préparation</label>
+        <select id="f-stage" class="form-select"><option value="">Tous</option></select>
+      </div>
+
+      <div class="form-group" id="grp-etat">
+        <label class="form-label">État du véhicule</label>
+        <div id="f-etat"></div>
+      </div>
+
+      <div class="form-group" id="grp-cat-piece" style="display:none;">
+        <label class="form-label">Catégorie de pièce</label>
+        <select id="f-cat-piece" class="form-select"><option value="">Toutes</option></select>
+      </div>
+
+      <div class="form-group" id="grp-sous-piece" style="display:none;">
+        <label class="form-label">Sous-catégorie</label>
+        <select id="f-sous-piece" class="form-select"><option value="">Toutes</option></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Marque</label>
+        <select id="f-marque" class="form-select"><option value="">Toutes</option></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Modèle</label>
+        <select id="f-modele" class="form-select"><option value="">Tous</option></select>
+      </div>
+
+      <div class="form-group" id="grp-cat-voiture">
+        <label class="form-label">Catégorie</label>
+        <select id="f-cat-voiture" class="form-select"><option value="">Toutes</option></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Prix (€)</label>
+        <div class="filter-range">
+          <input type="number" id="f-prix-min" class="form-input" placeholder="Min">
+          <span>–</span>
+          <input type="number" id="f-prix-max" class="form-input" placeholder="Max">
+        </div>
+      </div>
+
+      <div class="form-group" id="grp-km">
+        <label class="form-label">Kilométrage</label>
+        <div class="filter-range">
+          <input type="number" id="f-km-min" class="form-input" placeholder="Min">
+          <span>–</span>
+          <input type="number" id="f-km-max" class="form-input" placeholder="Max">
+        </div>
+      </div>
+
+      <div class="form-group" id="grp-annee">
+        <label class="form-label">Année</label>
+        <div class="filter-range">
+          <select id="f-annee-min" class="form-select"></select>
+          <span>–</span>
+          <select id="f-annee-max" class="form-select"></select>
+        </div>
+      </div>
+
+      <div class="form-group" id="grp-chevaux">
+        <label class="form-label">Puissance (ch)</label>
+        <div class="filter-range">
+          <input type="number" id="f-ch-min" class="form-input" placeholder="ch min" min="0">
+          <span>–</span>
+          <input type="number" id="f-ch-max" class="form-input" placeholder="ch max" min="0">
+        </div>
+      </div>
+
+      <div class="form-group" id="grp-carburant">
+        <label class="form-label">Carburant</label>
+        <div id="f-carburant"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Région</label>
+        <select id="f-region" class="form-select"><option value="">Toute la France</option></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Département</label>
+        <select id="f-departement" class="form-select"><option value="">Tous</option></select>
+      </div>
+
+      <div class="form-group" id="grp-couleur">
+        <label class="form-label">Couleur</label>
+        <select id="f-couleur" class="form-select"><option value="">Toutes</option></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Type de vendeur</label>
+        <label class="checkbox-line"><input type="checkbox" value="Particulier" name="vendeur"> Particulier</label>
+        <label class="checkbox-line"><input type="checkbox" value="Professionnel" name="vendeur"> Professionnel</label>
+      </div>
+
+      <div class="filter-actions-sticky">
+        <button class="btn btn-primary btn-block" onclick="applyFilters()">Appliquer</button>
+        <button class="btn btn-ghost btn-block mt-1" onclick="resetFilters()">Réinitialiser</button>
+      </div>
+      <button class="btn btn-outline btn-block mt-1" onclick="saveSearch()">💾 Sauvegarder ma recherche</button>
+    </aside>
+
+    <div class="listing-main">
+      <div class="insp-legend collapsed" id="badge-filter-bar">
+        <span class="insp-legend-title" onclick="toggleBadgeBar()">🏷️ Filtrer par badge</span>
+        <button type="button" class="badge-filter" data-badge="or" id="bf-or" aria-pressed="false">
+          <span class="badge badge-or">🥇 Or</span> Inspection complète</button>
+        <button type="button" class="badge-filter" data-badge="argent" id="bf-argent" aria-pressed="false">
+          <span class="badge badge-argent">🥈 Argent</span> Inspection premium</button>
+        <button type="button" class="badge-filter" data-badge="bronze" id="bf-bronze" aria-pressed="false">
+          <span class="badge badge-bronze">🥉 Bronze</span> Inspection standard</button>
+        <button type="button" class="badge-filter" data-badge="urgent" id="bf-urgent" aria-pressed="false">
+          <span class="badge badge-urgent">⚡ Urgente</span> Vente urgente</button>
+        <button type="button" class="badge-filter" data-badge="premium" id="bf-premium" aria-pressed="false">
+          <span class="badge badge-premium">⭐ Premium</span> En tête de liste</button>
+        <a href="inspection.html" class="insp-legend-link" id="badge-info-link">En savoir plus ›</a>
+      </div>
+
+      <div class="listing-toolbar">
+        <div class="toolbar-count" id="result-count">— annonces</div>
+        <div class="toolbar-actions">
+          <label style="font-size:14px;">Trier par :
+            <select id="sort" class="form-select" style="display:inline-block;width:auto;padding:6px 8px;">
+              <option value="recent">Plus récentes</option>
+              <option value="prix-asc">Prix croissant</option>
+              <option value="prix-desc">Prix décroissant</option>
+              <option value="km-asc">Km croissant</option>
+            </select>
+          </label>
+          <button class="btn btn-outline btn-sm" onclick="toggleMap()">🗺️ Vue carte</button>
+        </div>
+      </div>
+
+      <div id="map-view" class="france-map mb-2" style="display:none;">
+        <strong>📍 Carte de France interactive</strong>
+        <p class="text-muted" style="font-size:13px;">Chaque marqueur correspond à une annonce filtrée. Cliquez dessus pour voir l'aperçu.</p>
+        <div id="listing-map"></div>
+        <p class="text-muted mt-1" style="font-size:12px;">
+          La position est approximative (centre du département). Zoomez/dézoomez avec la molette.
+        </p>
+      </div>
+
+      <div class="ad-slot ad-leaderboard">
+        <span class="ad-label">Publicité</span>
+        <div class="ad-main">Espace publicitaire</div>
+        <div class="ad-sub">Bannière ou annonce sponsorisée — <a href="contact.html">réservez cet emplacement</a></div>
+      </div>
+
+      <div class="ad-grid" id="results"></div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = (getParam("type")==="piece"?"pieces":"voitures");
+let currentType = getParam("type") || "voiture";
+
+// v17 : sur mobile, replier les filtres par défaut
+// v17 : toggle de la barre badge-filter (collapsed par défaut sur mobile)
+function toggleBadgeBar() {
+  const bar = document.getElementById("badge-filter-bar");
+  if (bar) bar.classList.toggle("collapsed");
+}
+function toggleFiltersPanel() {
+  document.body.classList.toggle("mobile-filters-closed");
+  const closed = document.body.classList.contains("mobile-filters-closed");
+  // Ancien bouton (desktop legacy, masqué sur mobile par CSS)
+  const btn = document.getElementById("filters-toggle-btn");
+  if (btn) {
+    btn.textContent = closed ? "🔧 Afficher les filtres" : "🔧 Masquer les filtres";
+    btn.classList.toggle("open", !closed);
+  }
+  // Bouton principal "🔧 Filtres" en haut de page (mobile)
+  const btn2 = document.getElementById("filters-toggle-btn-2");
+  if (btn2) {
+    btn2.textContent = closed ? "🔧 Filtres" : "✕ Filtres";
+    btn2.classList.toggle("open", !closed);
+  }
+}
+function setupMobileFilters() {
+  if (window.innerWidth <= 900) {
+    document.body.classList.add("mobile-filters-closed");
+    const btn = document.getElementById("filters-toggle-btn");
+    if (btn) { btn.textContent = "🔧 Afficher les filtres"; btn.classList.remove("open"); }
+  } else {
+    document.body.classList.remove("mobile-filters-closed");
+  }
+}
+window.addEventListener("resize", setupMobileFilters);
+
+function initPage() {
+  // v14 : déclencher renderResults quand l'utilisateur saisit dans ch-min/ch-max
+  setTimeout(function(){
+    ["#f-ch-min","#f-ch-max"].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.addEventListener("input", function(){ if (typeof renderResults === "function") renderResults(); });
+    });
+  }, 0);
+  // Adapt UI based on type
+  if (currentType === "piece") {
+    $("#bc-type").textContent = "Pièces détachées";
+    $("#grp-cat-piece").style.display = "block";
+    ["grp-cat-voiture","grp-km","grp-annee","grp-chevaux","grp-carburant","grp-stage","grp-etat","grp-couleur"]
+      .forEach(id => { const el=$("#"+id); if(el) el.style.display="none"; });
+    // v17 — Les pièces n'ont pas de kilométrage : retirer l'option "Km croissant" du tri
+    const _kmOpt = document.querySelector('#sort option[value="km-asc"]');
+    if (_kmOpt) _kmOpt.remove();
+    // Les badges d'inspection ne concernent que les voitures
+    ["bf-or","bf-argent","bf-bronze"].forEach(id => { const el=$("#"+id); if(el) el.style.display="none"; });
+    // Pour les pièces, "En savoir plus" pointe vers la page Boost annonce (tarifs)
+    const _binfo = $("#badge-info-link"); if (_binfo) _binfo.setAttribute("href", "tarifs.html");
+    fillSelect($("#f-cat-piece"), Object.keys(DATA.pieces), "Toutes");
+    // Cascade catégorie -> sous-catégorie
+    $("#f-cat-piece").addEventListener("change", () => {
+      const c = $("#f-cat-piece").value;
+      if (c && DATA.pieces[c]) {
+        fillSelect($("#f-sous-piece"), DATA.pieces[c], "Toutes");
+        $("#grp-sous-piece").style.display = "block";
+      } else {
+        $("#f-sous-piece").innerHTML = '<option value="">Toutes</option>';
+        $("#grp-sous-piece").style.display = "none";
+      }
+    });
+  } else {
+    $("#bc-type").textContent = "Voitures préparées";
+  }
+
+  // Fill selects
+  fillSelect($("#f-marque"), Object.keys(DATA.marques_models), "Toutes");
+  fillSelect($("#f-cat-voiture"), DATA.categories_voiture, "Toutes");
+  fillSelect($("#f-stage"), DATA.stages.map(s=>s.stage), "Tous");
+  fillSelect($("#f-couleur"), DATA.couleurs, "Toutes");
+  fillSelect($("#f-region"), DATA.regions, "Toute la France");
+  fillSelect($("#f-departement"), DATA.departements.map(d=>({value:d.code,label:d.code+" - "+d.name})), "Tous");
+  fillSelect($("#f-annee-min"), DATA.annees, "Min");
+  fillSelect($("#f-annee-max"), DATA.annees, "Max");
+
+  // Cascade marque -> modèle
+  $("#f-marque").addEventListener("change", e => {
+    const mods = DATA.marques_models[e.target.value] || [];
+    fillSelect($("#f-modele"), mods, "Tous");
+  });
+
+  // Carburants checkboxes
+  $("#f-carburant").innerHTML = DATA.carburants.map(c =>
+    `<label class="checkbox-line"><input type="checkbox" name="carburant" value="${c}"> ${c}</label>`
+  ).join("");
+  $("#f-etat").innerHTML = DATA.etats.map(e =>
+    `<label class="checkbox-line"><input type="checkbox" name="etat" value="${e}"> ${e}</label>`
+  ).join("");
+
+  // Pré-remplissage depuis l'URL (venant de la barre de recherche)
+  const m = getParam("marque");
+  if (m) {
+    $("#f-marque").value = m;
+    $("#f-marque").dispatchEvent(new Event("change"));
+    // Puis le modèle (après que la liste des modèles ait été remplie)
+    const mod = getParam("modele");
+    if (mod) $("#f-modele").value = mod;
+  }
+  const pmax = getParam("prix_max");
+  if (pmax) $("#f-prix-max").value = pmax;
+  const pmin = getParam("prix_min");
+  if (pmin) $("#f-prix-min").value = pmin;
+  const reg = getParam("region");
+  if (reg) $("#f-region").value = reg;
+  const catP = getParam("cat_piece");
+  if (catP && $("#f-cat-piece")) {
+    $("#f-cat-piece").value = catP;
+    $("#f-cat-piece").dispatchEvent(new Event("change"));
+    const sousP = getParam("sous_piece");
+    if (sousP) $("#f-sous-piece").value = sousP;
+  }
+  const q = getParam("q");
+  if (q) $("#f-q").value = q;
+
+  // Restauration complémentaire des filtres (recherche sauvegardée relancée)
+  const setVal = (param, id) => {
+    const v = getParam(param), el = $("#"+id);
+    if (v && el) el.value = v;
+  };
+  setVal("departement", "f-departement");
+  setVal("km_min", "f-km-min");
+  setVal("km_max", "f-km-max");
+  setVal("stage", "f-stage");
+  setVal("sort", "sort");
+  const setChecks = (param, name) => {
+    const v = getParam(param);
+    if (!v) return;
+    const vals = v.split(",");
+    $$('input[name="'+name+'"]').forEach(c => { if (vals.includes(c.value)) c.checked = true; });
+  };
+  setChecks("carburants", "carburant");
+  setChecks("etats", "etat");
+  if (getParam("urgent"))  setBadgeFilter("urgent", true);
+  if (getParam("premium")) setBadgeFilter("premium", true);
+  (getParam("inspections") || "").split(",").filter(Boolean)
+    .forEach(b => setBadgeFilter(b, true));
+
+  setupMobileFilters();
+  renderResults();
+  $("#sort").addEventListener("change", renderResults);
+
+  // ⏎ Appuyer sur Entrée dans n'importe quel filtre relance la recherche
+  $$(".filters input, .filters select").forEach(el => {
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applyFilters();
+      }
+    });
+  });
+
+  // Recherche instantanée : cocher une case ou choisir dans une liste
+  // déroulante relance les résultats sans cliquer sur « Appliquer ».
+  $$(".filters select, .filters input[type='checkbox']").forEach(el => {
+    el.addEventListener("change", applyFilters);
+  });
+
+  // Badges cliquables : un clic active / désactive le filtre correspondant
+  $$(".badge-filter").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const on = btn.getAttribute("aria-pressed") === "true";
+      btn.setAttribute("aria-pressed", on ? "false" : "true");
+      applyFilters();
+    });
+  });
+}
+
+// Helpers pour les filtres-badges de la barre du haut
+function badgeFilterOn(badge){
+  const el = document.querySelector('.badge-filter[data-badge="' + badge + '"]');
+  return !!(el && el.getAttribute("aria-pressed") === "true");
+}
+function setBadgeFilter(badge, on){
+  const el = document.querySelector('.badge-filter[data-badge="' + badge + '"]');
+  if (el) el.setAttribute("aria-pressed", on ? "true" : "false");
+}
+
+function applyFilters(){ renderResults(); }
+function resetFilters(){
+  $$(".filters input, .filters select").forEach(el => {
+    if (el.type==="checkbox") el.checked=false;
+    else el.value="";
+  });
+  $$(".badge-filter").forEach(b => b.setAttribute("aria-pressed", "false"));
+  renderResults();
+}
+// Rassemble les critères de recherche actuellement saisis en un objet
+function collectSearchCriteria(){
+  const val = id => { const el = $("#"+id); return el ? (el.value||"").trim() : ""; };
+  const checked = id => { const el = $("#"+id); return !!(el && el.checked); };
+  const data = {
+    type: currentType,
+    q: val("f-q"),
+    marque: val("f-marque"),
+    modele: val("f-modele"),
+    prix_min: val("f-prix-min"),
+    prix_max: val("f-prix-max"),
+    region: ($("#f-region") && $("#f-region").value) || "",
+    departement: ($("#f-departement") && $("#f-departement").value) || "",
+    urgent: badgeFilterOn("urgent"),
+    premium: badgeFilterOn("premium"),
+    sort: ($("#sort") && $("#sort").value) || ""
+  };
+  if (currentType === "voiture") {
+    data.km_min = val("f-km-min");
+    data.km_max = val("f-km-max");
+    data.stage  = val("f-stage");
+    data.carburants = $$('input[name="carburant"]:checked').map(c => c.value);
+    data.etats      = $$('input[name="etat"]:checked').map(c => c.value);
+  } else {
+    data.cat_piece  = val("f-cat-piece");
+    data.sous_piece = val("f-sous-piece");
+  }
+  data.inspections = ["or","argent","bronze"].filter(badgeFilterOn);
+  data.label = searchLabel(data);
+  return data;
+}
+
+// Résumé lisible d'une recherche (pour l'afficher dans « Mon compte »)
+function searchLabel(d){
+  const parts = [ d.type === "piece" ? "Pièces" : "Voitures" ];
+  if (d.q) parts.push("« " + d.q + " »");
+  if (d.marque) parts.push(d.marque + (d.modele ? " " + d.modele : ""));
+  if (d.stage) parts.push(d.stage);
+  if (d.cat_piece) parts.push(d.cat_piece + (d.sous_piece ? " / " + d.sous_piece : ""));
+  if (d.carburants && d.carburants.length) parts.push(d.carburants.join("/"));
+  if (d.region && d.region !== "Toute la France") parts.push(d.region);
+  else if (d.departement) parts.push(d.departement);
+  if (d.prix_min && d.prix_max) parts.push(d.prix_min + "–" + d.prix_max + " €");
+  else if (d.prix_max) parts.push("max " + d.prix_max + " €");
+  else if (d.prix_min) parts.push("dès " + d.prix_min + " €");
+  return parts.join(" · ");
+}
+
+function saveSearch(){
+  if (!requireLogin("La sauvegarde de recherche")) return;
+  const item = addSavedSearch(collectSearchCriteria());
+  if (!item) { alert("Vous devez être connecté pour sauvegarder une recherche."); return; }
+  alert("✅ Recherche sauvegardée !\n\n« " + item.label + " »\n\n" +
+    "Retrouvez-la dans « Mon compte › Recherches sauvegardées ».");
+}
+let listingMap = null;
+let listingMarkers = [];
+
+function initListingMap() {
+  if (listingMap) return;
+  listingMap = L.map("listing-map").setView([46.6, 2.5], 5.5);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18, attribution: "© OpenStreetMap"
+  }).addTo(listingMap);
+}
+
+function refreshMapMarkers(ads) {
+  if (!listingMap) return;
+  listingMarkers.forEach(m => listingMap.removeLayer(m));
+  listingMarkers = [];
+
+  const adIcon = L.divIcon({
+    className: "ad-marker",
+    html: '<div style="background:var(--orange);border:3px solid #fff;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);color:#fff;font-size:12px;">🏎</span></div>',
+    iconSize: [28,28], iconAnchor:[14,28], popupAnchor:[0,-28]
+  });
+
+  const bounds = [];
+  ads.forEach(ad => {
+    const coords = getAdCoords(ad);
+    if (!coords) return;
+    const m = L.marker(coords, { icon: adIcon }).addTo(listingMap);
+    m.bindPopup(`
+      <strong>${escHtml(ad.titre)}</strong><br>
+      <span style="color:var(--orange);font-weight:700;font-size:15px;">${ad.prix.toLocaleString('fr-FR')} €</span><br>
+      <span style="color:#666;font-size:12px;">${ad.departement||""}</span><br>
+      <a class="popup-link" href="annonce.html?id=${ad.id}">Voir l'annonce →</a>
+    `);
+    listingMarkers.push(m);
+    bounds.push(coords);
+  });
+
+  if (bounds.length) listingMap.fitBounds(bounds, { padding:[40,40], maxZoom:8 });
+}
+
+function toggleMap(){
+  const m = $("#map-view");
+  const isOpen = m.style.display !== "none";
+  m.style.display = isOpen ? "none" : "block";
+  if (!isOpen) {
+    // Initialise au premier affichage et rafraîchit les marqueurs
+    setTimeout(() => {
+      initListingMap();
+      listingMap.invalidateSize();
+      refreshMapMarkers(_lastFilteredAds);
+    }, 50);
+  }
+}
+
+function renderResults(){
+  // Listing public : uniquement les annonces approuvees par l'admin et non expirees
+  // v15 : MOCK_ADS (demos) + loadUserAds() (cache Supabase)
+  const _all = MOCK_ADS.concat(typeof loadUserAds === "function" ? loadUserAds() : []);
+  let ads = _all.filter(a => a.type === currentType && isAdPublic(a));
+
+  // Filtre mots-clés (titre, marque, modèle, sous-catégorie pour pièces)
+  const q = ($("#f-q").value || "").trim().toLowerCase();
+  if (q) {
+    const terms = q.split(/\s+/);
+    ads = ads.filter(a => {
+      const hay = [a.titre, a.marque, a.modele, a.cat, a.sous, a.stage]
+        .filter(Boolean).join(" ").toLowerCase();
+      return terms.every(t => hay.includes(t));
+    });
+  }
+
+  const fm = $("#f-marque").value;
+  if (fm) ads = ads.filter(a => a.marque === fm);
+  const fmod = $("#f-modele").value;
+  if (fmod) ads = ads.filter(a => a.modele === fmod);
+
+  const pmin = parseInt($("#f-prix-min").value)||0;
+  const pmax = parseInt($("#f-prix-max").value)||Infinity;
+  ads = ads.filter(a => a.prix >= pmin && a.prix <= pmax);
+
+  // Filtre géographique : région et / ou département
+  const freg = ($("#f-region") ? $("#f-region").value : "") || "";
+  if (freg && freg !== "Toute la France") ads = ads.filter(a => adInRegion(a, freg));
+  const fdept = ($("#f-departement") ? $("#f-departement").value : "") || "";
+  if (fdept) ads = ads.filter(a => deptCodeOf(a.departement) === deptCodeOf(fdept));
+
+  if (currentType==="voiture") {
+    const kmin = parseInt($("#f-km-min").value)||0;
+    const kmax = parseInt($("#f-km-max").value)||Infinity;
+    ads = ads.filter(a => (a.km||0) >= kmin && (a.km||0) <= kmax);
+    // v14 : filtre puissance (ch) — compare avec puissance_actuelle de l'annonce
+    const chmin = parseInt($("#f-ch-min").value)||0;
+    const chmax = parseInt($("#f-ch-max").value)||Infinity;
+    if (chmin > 0 || chmax !== Infinity) {
+      ads = ads.filter(a => {
+        const p = parseInt(a.puissance_actuelle) || 0;
+        return p >= chmin && p <= chmax;
+      });
+    }
+    const stage = $("#f-stage").value;
+    if (stage) ads = ads.filter(a => a.stage === stage);
+    const carbs = $$('input[name="carburant"]:checked').map(c=>c.value);
+    if (carbs.length) ads = ads.filter(a => carbs.includes(a.carburant));
+    const etats = $$('input[name="etat"]:checked').map(c=>c.value);
+    if (etats.length) ads = ads.filter(a => etats.includes(a.etat));
+    // v15 : filtres catégorie / couleur / fourchette d'année
+    const catV = $("#f-cat-voiture") ? $("#f-cat-voiture").value : "";
+    if (catV) ads = ads.filter(a => (a.categorie || "") === catV);
+    const couleur = $("#f-couleur") ? $("#f-couleur").value : "";
+    if (couleur) ads = ads.filter(a => (a.couleur || "") === couleur);
+    const anneeMin = parseInt(($("#f-annee-min") || {}).value) || 0;
+    const anneeMax = parseInt(($("#f-annee-max") || {}).value) || 9999;
+    if (anneeMin > 0 || anneeMax < 9999) {
+      ads = ads.filter(a => {
+        const an = parseInt(a.annee) || 0;
+        return an >= anneeMin && an <= anneeMax;
+      });
+    }
+  } else {
+    const cat = $("#f-cat-piece").value;
+    if (cat) ads = ads.filter(a => a.cat === cat);
+    const sous = $("#f-sous-piece").value;
+    if (sous) ads = ads.filter(a => a.sous === sous);
+  }
+
+  // v15 : filtre Type de vendeur (Particulier / Professionnel)
+  const vendeurs = $$('input[name="vendeur"]:checked').map(c => c.value);
+  if (vendeurs.length) {
+    ads = ads.filter(a => {
+      const isPro = !!a.pro;
+      if (vendeurs.includes("Particulier") && !isPro) return true;
+      if (vendeurs.includes("Professionnel") && isPro) return true;
+      return false;
+    });
+  }
+
+  if (badgeFilterOn("urgent"))  ads = ads.filter(a => (a.badges||[]).includes("urgent"));
+  if (badgeFilterOn("premium")) ads = ads.filter(a => (a.badges||[]).includes("premium"));
+  if ($("#f-vente-en-ligne") && $("#f-vente-en-ligne").checked) ads = ads.filter(a => a.vente_en_ligne);
+  // Filtre inspection : on garde les annonces ayant AU MOINS un des badges actifs
+  const inspChecked = ["or","argent","bronze"].filter(badgeFilterOn);
+  if (inspChecked.length) ads = ads.filter(a => (a.badges||[]).some(b => inspChecked.includes(b)));
+
+  // Tri choisi par l'utilisateur
+  const sort = $("#sort").value;
+  if (sort==="prix-asc") ads.sort((a,b)=>a.prix-b.prix);
+  else if (sort==="prix-desc") ads.sort((a,b)=>b.prix-a.prix);
+  else if (sort==="km-asc") ads.sort((a,b)=>(a.km||0)-(b.km||0));
+  else ads.sort((a,b)=> new Date(b.created_at||0) - new Date(a.created_at||0)); // "Plus récentes" : de la plus récente à la plus ancienne
+
+  // Remontée en TÊTE de liste : annonces Pack Remontada (badge "premium")
+  // ET annonces des comptes professionnels Pack Performance (remontée mensuelle incluse).
+  // Le tri reste stable : l'ordre choisi s'applique à l'intérieur de chaque groupe.
+  const isTopAd = a => (a.badges||[]).includes("premium") || a.pro_pack === "performance";
+  ads = [
+    ...ads.filter(isTopAd),
+    ...ads.filter(a => !isTopAd(a))
+  ];
+
+  $("#result-count").textContent = ads.length + " annonce" + (ads.length>1?"s":"") + " trouvée" + (ads.length>1?"s":"");
+
+  if (!ads.length) {
+    $("#results").innerHTML = `<div class="alert alert-info" style="grid-column:1/-1;">Aucune annonce ne correspond à vos critères. Essayez d'élargir la recherche.</div>`;
+  } else {
+    $("#results").innerHTML = ads.map(renderAdCard).join("");
+  }
+
+  // Pagination factice (40 par page comme demandé)
+  const totalPages = Math.max(1, Math.ceil(ads.length / 40));
+  let pagHTML = '<a href="#">‹</a><span class="current">1</span>';
+  for (let i=2; i<=Math.min(totalPages, 4); i++) pagHTML += `<a href="#">${i}</a>`;
+  if (totalPages > 1) pagHTML += '<a href="#">›</a>';
+  $("#pagination").innerHTML = pagHTML;
+
+  // Met à jour les marqueurs de la c
