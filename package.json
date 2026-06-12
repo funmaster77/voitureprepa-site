@@ -1,0 +1,10 @@
+{
+  "name": "voitureprepa-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site VoiturePrepa.fr - marketplace de véhicules préparés et pièces de performance",
+  "dependencies": {
+    "stripe": "^18.5.0",
+    "@supabase/supabase-js": "^2.48.0"
+  }
+}
