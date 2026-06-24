@@ -590,13 +590,13 @@ async function initPage() {
       ["Stage", ad.stage], ["État", ad.etat],
       // v29 — Puissance et couple fusionnés : une seule case "origine → actuelle" en vert.
       //   Si la valeur "actuelle" n'est pas renseignée, on la duplique à partir de l'origine.
-      ["Puissance origine <span style='color:#16a34a;'>vs actuelle</span>", (function(){
+      ["Puissance stock <span style='color:#16a34a;'>vs actuelle</span>", (function(){
         const orig = ad.puissance_origine, act = ad.puissance_actuelle || ad.puissance_origine;
         if (!orig && !act) return null;
         if (!orig) return (act + " ch");
         return '<span style="font-weight:600;">' + orig + ' ch</span> <span style="color:#16a34a;font-weight:700;margin:0 4px;">→</span> <span style="color:#16a34a;font-weight:700;">' + act + ' ch</span>';
       })()],
-      ["Couple", (function(){
+      ["Couple stock <span style='color:#16a34a;'>vs actuel</span>", (function(){
         const orig = ad.couple_origine, act = ad.couple_actuel || ad.couple_origine;
         if (!orig && !act) return null;
         if (!orig) return (act + " Nm");
