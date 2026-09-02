@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Répondre à VoiturePrepa.fr</title>
+<meta name="description" content="Poursuivez votre conversation avec l'équipe VoiturePrepa.fr.">
+<!-- Page privée accessible par lien à jeton : jamais indexée -->
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .rep-msg {
+    border-left:3px solid var(--border); background:#fafafa;
+    padding:11px 14px; border-radius:6px; margin:8px 0;
+    font-size:14.5px; line-height:1.55; white-space:pre-line;
+  }
+  .rep-msg.admin   { border-left-color:var(--green); background:#f3faf5; }
+  .rep-msg.visiteur{ border-left-color:var(--orange); background:#fff7ed; }
+  .rep-who  { font-weight:700; font-size:13.5px; }
+  .rep-when { color:var(--text-muted); font-size:12px; font-weight:400; }
+  .rep-sujet{
+    background:var(--bg-alt); border-radius:8px; padding:12px 14px;
+    font-size:14px; margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <nav class="breadcrumb"><a href="index.html">Accueil</a><span class="sep">›</span><span>Répondre</span></nav>
+
+  <div class="auth-card" style="max-width:700px;">
+    <h1>Poursuivre la conversation</h1>
+    <p class="sub">Répondez à l'équipe VoiturePrepa.fr — aucun compte n'est nécessaire.</p>
+
+    <div id="rep-etat" class="alert alert-info">Chargement de votre conversation…</div>
+
+    <div id="rep-contenu" style="display:none;">
+      <div class="rep-sujet" id="rep-entete"></div>
+      <div id="rep-fil"></div>
+
+      <div class="form-group" style="margin-top:18px;">
+        <label class="form-label" for="rep-texte">Votre réponse</label>
+        <textarea id="rep-texte" class="form-textarea" rows="6"
+                  placeholder="Écrivez votre message…" maxlength="5000"></textarea>
+        <p class="form-hint">Votre message parviendra directement à l'équipe VoiturePrepa.fr.</p>
+      </div>
+      <button id="rep-envoyer" class="btn btn-primary btn-block btn-lg" onclick="envoyerReponse()">
+        Envoyer ma réponse
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+const PAGE_ACTIVE = "contact";
+
+/* =====================================================================
+   v29 — Page de réponse à jeton
+   ---------------------------------------------------------------------
+   Accessible uniquement via le lien contenu dans l'email de réponse de
+   l'administrateur. Le jeton ouvre UN SEUL fil : aucune donnée d'un autre
+   visiteur n'est accessible, et aucun compte n'est requis — c'est ce qui
+   permet à la conversation de revenir dans l'administration au lieu de se
+   poursuivre dans une boîte email, hors de l'outil.
+   ===================================================================== */
+let _token = null;
+
+function _fr(iso) {
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "" : d.toLocaleString("fr-FR",
+    { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+function _esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function _erreur(txt) {
+  const e = document.getElementById("rep-etat");
+  e.className = "alert alert-warning";
+  e.innerHTML = txt;
+  document.getElementById("rep-contenu").style.display = "none";
+}
+
+async function initPage() {
+  _token = new URLSearchParams(location.search).get("t");
+  if (!_token) {
+    _erreur("⚠ <strong>Lien incomplet.</strong><br>Ouvrez cette page depuis le lien reçu dans votre email, "
+          + "ou écrivez-nous depuis la <a href='contact.html'>page Contact</a>.");
+    return;
+  }
+  if (typeof VP_SB === "undefined" || !VP_SB.getContactThread) {
+    _erreur("Service momentanément indisponible. Merci de réessayer dans quelques instants.");
+    return;
+  }
+  try {
+    const r = await VP_SB.getContactThread(_token);
+    if (!r || !r.ok) {
+      _erreur("⚠ <strong>" + _esc((r && r.erreur) || "Lien invalide ou expiré") + ".</strong><br>"
+            + "Écrivez-nous depuis la <a href='contact.html'>page Contact</a>, nous reprendrons l'échange.");
+      return;
+    }
+    afficherFil(r);
+  } catch (e) {
+    console.error(e);
+    _erreur("Erreur technique : " + _esc(e.message || e));
+  }
+}
+
+function afficherFil(r) {
+  document.getElementById("rep-etat").style.display = "none";
+  document.getElementById("rep-contenu").style.display = "block";
+
+  document.getElementById("rep-entete").innerHTML =
+    "<strong>" + _esc(r.sujet || "Votre message") + "</strong>"
+    + "<div class='text-muted' style='font-size:12.5px;margin-top:3px;'>Conversation ouverte le "
+    + _esc(_fr(r.created_at)) + "</div>";
+
+  let html = "<div class='rep-msg visiteur'>"
+           + "<div class='rep-who'>" + _esc(r.nom || "Vous")
+           + " <span class='rep-when'>· " + _esc(_fr(r.created_at)) + "</span></div>"
+           + _esc(r.message) + "</div>";
+
+  (r.fil || []).forEach(function (m) {
+    const admin = m.auteur === "admin";
+    html += "<div class='rep-msg " + (admin ? "admin" : "visiteur") + "'>"
+          + "<div class='rep-who'>" + _esc(m.auteur_nom || (admin ? "Support VoiturePrepa" : (r.nom || "Vous")))
+          + " <span class='rep-when'>· " + _esc(_fr(m.created_at)) + "</span></div>"
+          + _esc(m.corps) + "</div>";
+  });
+  document.getElementById("rep-fil").innerHTML = html;
+}
+
+async function envoyerReponse() {
+  const ta = document.getElementById("rep-texte");
+  const txt = (ta.value || "").trim();
+  if (!txt) { alert("Veuillez écrire votre message avant de l'envoyer."); return; }
+
+  const btn = document.getElementById("rep-envoyer");
+  const lbl = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = "⏳ Envoi en cours…";
+
+  try {
+    const r = await VP_SB.replyContactThread(_token, txt);
+    if (!r || !r.ok) {
+      alert("❌ " + ((r && r.erreur) || "Envoi impossible."));
+      return;
+    }
+
+    // Prévient l'administrateur par email qu'une réponse est arrivée
+    try {
+      fetch("/api/notify-new-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipient_email: "ralet.thomas@hotmail.fr",
+          recipient_name: "Admin VoiturePrepa",
+          sender_name: (r.nom || "Un visiteur"),
+          ad_title: "Réponse — " + (r.sujet || "message de contact"),
+          ad_id: null,
+          thread_id: "contact-token-" + _token,
+          message_preview: txt.substring(0, 500)
+        })
+      }).catch(function (e) { console.warn("notify admin KO", e); });
+    } catch (e) {}
+
+    ta.value = "";
+    alert("✅ Votre réponse a bien été envoyée.\n\nL'équipe VoiturePrepa vous répondra par email.");
+    // Recharge le fil pour que le visiteur voie son message
+    const maj = await VP_SB.getContactThread(_token);
+    if (maj && maj.ok) afficherFil(maj);
+  } catch (e) {
+    console.error(e);
+    alert("❌ Erreur technique : " + (e.message || e));
+  } finally {
+    btn.disabled = false; btn.innerHTML = lbl;
+  }
+}
+</script>
+</body>
+</html>
