@@ -1,0 +1,12 @@
+*.docx
+*.pptx
+*.xlsx
+backend/node_modules
+backend/data
+backend/*.db
+*.zip
+.git
+# Notes internes et migrations : versionnées sur GitHub, jamais servies par le site
+*.md
+sql/
+*.sql
